@@ -1,3 +1,50 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.utils.text import slugify
 
-# Create your models here.
+class Store(models.Model):
+    CATEGORY_CHOICES = (
+        ('electronics', 'Electronics'),
+        ('fashion', 'Fashion'),
+        ('food', 'Groceries'),
+        ('home', 'Home & Decor'),
+    )
+
+    # Link store to a generic User (Seller)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stores')
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    
+    # Branding (Basic for MVP)
+    primary_color = models.CharField(max_length=7, default="#000000")
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Auto-generate slug from name if empty
+        if not self.slug:
+            base_slug = slugify(self.name)
+            self.slug = base_slug
+            # Simple collision check could be added here
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+class Product(models.Model):
+    # CRITICAL: Every product belongs to ONE store
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='products')
+    
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.IntegerField(default=0)
+    # We will handle images in Phase 3
+    
+    is_available = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.store.name})"

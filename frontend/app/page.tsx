@@ -1,64 +1,99 @@
-import Image from "next/image";
+import Link from "next/link";
+import { fetchStores } from "../lib/api";
+import { Store } from "../types";
 
-export default function Home() {
+export default async function Home() {
+  let stores: Store[] = [];
+  let debugError = ""; // New variable to hold the error
+
+  try {
+    stores = await fetchStores();
+  } catch (e) {
+    console.error("FETCH ERROR:", e);
+    // Capture the error message to display it
+    debugError = e instanceof Error ? e.message : "Unknown Error";
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-gray-50">
+      {/* Platform Header */}
+      <header className="bg-white shadow-sm p-4">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-blue-600">StoreVille</h1>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded">
+            Open Your Store
+          </button>
+        </div>
+      </header>
+
+
+
+
+
+{/* DEBUG SECTION: Add this right after the Header */}
+      {debugError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative container mx-auto mt-4">
+          <strong className="font-bold">Connection Error: </strong>
+          <span className="block sm:inline">{debugError}</span>
+          <p className="text-sm mt-1">
+            Trying to fetch from: <strong>http://backend:8000/api/stores/</strong>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      )}
+
+
+
+
+
+      {/* Hero Section */}
+      <section className="bg-blue-600 text-white py-20 text-center">
+        <h2 className="text-4xl font-bold mb-4">
+          The Digital Mall of Ethiopia
+        </h2>
+        <p className="text-lg opacity-90">
+          Shop from your favorite local creators and businesses.
+        </p>
+      </section>
+
+      {/* Store Directory */}
+      <main className="container mx-auto py-12 px-4">
+        <h3 className="text-xl font-semibold mb-6">Browse Stores</h3>
+
+        {stores.length === 0 ? (
+          <p className="text-gray-500">
+            No stores open yet. Be the first to join!
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {stores.map((store) => (
+              <Link
+                key={store.id}
+                href={`/store/${store.slug}`}
+                className="block group"
+              >
+                <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition p-6 border border-gray-100">
+                  <div
+                    className="h-32 rounded-md mb-4 flex items-center justify-center text-white font-bold text-2xl"
+                    style={{
+                      backgroundColor: store.primary_color || "#3b82f6",
+                    }}
+                  >
+                    {store.name.substring(0, 2).toUpperCase()}
+                  </div>
+                  <h4 className="font-bold text-lg group-hover:text-blue-600">
+                    {store.name}
+                  </h4>
+                  <p className="text-sm text-gray-500 capitalize">
+                    {store.category}
+                  </p>
+                  <div className="mt-4 text-sm text-gray-400">
+                    {store.products.length} Products
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

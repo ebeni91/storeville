@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from django.db import transaction # <--- NEW IMPORT
 from .models import Order, OrderItem
 from stores.models import Product
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField() # We receive ID, not the object
+    product_id = serializers.IntegerField()
 
     class Meta:
         model = OrderItem
@@ -19,20 +20,31 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         
-        # 1. Create the Order
-        order = Order.objects.create(**validated_data)
+        # 🔒 ATOMIC TRANSACTION: Do everything or nothing.
+        # This prevents "half-finished" orders if an error occurs mid-way.
+        with transaction.atomic():
+            order = Order.objects.create(**validated_data)
 
-        # 2. Create the Items
-        for item in items_data:
-            product_id = item['product_id']
-            # Security: Ensure price matches DB, don't trust frontend price!
-            product = Product.objects.get(id=product_id) 
-            
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=item['quantity'],
-                price=product.price # Use server price
-            )
+            for item in items_data:
+                product = Product.objects.get(id=item['product_id'])
+                qty = item['quantity']
+
+                # 1. Check Stock Logic
+                if product.stock < qty:
+                    raise serializers.ValidationError(
+                        f"Stock Error: Only {product.stock} units of '{product.name}' are left."
+                    )
+
+                # 2. Deduct Stock
+                product.stock -= qty
+                product.save() # Update the database
+
+                # 3. Create Item Record
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=qty,
+                    price=product.price
+                )
 
         return order

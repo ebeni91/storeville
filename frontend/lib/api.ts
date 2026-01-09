@@ -19,3 +19,22 @@ export async function fetchStores() {
 
   return res.json();
 }
+
+// ... (keep getBaseUrl and fetchStores) ...
+
+export async function createOrder(orderData: any) {
+  const res = await fetch(`${getBaseUrl()}/api/orders/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(JSON.stringify(errorData));
+  }
+
+  return res.json();
+}

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework', # Add this (for API)
     'corsheaders',    # Add this (for Frontend connection)
     'stores',
+    'orders',
 ]
 
 MIDDLEWARE = [

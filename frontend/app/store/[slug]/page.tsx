@@ -2,10 +2,11 @@ import { getBaseUrl } from "../../../lib/api";
 import { Store } from "../../../types";
 import AddToCartBtn from "../../../components/AddToCartBtn";
 
-async function getStore(slug: string): Promise<Store> {
+async function getStore(slug: string): Promise<Store | null> {
   const res = await fetch(`${getBaseUrl()}/api/stores/${slug}/`, {
     cache: "no-store",
   });
+  if (!res.ok) return null; // Return null if 404
   return res.json();
 }
 
@@ -24,7 +25,15 @@ export default async function StorePage({
 }) {
   const resolvedParams = await params;
   const store = await getStore(resolvedParams.slug);
-
+  if (!store) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold text-gray-800">Store Not Found</h1>
+        <p className="text-gray-500 mt-2">The store you are looking for does not exist.</p>
+        <a href="/" className="text-blue-600 underline mt-4 block">Return Home</a>
+      </div>
+    );
+  }
   return (
     <div>
       {/* Store Banner / Header */}

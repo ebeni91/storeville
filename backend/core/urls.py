@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('stores.urls')),
     path('api/', include('orders.urls')),
-    path('api/', include('users.urls')),  # <--- ADD THIS LINE
+    path('api/users/', include('users.urls')),  # <--- ADD THIS LINE
 ]
 
 # Enable media serving in development

@@ -7,7 +7,8 @@ class Store(models.Model):
         ('electronics', 'Electronics'),
         ('fashion', 'Fashion'),
         ('food', 'Groceries'),
-        ('home', 'Home & Decor'),
+        ('home', 'Home & Garden'), # Updated label
+        ('art', 'Art & Crafts'),   # <--- Added this
     )
 
     # Link store to a generic User (Seller)
@@ -43,7 +44,7 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     # We will handle images in Phase 3
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
-    
+
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

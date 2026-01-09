@@ -7,8 +7,9 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function CreateStorePage() {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("Electronics");
-  const [color, setColor] = useState("#3b82f6"); // Default Blue
+  // 👇 FIX 1: Default to lowercase key
+  const [category, setCategory] = useState("electronics"); 
+  const [color, setColor] = useState("#3b82f6");
   const { token } = useAuth();
   const router = useRouter();
 
@@ -64,11 +65,11 @@ export default function CreateStorePage() {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
-              <option>Electronics</option>
-              <option>Fashion</option>
-              <option>Home & Garden</option>
-              <option>Art & Crafts</option>
-              <option>Food</option>
+              <option value="electronics">Electronics</option>
+              <option value="fashion">Fashion</option>
+              <option value="home">Home & Garden</option>
+              <option value="art">Art & Crafts</option>
+              <option value="food">Food</option>
             </select>
           </div>
 

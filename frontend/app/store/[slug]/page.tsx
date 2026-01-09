@@ -36,9 +36,20 @@ export default async function StorePage({
           {store.products.map((product) => (
             <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 group">
               {/* Product Image Placeholder */}
-              <div className="h-48 bg-gray-200 flex items-center justify-center text-gray-400">
-                <span className="text-4xl">📦</span>
-              </div>
+              {/* Product Image */}
+<div className="h-48 bg-gray-200 overflow-hidden relative">
+  {product.image ? (
+    <img 
+      src={product.image} 
+      alt={product.name} 
+      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-gray-400">
+      <span className="text-4xl">📦</span>
+    </div>
+  )}
+</div>
               
               <div className="p-4">
                 <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 truncate">

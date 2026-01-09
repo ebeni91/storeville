@@ -5,6 +5,7 @@ export interface Product {
   price: string;
   stock: number;
   is_available: boolean;
+  image: string | null;
 }
 
 export interface Store {

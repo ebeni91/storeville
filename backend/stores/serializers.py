@@ -4,7 +4,7 @@ from .models import Store, Product
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'stock', 'is_available']
+        fields = ['id', 'name', 'description', 'price', 'stock', 'is_available', 'image']
 
 class StoreSerializer(serializers.ModelSerializer):
     # We include products so we can see what's inside a store easily

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-// FIX: Use 4 sets of '../' to reach the frontend root
+// ✅ FIX 1: Correct path (4 dots) and import getBaseUrl
 import { useCart } from "../../../../context/CartContext";
 import { use, useEffect, useState } from "react";
-import { createOrder } from "../../../../lib/api";
-import { Store } from "../../../../types"; 
+import { createOrder, getBaseUrl } from "../../../../lib/api";
+import { Store } from "../../../../types";
 
 // Helper hook
 function useHasMounted() {
@@ -28,9 +28,14 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
   const [storeId, setStoreId] = useState<number | null>(null);
 
   useEffect(() => {
-    // Quick fetch to get Store ID from slug
-    fetch(`http://localhost:8000/api/stores/${resolvedParams.slug}/`)
-      .then((res) => res.json())
+    // ✅ FIX 2: Use getBaseUrl() instead of hardcoded string
+    const url = `${getBaseUrl()}/api/stores/${resolvedParams.slug}/`;
+    
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error("Store lookup failed");
+        return res.json();
+      })
       .then((data) => setStoreId(data.id))
       .catch((err) => console.error("Failed to get store ID", err));
   }, [resolvedParams.slug]);
@@ -40,7 +45,10 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
       alert("Please enter your name and phone number");
       return;
     }
-    if (!storeId) return;
+    if (!storeId) {
+        alert("Store ID not found. Please refresh.");
+        return;
+    }
 
     setIsCheckingOut(true);
 

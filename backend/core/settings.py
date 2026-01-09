@@ -38,9 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework', # Add this (for API)
+    'rest_framework.authtoken', # Add this (for API)
     'corsheaders',    # Add this (for Frontend connection)
     'stores',
     'orders',
+    'users',
 ]
 
 # MIDDLEWARE = [

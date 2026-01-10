@@ -3,16 +3,17 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies based on package.json (created later)
-# COPY package.json package-lock.json* ./
+# 1. Copy package files FIRST (for better caching)
+COPY package.json package-lock.json* ./
 
-# Check if package.json exists, if so install, else do nothing (for first run)
-# RUN if [ -f package.json ]; then npm install; fi
+# 2. Install dependencies (Crucial for Deployment)
+RUN npm install
 
+# 3. Copy the rest of the app code
 COPY . .
 
 # Expose port
 EXPOSE 3000
 
-# Start command (Dev mode)
+# Start command
 CMD ["npm", "run", "dev"]

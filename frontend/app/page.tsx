@@ -1,93 +1,165 @@
 import Link from "next/link";
 import { fetchStores } from "../lib/api";
 import { Store } from "../types";
+import { 
+  Search, Store as StoreIcon, ArrowRight, ShoppingBag, 
+  Sparkles, TrendingUp, LayoutGrid, LogIn 
+} from "lucide-react";
 
 export default async function Home() {
   let stores: Store[] = [];
-  let debugError = ""; // New variable to hold the error
-
+  
   try {
     stores = await fetchStores();
   } catch (e) {
-    console.error("FETCH ERROR:", e);
-    // Capture the error message to display it
-    debugError = e instanceof Error ? e.message : "Unknown Error";
+    console.error("Fetch Error", e);
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Platform Header */}
-      <header className="bg-white shadow-sm p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-blue-600">StoreVille</h1>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">
-            Open Your Store
-          </button>
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+      
+      {/* 1. Transparent Sticky Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+              <StoreIcon size={24} />
+            </div>
+            <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
+              StoreVille
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="hidden sm:flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-medium transition">
+              <LogIn size={18} /> Seller Login
+            </Link>
+            <Link href="/register" className="btn-primary py-2.5 px-6 text-sm">
+              Open Your Store
+            </Link>
+          </div>
         </div>
-      </header>
+      </nav>
 
+      {/* 2. Hero Section */}
+      <section className="relative overflow-hidden pt-20 pb-32">
+        {/* Background Decorative Blobs */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+          <div className="absolute top-20 right-10 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+          <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000" />
+        </div>
 
-
-
-
-{/* DEBUG SECTION: Add this right after the Header */}
-      {debugError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative container mx-auto mt-4">
-          <strong className="font-bold">Connection Error: </strong>
-          <span className="block sm:inline">{debugError}</span>
-          <p className="text-sm mt-1">
-            Trying to fetch from: <strong>http://backend:8000/api/stores/</strong>
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 font-bold text-xs uppercase tracking-wide mb-6 border border-indigo-100">
+            <Sparkles size={14} /> The Digital Mall of Ethiopia
+          </div>
+          <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 leading-tight mb-8">
+            Discover local <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">creators</span> & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">businesses</span>.
+          </h1>
+          <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Shop directly from your favorite brands or start your own digital store in seconds. No coding required.
           </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+             <div className="relative w-full sm:w-96 group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                  <Search size={20} />
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Search for stores (e.g. fashion, food)..." 
+                  className="w-full pl-11 pr-4 py-4 rounded-2xl border border-slate-200 shadow-sm focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-lg"
+                />
+             </div>
+             <Link href="#browse" className="w-full sm:w-auto btn-primary py-4 px-8 text-lg shadow-xl shadow-indigo-200">
+               Explore <ArrowRight size={20} />
+             </Link>
+          </div>
         </div>
-      )}
-
-
-
-
-
-      {/* Hero Section */}
-      <section className="bg-blue-600 text-white py-20 text-center">
-        <h2 className="text-4xl font-bold mb-4">
-          The Digital Mall of Ethiopia
-        </h2>
-        <p className="text-lg opacity-90">
-          Shop from your favorite local creators and businesses.
-        </p>
       </section>
 
-      {/* Store Directory */}
-      <main className="container mx-auto py-12 px-4">
-        <h3 className="text-xl font-semibold mb-6">Browse Stores</h3>
+      {/* 3. Stats / Trust Banner */}
+      <div className="bg-white border-y border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+           {[
+             { label: "Active Stores", value: stores.length + "+", icon: StoreIcon },
+             { label: "Happy Customers", value: "10k+", icon: ShoppingBag },
+             { label: "Products", value: "500+", icon: LayoutGrid },
+             { label: "Growth", value: "120%", icon: TrendingUp },
+           ].map((stat, i) => (
+             <div key={i} className="flex flex-col items-center text-center">
+               <div className="mb-3 p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                 <stat.icon size={24} />
+               </div>
+               <h3 className="text-3xl font-bold text-slate-900">{stat.value}</h3>
+               <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide">{stat.label}</p>
+             </div>
+           ))}
+        </div>
+      </div>
+
+      {/* 4. Store Directory */}
+      <main id="browse" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+        <div className="flex items-center justify-between mb-10">
+          <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+            <LayoutGrid className="text-indigo-600" /> Browse Stores
+          </h2>
+          {/* Filter pills could go here */}
+        </div>
 
         {stores.length === 0 ? (
-          <p className="text-gray-500">
-            No stores open yet. Be the first to join!
-          </p>
+          <div className="bg-white rounded-3xl p-16 text-center border-2 border-dashed border-slate-200">
+            <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
+              <StoreIcon size={40} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No stores open yet</h3>
+            <p className="text-slate-500 mb-8">Be the pioneer and launch the first store on StoreVille!</p>
+            <Link href="/register" className="btn-primary inline-flex">
+              Launch Your Store
+            </Link>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {stores.map((store) => (
-              <Link
-                key={store.id}
+              <Link 
+                key={store.id} 
                 href={`/store/${store.slug}`}
-                className="block group"
+                className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
               >
-                <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition p-6 border border-gray-100">
-                  <div
-                    className="h-32 rounded-md mb-4 flex items-center justify-center text-white font-bold text-2xl"
-                    style={{
-                      backgroundColor: store.primary_color || "#3b82f6",
-                    }}
-                  >
-                    {store.name.substring(0, 2).toUpperCase()}
+                {/* Store Header Color */}
+                <div 
+                  className="h-32 relative flex items-end p-4"
+                  style={{ backgroundColor: store.primary_color || '#3b82f6' }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  
+                  {/* Store Avatar */}
+                  <div className="relative z-10 w-16 h-16 bg-white rounded-xl shadow-md p-1 -mb-8 flex-shrink-0">
+                    <div className="w-full h-full bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 font-bold text-2xl uppercase border border-slate-200">
+                      {store.name.substring(0, 2)}
+                    </div>
                   </div>
-                  <h4 className="font-bold text-lg group-hover:text-blue-600">
-                    {store.name}
-                  </h4>
-                  <p className="text-sm text-gray-500 capitalize">
-                    {store.category}
-                  </p>
-                  <div className="mt-4 text-sm text-gray-400">
-                    {store.products.length} Products
+                </div>
+
+                {/* Store Info */}
+                <div className="pt-10 p-6 flex-1 flex flex-col">
+                  <div className="mb-4">
+                    <h3 className="font-bold text-xl text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                      {store.name}
+                    </h3>
+                    <p className="text-sm font-medium text-slate-400 capitalize flex items-center gap-1.5 mt-1">
+                      <span className="w-2 h-2 rounded-full bg-green-400" />
+                      {store.category}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between text-sm">
+                    <span className="text-slate-500 font-medium bg-slate-50 px-3 py-1 rounded-lg">
+                      {store.products.length} Products
+                    </span>
+                    <span className="text-indigo-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                      Visit <ArrowRight size={16} />
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -95,6 +167,21 @@ export default async function Home() {
           </div>
         )}
       </main>
+
+      {/* 5. Footer */}
+      <footer className="bg-white border-t border-slate-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+              <StoreIcon size={16} />
+            </div>
+            <span className="font-bold text-xl text-slate-900">StoreVille</span>
+          </div>
+          <p className="text-slate-400 text-sm">
+            © {new Date().getFullYear()} StoreVille Inc. Built for the future of commerce.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

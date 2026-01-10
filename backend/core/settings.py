@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -166,4 +167,44 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ]
+}
+
+# 🎨 Jazzmin Admin Theme Configuration
+JAZZMIN_SETTINGS = {
+    "site_title": "StoreVille Admin",
+    "site_header": "StoreVille",
+    "site_brand": "StoreVille HQ",
+    "welcome_sign": "Welcome back, Admin!",
+    "copyright": "StoreVille Inc",
+    "search_model": "users.User",
+    
+    # Top Menu
+    "topmenu_links": [
+        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "View Site", "url": "http://localhost:3000", "new_window": True},
+    ],
+
+    # Sidebar
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    
+    # Icons (FontAwesome 5)
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "users.User": "fas fa-user-shield",
+        "stores.Store": "fas fa-store",
+        "stores.Product": "fas fa-box-open",
+        "orders.Order": "fas fa-shopping-bag",
+        "orders.OrderItem": "fas fa-list",
+    },
+    
+    # Order of apps in sidebar
+    "order_with_respect_to": ["orders", "stores", "users", "auth"],
+}
+
+# UI Tweaks
+JAZZMIN_UI_TWEAKS = {
+    "theme": "flatly",   # Try: simplex, materia, cerulean, cosmo
+    "dark_mode_theme": "darkly",
 }

@@ -2,60 +2,27 @@
 
 import { useCart } from "../../../../context/CartContext";
 import { useAuth } from "../../../../context/AuthContext";
-import { getBaseUrl } from "../../../../lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, CreditCard, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
 
 function getPublicImageUrl(url: string | null) {
   if (!url) return null;
   return url.replace("http://backend:8000", "http://localhost:8000");
 }
 
-export default function CartPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { cart, removeFromCart, updateQuantity, clearCart, total } = useCart();
-  const { token, isAuthenticated } = useAuth();
+export default function CartPage() {
+  const { cart, removeFromCart, updateQuantity, total } = useCart();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const params = useParams(); // Safe way to get slug in Client Component
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!isAuthenticated) {
-      // Save current path to return after login? (Optional enhancement)
       router.push("/login");
       return;
     }
-
-    setIsCheckingOut(true);
-
-    try {
-      const items = cart.map((item) => ({
-        product_id: item.product.id,
-        quantity: item.quantity,
-      }));
-
-      const res = await fetch(`${getBaseUrl()}/api/orders/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Token ${token}`,
-        },
-        body: JSON.stringify({ items }),
-      });
-
-      if (res.ok) {
-        clearCart();
-        alert("Order placed successfully! 🎉");
-        router.push("/dashboard");
-      } else {
-        alert("Checkout failed. Please try again.");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Error processing checkout");
-    } finally {
-      setIsCheckingOut(false);
-    }
+    // 👇 Redirect to the Checkout Page
+    router.push(`/store/${params.slug}/checkout`);
   };
 
   if (cart.length === 0) {
@@ -169,16 +136,9 @@ export default function CartPage({ params }: { params: Promise<{ slug: string }>
 
               <button 
                 onClick={handleCheckout}
-                disabled={isCheckingOut}
                 className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-100"
               >
-                {isCheckingOut ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    Checkout <ArrowRight size={20} />
-                  </>
-                )}
+                Proceed to Checkout <ArrowRight size={20} />
               </button>
               
               <p className="text-xs text-center text-slate-400 mt-4 flex items-center justify-center gap-2">

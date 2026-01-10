@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useCart } from "../../../../context/CartContext";
 import { useAuth } from "../../../../context/AuthContext";
 import { getBaseUrl } from "../../../../lib/api";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { ArrowLeft, CreditCard, MapPin, Phone, User, CheckCircle, Truck } from "lucide-react";
+import { useRouter, useParams } from "next/navigation"; // <--- Add useParams
 
 export default function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { cart, total, clearCart } = useCart();
   const { token, isAuthenticated } = useAuth();
   const router = useRouter();
-  
+  const urlParams = useParams();
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -39,8 +40,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
       // Backend later to actually save the 'address' field.
       const payload = {
         items,
-        shipping_address: `${formData.address}, ${formData.city}`, 
-        buyer_phone: formData.phone // Trying to override phone if allowed
+        buyer_name: formData.name, // <--- ADD THIS LINE!
+        buyer_phone: formData.phone,
+        shipping_address: `${formData.address}, ${formData.city}`,
       };
 
       const res = await fetch(`${getBaseUrl()}/api/orders/`, {
@@ -56,7 +58,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
         clearCart();
         // Redirect to a specific "Order Success" page or Dashboard
         alert("Order Successfully Placed! 🚚");
-        router.push("/dashboard"); 
+        router.push(`/store/${urlParams.slug}/order-success`); 
       } else {
         const errorData = await res.json();
         alert(`Checkout Failed: ${JSON.stringify(errorData)}`);

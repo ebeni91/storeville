@@ -1,181 +1,192 @@
 "use client";
 
-import Link from "next/link";
-// ✅ FIX 1: Correct path (4 dots) and import getBaseUrl
 import { useCart } from "../../../../context/CartContext";
-import { use, useEffect, useState } from "react";
-import { createOrder, getBaseUrl } from "../../../../lib/api";
-import { Store } from "../../../../types";
+import { useAuth } from "../../../../context/AuthContext";
+import { getBaseUrl } from "../../../../lib/api";
+import { useRouter } from "next/navigation";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, CreditCard, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
-// Helper hook
-function useHasMounted() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted;
+function getPublicImageUrl(url: string | null) {
+  if (!url) return null;
+  return url.replace("http://backend:8000", "http://localhost:8000");
 }
 
 export default function CartPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { cart, removeFromCart, cartTotal, clearCart } = useCart();
-  const mounted = useHasMounted();
-  const resolvedParams = use(params);
-
-  // checkout states
+  const { cart, removeFromCart, updateQuantity, clearCart, total } = useCart();
+  const { token, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerPhone, setBuyerPhone] = useState("");
-
-  const [storeId, setStoreId] = useState<number | null>(null);
-
-  useEffect(() => {
-    // ✅ FIX 2: Use getBaseUrl() instead of hardcoded string
-    const url = `${getBaseUrl()}/api/stores/${resolvedParams.slug}/`;
-    
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error("Store lookup failed");
-        return res.json();
-      })
-      .then((data) => setStoreId(data.id))
-      .catch((err) => console.error("Failed to get store ID", err));
-  }, [resolvedParams.slug]);
 
   const handleCheckout = async () => {
-    if (!buyerName || !buyerPhone) {
-      alert("Please enter your name and phone number");
+    if (!isAuthenticated) {
+      // Save current path to return after login? (Optional enhancement)
+      router.push("/login");
       return;
-    }
-    if (!storeId) {
-        alert("Store ID not found. Please refresh.");
-        return;
     }
 
     setIsCheckingOut(true);
 
-    const orderPayload = {
-      store: storeId,
-      buyer_name: buyerName,
-      buyer_phone: buyerPhone,
-      total_amount: cartTotal,
-      items: cart.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-    };
-
     try {
-      await createOrder(orderPayload);
-      setOrderSuccess(true);
-      clearCart(); // Clear the cart after success
+      const items = cart.map((item) => ({
+        product_id: item.product.id,
+        quantity: item.quantity,
+      }));
+
+      const res = await fetch(`${getBaseUrl()}/api/orders/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Token ${token}`,
+        },
+        body: JSON.stringify({ items }),
+      });
+
+      if (res.ok) {
+        clearCart();
+        alert("Order placed successfully! 🎉");
+        router.push("/dashboard");
+      } else {
+        alert("Checkout failed. Please try again.");
+      }
     } catch (error) {
-      alert("Checkout Failed: " + error);
+      console.error(error);
+      alert("Error processing checkout");
     } finally {
       setIsCheckingOut(false);
     }
   };
 
-  if (!mounted) return <div className="p-10 text-center">Loading cart...</div>;
-
-  // SUCCESS SCREEN
-  if (orderSuccess) {
-    return (
-      <div className="max-w-md mx-auto mt-10 p-8 bg-green-50 rounded-xl text-center border border-green-200">
-        <div className="text-5xl mb-4">✅</div>
-        <h2 className="text-2xl font-bold text-green-800 mb-2">Order Placed!</h2>
-        <p className="text-green-700 mb-6">
-          Thank you, {buyerName}. The store owner will contact you at {buyerPhone} shortly.
-        </p>
-        <Link 
-          href={`/store/${resolvedParams.slug}`} 
-          className="bg-green-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700"
-        >
-          Back to Store
-        </Link>
-      </div>
-    );
-  }
-
   if (cart.length === 0) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Your cart is empty</h2>
-        <Link 
-          href={`/store/${resolvedParams.slug}`} 
-          className="text-blue-600 underline hover:text-blue-800"
-        >
-          ← Go back to shopping
-        </Link>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 text-center max-w-md w-full">
+          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+            <ShoppingBag size={40} />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Your cart is empty</h1>
+          <p className="text-slate-500 mb-8">Looks like you haven't added anything yet.</p>
+          <button onClick={() => router.back()} className="btn-primary w-full">
+            <ArrowLeft size={20} /> Continue Shopping
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white shadow-sm rounded-lg border p-6">
-      <h1 className="text-2xl font-bold mb-6 border-b pb-4">Shopping Cart</h1>
+    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+          <ShoppingBag className="text-indigo-600" /> Shopping Cart
+        </h1>
 
-      {/* Cart Items List */}
-      <div className="space-y-4 mb-8">
-        {cart.map((item) => (
-          <div key={item.id} className="flex justify-between items-center py-4 border-b last:border-0">
-            <div>
-              <h3 className="font-bold text-lg">{item.name}</h3>
-              <p className="text-gray-500 text-sm">{item.price} ETB x {item.quantity}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="font-bold">
-                {(parseFloat(item.price) * item.quantity).toFixed(2)} ETB
-              </span>
-              <button
-                onClick={() => removeFromCart(item.id)}
-                className="text-red-500 hover:text-red-700 text-sm font-semibold"
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Cart Items List */}
+          <div className="lg:col-span-2 space-y-4">
+            {cart.map((item) => (
+              <div key={item.product.id} className="card p-4 flex gap-4 sm:gap-6 items-center">
+                
+                {/* Image */}
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
+                  {item.product.image ? (
+                    <img 
+                      src={getPublicImageUrl(item.product.image) || ""} 
+                      alt={item.product.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-300">📦</div>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg text-slate-900 truncate">{item.product.name}</h3>
+                  <p className="text-indigo-600 font-bold mb-3">{item.product.price} ETB</p>
+                  
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                      <button 
+                        onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
+                        className="p-2 hover:bg-slate-200 transition text-slate-600"
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="w-10 text-center font-semibold text-sm">{item.quantity}</span>
+                      <button 
+                         onClick={() => updateQuantity(item.product.id, Math.min(item.product.stock, item.quantity + 1))}
+                         className="p-2 hover:bg-slate-200 transition text-slate-600"
+                         disabled={item.quantity >= item.product.stock}
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <button 
+                      onClick={() => removeFromCart(item.product.id)}
+                      className="p-2 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50"
+                      title="Remove item"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Line Total */}
+                <div className="hidden sm:block text-right">
+                  <p className="font-bold text-slate-900 text-lg">
+                    {(parseFloat(item.product.price) * item.quantity).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-slate-500">ETB</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="card p-6 sticky top-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-6">Order Summary</h2>
+              
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between text-slate-600">
+                  <span>Subtotal</span>
+                  <span>{total.toFixed(2)} ETB</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Taxes (0%)</span>
+                  <span>0.00 ETB</span>
+                </div>
+                <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
+                  <span className="font-bold text-lg text-slate-900">Total</span>
+                  <span className="font-extrabold text-2xl text-indigo-600">{total.toFixed(2)} ETB</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleCheckout}
+                disabled={isCheckingOut}
+                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-100"
               >
-                Remove
+                {isCheckingOut ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    Checkout <ArrowRight size={20} />
+                  </>
+                )}
               </button>
+              
+              <p className="text-xs text-center text-slate-400 mt-4 flex items-center justify-center gap-2">
+                <CreditCard size={14}/> Secure Checkout
+              </p>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Checkout Form */}
-      <div className="bg-gray-50 p-6 rounded-lg">
-        <h3 className="font-bold text-lg mb-4">Checkout Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input 
-            type="text" 
-            placeholder="Your Name" 
-            className="p-3 border rounded"
-            value={buyerName}
-            onChange={(e) => setBuyerName(e.target.value)}
-          />
-          <input 
-            type="tel" 
-            placeholder="Phone Number (09...)" 
-            className="p-3 border rounded"
-            value={buyerPhone}
-            onChange={(e) => setBuyerPhone(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col items-end border-t pt-4">
-          <div className="text-xl mb-4">
-            Total: <span className="font-bold text-green-700">{cartTotal.toFixed(2)} ETB</span>
-          </div>
-          <div className="flex gap-4">
-            <button 
-              onClick={clearCart}
-              className="px-6 py-2 text-gray-500 hover:text-gray-700"
-            >
-              Clear Cart
-            </button>
-            <button 
-              onClick={handleCheckout}
-              disabled={isCheckingOut}
-              className="bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 shadow-md disabled:opacity-50"
-            >
-              {isCheckingOut ? "Placing Order..." : "Confirm Order"}
-            </button>
-          </div>
         </div>
       </div>
     </div>

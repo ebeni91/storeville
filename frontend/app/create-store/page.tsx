@@ -47,10 +47,11 @@ export default function CreateStorePage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-xl w-full max-w-lg border border-slate-100">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      {/* Glass Card */}
+      <div className="bg-white/10 backdrop-blur-2xl p-8 sm:p-10 rounded-3xl shadow-xl w-full max-w-lg border border-white/20">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-indigo-50/50 backdrop-blur-sm text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-100/30">
             <Rocket size={32} />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900">Launch Your Store</h1>
@@ -65,7 +66,7 @@ export default function CreateStorePage() {
               <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text" 
-                className="input-field pl-10"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/20 bg-white/10 text-slate-900 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 backdrop-blur-sm"
                 placeholder="e.g. Addis Fashion"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -77,15 +78,15 @@ export default function CreateStorePage() {
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
             <select 
-              className="input-field appearance-none"
+              className="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/10 text-slate-900 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none transition-all appearance-none backdrop-blur-sm"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
-              <option value="electronics">Electronics</option>
-              <option value="fashion">Fashion</option>
-              <option value="home">Home & Garden</option>
-              <option value="art">Art & Crafts</option>
-              <option value="food">Food</option>
+              <option value="electronics" className="text-slate-900 bg-white">Electronics</option>
+              <option value="fashion" className="text-slate-900 bg-white">Fashion</option>
+              <option value="home" className="text-slate-900 bg-white">Home & Garden</option>
+              <option value="art" className="text-slate-900 bg-white">Art & Crafts</option>
+              <option value="food" className="text-slate-900 bg-white">Food</option>
             </select>
           </div>
 
@@ -93,12 +94,12 @@ export default function CreateStorePage() {
             <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
               <Palette size={16} /> Brand Color
             </label>
-            <div className="flex gap-3 justify-center">
+            <div className="flex gap-3 justify-center bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
               {colors.map((c) => (
                 <button
                   key={c.bg}
                   type="button"
-                  className={`w-10 h-10 rounded-full transition-all duration-200 ${color === c.bg ? 'ring-2 ring-offset-2 ring-indigo-500 scale-110 shadow-lg' : 'hover:scale-105'}`}
+                  className={`w-10 h-10 rounded-full transition-all duration-200 border-2 border-white/50 shadow-sm ${color === c.bg ? 'ring-2 ring-offset-2 ring-indigo-500 scale-110 shadow-lg' : 'hover:scale-105'}`}
                   style={{ backgroundColor: c.bg }}
                   onClick={() => setColor(c.bg)}
                   title={c.name}
@@ -110,7 +111,7 @@ export default function CreateStorePage() {
           <button 
             type="submit" 
             disabled={isLoading}
-            className="btn-primary w-full py-4 text-lg mt-4"
+            className="btn-primary w-full py-4 text-lg mt-4 bg-indigo-600/90 hover:bg-indigo-700/90 backdrop-blur-md shadow-indigo-500/20"
           >
             {isLoading ? "Launching..." : "Create Store"}
             {!isLoading && <ArrowRight size={20} />}

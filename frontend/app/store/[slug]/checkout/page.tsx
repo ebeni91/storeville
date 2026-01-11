@@ -4,15 +4,19 @@ import { useState } from "react";
 import { useCart } from "../../../../context/CartContext";
 import { useAuth } from "../../../../context/AuthContext";
 import { getBaseUrl } from "../../../../lib/api";
-// import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, MapPin, Phone, User, CheckCircle, Truck } from "lucide-react";
-import { useRouter, useParams } from "next/navigation"; // <--- Add useParams
+import { 
+  ArrowLeft, CreditCard, MapPin, Phone, User, CheckCircle, 
+  Truck, ShoppingBag, X 
+} from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 
 export default function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { cart, total, clearCart } = useCart();
   const { token, isAuthenticated } = useAuth();
   const router = useRouter();
-  const urlParams = useParams();
+  const urlParams = useParams(); 
+  
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -20,6 +24,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
     city: "Addis Ababa"
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false); 
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,11 +41,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
         quantity: item.quantity,
       }));
 
-      // Note: We are sending shipping info, but we might need to update the 
-      // Backend later to actually save the 'address' field.
       const payload = {
         items,
-        buyer_name: formData.name, // <--- ADD THIS LINE!
+        buyer_name: formData.name,
         buyer_phone: formData.phone,
         shipping_address: `${formData.address}, ${formData.city}`,
       };
@@ -56,9 +59,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
 
       if (res.ok) {
         clearCart();
-        // Redirect to a specific "Order Success" page or Dashboard
-        alert("Order Successfully Placed! 🚚");
-        router.push(`/store/${urlParams.slug}/order-success`); 
+        setShowSuccess(true);
       } else {
         const errorData = await res.json();
         alert(`Checkout Failed: ${JSON.stringify(errorData)}`);
@@ -71,14 +72,75 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
     }
   };
 
-  if (cart.length === 0) {
-    return <div className="p-10 text-center">Your cart is empty.</div>;
+  if (cart.length === 0 && !showSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white/60 backdrop-blur-xl p-10 rounded-3xl border border-white/40 text-center text-slate-900 font-bold shadow-xl">
+           <ShoppingBag size={48} className="mx-auto mb-4 text-slate-400 opacity-50"/>
+           <p className="text-xl">Your cart is empty.</p>
+           <button 
+             onClick={() => router.back()} 
+             className="mt-6 btn-primary bg-indigo-600/90 backdrop-blur-md"
+           >
+             Go Shopping
+           </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <button onClick={() => router.back()} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 transition">
+    <div className="min-h-screen py-12 px-4 relative">
+      
+      {/* ✨ SUCCESS GLASS POP-UP MODAL ✨ */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+          {/* Dark Overlay - Keeps focus on modal */}
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
+
+          {/* Glass Card - Updated: Whiter & No Green Line */}
+          <div className="relative bg-white/90 backdrop-blur-2xl p-8 sm:p-12 rounded-[2.5rem] shadow-2xl border border-white/50 max-w-md w-full text-center animate-[blob_0.4s_ease-out]">
+            
+            {/* Green Icon */}
+            <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-200 animate-bounce">
+              <CheckCircle size={48} strokeWidth={3} />
+            </div>
+            
+            <h2 className="text-3xl font-extrabold text-slate-900 mb-3 drop-shadow-sm">Order Confirmed!</h2>
+            <p className="text-slate-500 mb-8 text-lg font-medium leading-relaxed">
+              Thank you for your purchase. Your order has been placed successfully.
+            </p>
+
+            <div className="space-y-3">
+              <Link 
+                href={`/store/${urlParams.slug}`} 
+                className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all"
+              >
+                <ShoppingBag size={20} /> Continue Shopping
+              </Link>
+              
+              <Link 
+                href="/dashboard" 
+                className="block text-sm text-slate-400 hover:text-indigo-600 font-bold transition py-2"
+              >
+                View Order History
+              </Link>
+            </div>
+
+            {/* Close Button (Top Right) */}
+            <button 
+              onClick={() => { setShowSuccess(false); router.push(`/store/${urlParams.slug}`); }}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Checkout Content */}
+      <div className={`max-w-4xl mx-auto transition-all duration-500 ${showSuccess ? 'blur-md scale-95 opacity-50 pointer-events-none' : ''}`}>
+        <button onClick={() => router.back()} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 transition font-medium">
           <ArrowLeft size={18} className="mr-2" /> Back to Cart
         </button>
 
@@ -91,8 +153,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
           {/* Left Column: Shipping Form */}
           <div className="md:col-span-2 space-y-6">
             
-            {/* Shipping Info Card */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            {/* Shipping Info Card - Updated to Lighter Glass (bg-white/60) */}
+            <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/50">
               <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                 <MapPin size={20} className="text-indigo-600"/> Shipping Information
               </h2>
@@ -104,7 +166,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                     <input 
                       required
                       type="text" 
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none backdrop-blur-sm transition-all placeholder:text-slate-400"
                       placeholder="Abebe Bikila"
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
@@ -119,7 +181,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                       <input 
                         required
                         type="tel" 
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none backdrop-blur-sm transition-all placeholder:text-slate-400"
                         placeholder="0911..."
                         value={formData.phone}
                         onChange={e => setFormData({...formData, phone: e.target.value})}
@@ -129,15 +191,15 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">City</label>
                     <select 
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none backdrop-blur-sm appearance-none"
                       value={formData.city}
                       onChange={e => setFormData({...formData, city: e.target.value})}
                     >
-                      <option>Addis Ababa</option>
-                      <option>Adama</option>
-                      <option>Hawassa</option>
-                      <option>Bahir Dar</option>
-                      <option>Mekelle</option>
+                      <option className="text-slate-900 bg-white">Addis Ababa</option>
+                      <option className="text-slate-900 bg-white">Adama</option>
+                      <option className="text-slate-900 bg-white">Hawassa</option>
+                      <option className="text-slate-900 bg-white">Bahir Dar</option>
+                      <option className="text-slate-900 bg-white">Mekelle</option>
                     </select>
                   </div>
                 </div>
@@ -146,7 +208,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                   <textarea 
                     required
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none resize-none backdrop-blur-sm placeholder:text-slate-400"
                     placeholder="Sub-city, Woreda, House No. or nearby landmark..."
                     value={formData.address}
                     onChange={e => setFormData({...formData, address: e.target.value})}
@@ -155,18 +217,18 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
               </form>
             </div>
 
-            {/* Payment Method Card */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            {/* Payment Method Card - Updated to Lighter Glass (bg-white/60) */}
+            <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/50">
               <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
                 <CreditCard size={20} className="text-indigo-600"/> Payment Method
               </h2>
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border border-indigo-100 bg-indigo-50 rounded-xl cursor-pointer">
-                  <input type="radio" name="payment" defaultChecked className="w-5 h-5 text-indigo-600" />
+                <label className="flex items-center gap-3 p-4 border border-indigo-500/30 bg-indigo-50/60 rounded-xl cursor-pointer backdrop-blur-sm shadow-sm">
+                  <input type="radio" name="payment" defaultChecked className="w-5 h-5 text-indigo-600 accent-indigo-600" />
                   <span className="font-bold text-slate-900">Cash on Delivery</span>
                   <Truck size={18} className="ml-auto text-indigo-600"/>
                 </label>
-                <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl cursor-not-allowed opacity-60">
+                <label className="flex items-center gap-3 p-4 border border-white/30 rounded-xl cursor-not-allowed opacity-60 bg-white/40 backdrop-blur-sm">
                   <input type="radio" name="payment" disabled className="w-5 h-5" />
                   <span className="font-medium text-slate-500">Telebirr (Coming Soon)</span>
                 </label>
@@ -177,33 +239,33 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
 
           {/* Right Column: Order Summary */}
           <div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 sticky top-6">
+            <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/50 sticky top-6">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Order Summary</h2>
               
-              <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
+              <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                 {cart.map((item) => (
                   <div key={item.product.id} className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-3">
-                      <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">{item.quantity}x</span>
-                      <span className="text-slate-700 truncate max-w-[120px]">{item.product.name}</span>
+                      <span className="bg-white/50 text-slate-700 px-2 py-1 rounded-lg text-xs font-bold border border-white/40 backdrop-blur-sm">{item.quantity}x</span>
+                      <span className="text-slate-700 truncate max-w-[120px] font-medium">{item.product.name}</span>
                     </div>
-                    <span className="font-medium text-slate-900">
+                    <span className="font-bold text-slate-900">
                       {(parseFloat(item.product.price) * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-slate-100 pt-4 space-y-2 mb-6">
-                <div className="flex justify-between text-slate-500">
+              <div className="border-t border-slate-200/50 pt-4 space-y-2 mb-6">
+                <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>
                   <span>{total.toFixed(2)} ETB</span>
                 </div>
-                <div className="flex justify-between text-slate-500">
+                <div className="flex justify-between text-slate-600">
                   <span>Delivery Fee</span>
                   <span>50.00 ETB</span>
                 </div>
-                <div className="flex justify-between items-center text-lg font-bold text-slate-900 pt-2 border-t border-dashed border-slate-200">
+                <div className="flex justify-between items-center text-lg font-bold text-slate-900 pt-2 border-t border-dashed border-slate-300/50">
                   <span>Total</span>
                   <span className="text-indigo-600">{(total + 50).toFixed(2)} ETB</span>
                 </div>
@@ -211,9 +273,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
 
               <button 
                 type="submit"
-                form="checkout-form" // Links to the form ID above
+                form="checkout-form"
                 disabled={isProcessing}
-                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-200"
+                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 transition-all"
               >
                 {isProcessing ? "Processing..." : "Place Order"}
               </button>

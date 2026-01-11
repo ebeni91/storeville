@@ -14,27 +14,26 @@ export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, total } = useCart();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const params = useParams(); // Safe way to get slug in Client Component
+  const params = useParams();
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
       router.push("/login");
       return;
     }
-    // 👇 Redirect to the Checkout Page
     router.push(`/store/${params.slug}/checkout`);
   };
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 text-center max-w-md w-full">
-          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-sm border border-white/20 text-center max-w-md w-full">
+          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400 backdrop-blur-sm">
             <ShoppingBag size={40} />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Your cart is empty</h1>
           <p className="text-slate-500 mb-8">Looks like you haven't added anything yet.</p>
-          <button onClick={() => router.back()} className="btn-primary w-full">
+          <button onClick={() => router.back()} className="btn-primary w-full bg-indigo-600/90 hover:bg-indigo-700/90 backdrop-blur-md">
             <ArrowLeft size={20} /> Continue Shopping
           </button>
         </div>
@@ -43,7 +42,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
           <ShoppingBag className="text-indigo-600" /> Shopping Cart
@@ -54,10 +53,11 @@ export default function CartPage() {
           {/* Cart Items List */}
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => (
-              <div key={item.product.id} className="card p-4 flex gap-4 sm:gap-6 items-center">
+              // Glass Card
+              <div key={item.product.id} className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex gap-4 sm:gap-6 items-center shadow-sm">
                 
                 {/* Image */}
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white/20 rounded-xl overflow-hidden flex-shrink-0 border border-white/20">
                   {item.product.image ? (
                     <img 
                       src={getPublicImageUrl(item.product.image) || ""} 
@@ -65,7 +65,7 @@ export default function CartPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">📦</div>
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">📦</div>
                   )}
                 </div>
 
@@ -76,18 +76,18 @@ export default function CartPage() {
                   
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                    <div className="flex items-center border border-white/20 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm">
                       <button 
                         onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
-                        className="p-2 hover:bg-slate-200 transition text-slate-600"
+                        className="p-2 hover:bg-white/20 transition text-slate-600"
                         disabled={item.quantity <= 1}
                       >
                         <Minus size={14} />
                       </button>
-                      <span className="w-10 text-center font-semibold text-sm">{item.quantity}</span>
+                      <span className="w-10 text-center font-semibold text-sm text-slate-900">{item.quantity}</span>
                       <button 
                          onClick={() => updateQuantity(item.product.id, Math.min(item.product.stock, item.quantity + 1))}
-                         className="p-2 hover:bg-slate-200 transition text-slate-600"
+                         className="p-2 hover:bg-white/20 transition text-slate-600"
                          disabled={item.quantity >= item.product.stock}
                       >
                         <Plus size={14} />
@@ -95,7 +95,7 @@ export default function CartPage() {
                     </div>
                     <button 
                       onClick={() => removeFromCart(item.product.id)}
-                      className="p-2 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50"
+                      className="p-2 text-slate-400 hover:text-red-600 transition rounded-lg hover:bg-red-500/10"
                       title="Remove item"
                     >
                       <Trash2 size={18} />
@@ -116,7 +116,7 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="card p-6 sticky top-8">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sticky top-8 shadow-sm">
               <h2 className="text-xl font-bold text-slate-900 mb-6">Order Summary</h2>
               
               <div className="space-y-4 mb-6">
@@ -128,7 +128,7 @@ export default function CartPage() {
                   <span>Taxes (0%)</span>
                   <span>0.00 ETB</span>
                 </div>
-                <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
+                <div className="border-t border-white/20 pt-4 flex justify-between items-center">
                   <span className="font-bold text-lg text-slate-900">Total</span>
                   <span className="font-extrabold text-2xl text-indigo-600">{total.toFixed(2)} ETB</span>
                 </div>
@@ -136,7 +136,7 @@ export default function CartPage() {
 
               <button 
                 onClick={handleCheckout}
-                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-100"
+                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600/90 hover:bg-indigo-700/90 backdrop-blur-md"
               >
                 Proceed to Checkout <ArrowRight size={20} />
               </button>

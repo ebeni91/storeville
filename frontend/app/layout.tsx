@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
-import SplashScreen from "../components/SplashScreen"; // 👈 Import this
+import SplashScreen from "../components/SplashScreen"; 
+import AnimatedBackground from "../components/AnimatedBackground"; // 👈 Import here
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,8 +30,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 👇 Add the Splash Screen at the very top */}
         <SplashScreen />
+        
+        {/* 👇 Global Background added here */}
+        <AnimatedBackground />
         
         <AuthProvider>
           {children}

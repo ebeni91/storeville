@@ -1,6 +1,8 @@
+
 import Link from "next/link";
 import { fetchStores } from "../lib/api";
 import { Store } from "../types";
+import AnimatedBackground from "../components/AnimatedBackground"; // 👈 Import new component
 import { 
   Search, Store as StoreIcon, ArrowRight, ShoppingBag, 
   Sparkles, TrendingUp, LayoutGrid, LogIn 
@@ -16,24 +18,13 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans relative overflow-x-hidden">
       
-      {/* ✨ NEW: Modern Background Layer */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* 1. Subtle Grid Pattern */}
-        <div 
-          className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"
-          style={{ maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)' }}
-        />
-        
-        {/* 2. Ambient Aurora Gradients (Softer & Larger) */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-200/40 blur-[100px] animate-pulse" />
-        <div className="absolute top-[10%] right-[-5%] w-[40%] h-[50%] rounded-full bg-indigo-200/40 blur-[100px] animate-pulse delay-1000" />
-        <div className="absolute top-[40%] left-[20%] w-[60%] h-[40%] rounded-full bg-blue-100/40 blur-[120px] opacity-60" />
-      </div>
+      {/* ✨ NEW: Interactive Background Component */}
+      <AnimatedBackground />
 
       {/* 1. Transparent Sticky Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/60">
+      <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
@@ -57,11 +48,11 @@ export default async function Home() {
       {/* 2. Hero Section */}
       <section className="relative pt-24 pb-32 z-10">
         <div className="max-w-4xl mx-auto text-center px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-indigo-100 text-indigo-700 font-bold text-xs uppercase tracking-wide mb-8 shadow-sm backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-indigo-100 text-indigo-700 font-bold text-xs uppercase tracking-wide mb-8 shadow-sm backdrop-blur-sm">
             <Sparkles size={14} /> The Digital Mall of Ethiopia
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-8 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-8 tracking-tight drop-shadow-sm">
             Discover local <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">creators</span> <br/>
             & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">businesses</span>.
           </h1>
@@ -78,10 +69,10 @@ export default async function Home() {
                 <input 
                   type="text" 
                   placeholder="Search stores..." 
-                  className="w-full pl-11 pr-4 py-4 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-lg"
+                  className="w-full pl-11 pr-4 py-4 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-md shadow-sm focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-lg"
                 />
              </div>
-             <Link href="#browse" className="w-full sm:w-auto btn-primary py-4 px-8 text-lg shadow-xl shadow-indigo-200">
+             <Link href="#browse" className="w-full sm:w-auto btn-primary py-4 px-8 text-lg shadow-xl shadow-indigo-200/50 hover:shadow-indigo-200 transition-all">
                Explore <ArrowRight size={20} />
              </Link>
           </div>
@@ -89,7 +80,7 @@ export default async function Home() {
       </section>
 
       {/* 3. Stats / Trust Banner */}
-      <div className="bg-white/50 backdrop-blur-sm border-y border-slate-100 z-10">
+      <div className="relative z-10 bg-white/40 backdrop-blur-md border-y border-white/50">
         <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
            {[
              { label: "Active Stores", value: stores.length + "+", icon: StoreIcon },
@@ -98,11 +89,11 @@ export default async function Home() {
              { label: "Growth", value: "120%", icon: TrendingUp },
            ].map((stat, i) => (
              <div key={i} className="flex flex-col items-center text-center group">
-               <div className="mb-3 p-3 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform">
+               <div className="mb-3 p-3 bg-white shadow-sm border border-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 group-hover:shadow-md transition-all">
                  <stat.icon size={24} />
                </div>
                <h3 className="text-3xl font-bold text-slate-900">{stat.value}</h3>
-               <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide">{stat.label}</p>
+               <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{stat.label}</p>
              </div>
            ))}
         </div>
@@ -117,7 +108,7 @@ export default async function Home() {
         </div>
 
         {stores.length === 0 ? (
-          <div className="bg-white rounded-3xl p-16 text-center border-2 border-dashed border-slate-200">
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-16 text-center border-2 border-dashed border-slate-200">
             <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
               <StoreIcon size={40} />
             </div>
@@ -178,7 +169,7 @@ export default async function Home() {
       </main>
 
       {/* 5. Footer */}
-      <footer className="bg-white border-t border-slate-200 py-12 z-10">
+      <footer className="bg-white/60 backdrop-blur-md border-t border-slate-200 py-12 z-10">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">

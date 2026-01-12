@@ -28,18 +28,18 @@ export default async function StoreLayout({
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+      {/* 👇 REMOVED 'bg-slate-50' so the global animated background shows through */}
+      <div className="min-h-screen font-sans flex flex-col relative">
         
-        {/* 👇 FIX: Pass specific props (storeName & slug) instead of the object */}
         <StoreNavbar storeName={store.name} slug={store.slug} />
 
-        {/* Removed 'container' classes so the Hero Banner can be full-width */}
         <main className="flex-1">
           {children}
         </main>
 
-        <footer className="border-t border-slate-200 py-8 text-center text-slate-500 bg-white">
-          <p>© {new Date().getFullYear()} {store.name}. Powered by StoreVille.</p>
+        {/* Footer: Glass effect instead of solid white */}
+        <footer className="border-t border-white/20 py-8 text-center text-slate-500 bg-white/10 backdrop-blur-md">
+          <p>© {new Date().getFullYear()} {store.name}. Powered by ShopVille.</p>
         </footer>
       </div>
     </CartProvider>

@@ -47,7 +47,7 @@ export default function RegisterPage() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-100/50 text-indigo-600 mb-6 backdrop-blur-md border border-indigo-200/30">
               <Sparkles size={28} />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Join StoreVille</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Join ShopVille</h1>
             <p className="text-slate-500 mt-2">Start your e-commerce journey today</p>
           </div>
 

@@ -75,12 +75,12 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
   if (cart.length === 0 && !showSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-white/60 backdrop-blur-xl p-10 rounded-3xl border border-white/40 text-center text-slate-900 font-bold shadow-xl">
+        <div className="bg-white/40 backdrop-blur-2xl p-10 rounded-3xl border border-white/40 text-center text-slate-900 font-bold shadow-xl animate-[blob_0.5s_ease-out]">
            <ShoppingBag size={48} className="mx-auto mb-4 text-slate-400 opacity-50"/>
            <p className="text-xl">Your cart is empty.</p>
            <button 
              onClick={() => router.back()} 
-             className="mt-6 btn-primary bg-indigo-600/90 backdrop-blur-md"
+             className="mt-6 btn-primary bg-indigo-600/90 backdrop-blur-md hover:bg-indigo-700"
            >
              Go Shopping
            </button>
@@ -90,18 +90,14 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 relative">
+    <div className="min-h-screen pt-32 pb-12 px-4 relative">
       
       {/* ✨ SUCCESS GLASS POP-UP MODAL ✨ */}
       {showSuccess && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-          {/* Dark Overlay - Keeps focus on modal */}
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md transition-opacity" />
 
-          {/* Glass Card - Updated: Whiter & No Green Line */}
-          <div className="relative bg-white/90 backdrop-blur-2xl p-8 sm:p-12 rounded-[2.5rem] shadow-2xl border border-white/50 max-w-md w-full text-center animate-[blob_0.4s_ease-out]">
-            
-            {/* Green Icon */}
+          <div className="relative bg-white/90 backdrop-blur-3xl p-8 sm:p-12 rounded-[2.5rem] shadow-2xl border border-white/60 max-w-md w-full text-center animate-[blob_0.4s_ease-out]">
             <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-200 animate-bounce">
               <CheckCircle size={48} strokeWidth={3} />
             </div>
@@ -119,15 +115,14 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                 <ShoppingBag size={20} /> Continue Shopping
               </Link>
               
-              <Link 
+              {/* <Link 
                 href="/dashboard" 
                 className="block text-sm text-slate-400 hover:text-indigo-600 font-bold transition py-2"
               >
                 View Order History
-              </Link>
+              </Link> */}
             </div>
 
-            {/* Close Button (Top Right) */}
             <button 
               onClick={() => { setShowSuccess(false); router.push(`/store/${urlParams.slug}`); }}
               className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
@@ -140,11 +135,11 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
 
       {/* Main Checkout Content */}
       <div className={`max-w-4xl mx-auto transition-all duration-500 ${showSuccess ? 'blur-md scale-95 opacity-50 pointer-events-none' : ''}`}>
-        <button onClick={() => router.back()} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 transition font-medium">
+        <button onClick={() => router.back()} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 transition font-medium bg-white/30 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
           <ArrowLeft size={18} className="mr-2" /> Back to Cart
         </button>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold text-slate-900 mb-8 flex items-center gap-3">
           <CheckCircle className="text-green-500" /> Checkout
         </h1>
 
@@ -153,35 +148,35 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
           {/* Left Column: Shipping Form */}
           <div className="md:col-span-2 space-y-6">
             
-            {/* Shipping Info Card - Updated to Lighter Glass (bg-white/60) */}
-            <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/50">
+            {/* Shipping Info Card */}
+            <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-sm border border-white/50">
               <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <MapPin size={20} className="text-indigo-600"/> Shipping Information
+                <MapPin size={24} className="text-indigo-600"/> Shipping Information
               </h2>
-              <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
+              <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Full Name</label>
                   <div className="relative">
-                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                    <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"/>
                     <input 
                       required
                       type="text" 
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none backdrop-blur-sm transition-all placeholder:text-slate-400"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none backdrop-blur-sm transition-all placeholder:text-slate-400 font-medium"
                       placeholder="Abebe Bikila"
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Phone Number</label>
                     <div className="relative">
-                      <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                      <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"/>
                       <input 
                         required
                         type="tel" 
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none backdrop-blur-sm transition-all placeholder:text-slate-400"
+                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none backdrop-blur-sm transition-all placeholder:text-slate-400 font-medium"
                         placeholder="0911..."
                         value={formData.phone}
                         onChange={e => setFormData({...formData, phone: e.target.value})}
@@ -189,9 +184,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">City</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">City</label>
                     <select 
-                      className="w-full px-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none backdrop-blur-sm appearance-none"
+                      className="w-full px-4 py-3.5 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none backdrop-blur-sm appearance-none font-medium"
                       value={formData.city}
                       onChange={e => setFormData({...formData, city: e.target.value})}
                     >
@@ -204,11 +199,11 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Delivery Address</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Delivery Address</label>
                   <textarea 
                     required
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none resize-none backdrop-blur-sm placeholder:text-slate-400"
+                    className="w-full px-4 py-3.5 rounded-xl border border-white/40 bg-white/50 text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none resize-none backdrop-blur-sm placeholder:text-slate-400 font-medium"
                     placeholder="Sub-city, Woreda, House No. or nearby landmark..."
                     value={formData.address}
                     onChange={e => setFormData({...formData, address: e.target.value})}
@@ -217,18 +212,18 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
               </form>
             </div>
 
-            {/* Payment Method Card - Updated to Lighter Glass (bg-white/60) */}
-            <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/50">
-              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <CreditCard size={20} className="text-indigo-600"/> Payment Method
+            {/* Payment Method Card */}
+            <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-sm border border-white/50">
+              <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <CreditCard size={24} className="text-indigo-600"/> Payment Method
               </h2>
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border border-indigo-500/30 bg-indigo-50/60 rounded-xl cursor-pointer backdrop-blur-sm shadow-sm">
+              <div className="space-y-4">
+                <label className="flex items-center gap-4 p-5 border border-indigo-500/30 bg-indigo-50/60 rounded-2xl cursor-pointer backdrop-blur-sm shadow-sm transition-all hover:bg-indigo-100/50">
                   <input type="radio" name="payment" defaultChecked className="w-5 h-5 text-indigo-600 accent-indigo-600" />
-                  <span className="font-bold text-slate-900">Cash on Delivery</span>
-                  <Truck size={18} className="ml-auto text-indigo-600"/>
+                  <span className="font-bold text-slate-900 text-lg">Cash on Delivery</span>
+                  <Truck size={20} className="ml-auto text-indigo-600"/>
                 </label>
-                <label className="flex items-center gap-3 p-4 border border-white/30 rounded-xl cursor-not-allowed opacity-60 bg-white/40 backdrop-blur-sm">
+                <label className="flex items-center gap-4 p-5 border border-white/30 rounded-2xl cursor-not-allowed opacity-60 bg-white/40 backdrop-blur-sm">
                   <input type="radio" name="payment" disabled className="w-5 h-5" />
                   <span className="font-medium text-slate-500">Telebirr (Coming Soon)</span>
                 </label>
@@ -239,15 +234,15 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
 
           {/* Right Column: Order Summary */}
           <div>
-            <div className="bg-white/60 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-white/50 sticky top-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Order Summary</h2>
+            <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-lg shadow-indigo-500/5 border border-white/50 sticky top-32">
+              <h2 className="text-xl font-bold text-slate-900 mb-6">Order Summary</h2>
               
-              <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 mb-8 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                 {cart.map((item) => (
                   <div key={item.product.id} className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-3">
-                      <span className="bg-white/50 text-slate-700 px-2 py-1 rounded-lg text-xs font-bold border border-white/40 backdrop-blur-sm">{item.quantity}x</span>
-                      <span className="text-slate-700 truncate max-w-[120px] font-medium">{item.product.name}</span>
+                      <span className="bg-white/50 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-white/40 backdrop-blur-sm">{item.quantity}x</span>
+                      <span className="text-slate-700 truncate max-w-[120px] font-semibold">{item.product.name}</span>
                     </div>
                     <span className="font-bold text-slate-900">
                       {(parseFloat(item.product.price) * item.quantity).toFixed(2)}
@@ -256,18 +251,18 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                 ))}
               </div>
 
-              <div className="border-t border-slate-200/50 pt-4 space-y-2 mb-6">
-                <div className="flex justify-between text-slate-600">
+              <div className="border-t border-slate-200/50 pt-5 space-y-3 mb-8">
+                <div className="flex justify-between text-slate-600 font-medium">
                   <span>Subtotal</span>
                   <span>{total.toFixed(2)} ETB</span>
                 </div>
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-slate-600 font-medium">
                   <span>Delivery Fee</span>
                   <span>50.00 ETB</span>
                 </div>
-                <div className="flex justify-between items-center text-lg font-bold text-slate-900 pt-2 border-t border-dashed border-slate-300/50">
+                <div className="flex justify-between items-center text-xl font-extrabold text-slate-900 pt-3 border-t border-dashed border-slate-300/50">
                   <span>Total</span>
-                  <span className="text-indigo-600">{(total + 50).toFixed(2)} ETB</span>
+                  <span className="text-indigo-600">{(total + 50).toFixed(2)} <span className="text-sm font-semibold">ETB</span></span>
                 </div>
               </div>
 
@@ -275,12 +270,12 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
                 type="submit"
                 form="checkout-form"
                 disabled={isProcessing}
-                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 transition-all"
+                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 transition-all transform hover:-translate-y-1 font-bold rounded-xl"
               >
                 {isProcessing ? "Processing..." : "Place Order"}
               </button>
               
-              <p className="text-xs text-center text-slate-400 mt-4">
+              <p className="text-xs text-center text-slate-400 mt-5 font-medium">
                 By placing this order, you agree to our Terms of Service.
               </p>
             </div>

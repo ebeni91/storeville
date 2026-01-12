@@ -44,7 +44,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
         <div className="p-8 sm:p-10">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600/90 text-white mb-6 shadow-lg shadow-indigo-500/30 transform -rotate-6 backdrop-blur-md">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600/90 text-white mb-6 shadow-lg shadow-indigo-500/30 transform backdrop-blur-md">
               <Store size={28} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
@@ -90,7 +90,7 @@ export default function LoginPage() {
         </div>
         <div className="px-8 py-6 bg-white/5 border-t border-white/10 text-center backdrop-blur-sm">
           <p className="text-slate-600 text-sm">
-            New to StoreVille?{" "}
+            New to ShopVille?{" "}
             <Link href="/register" className="text-indigo-600 font-bold hover:underline">
               Create Account
             </Link>

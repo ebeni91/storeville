@@ -27,7 +27,7 @@ export default async function Home() {
               <StoreIcon size={24} />
             </div>
             <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
-              StoreVille
+              ShopVille
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -49,12 +49,12 @@ export default async function Home() {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-8 tracking-tight drop-shadow-sm">
-            Discover local <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">creators</span> <br/>
-            & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">businesses</span>.
+            Discover local <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">businesses</span> <br/>
+            & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">shops</span>.
           </h1>
           
           <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Shop directly from your favorite brands or start your own digital store in seconds. No coding required.
+            Shop directly from your favorite brands or start your own digital store in seconds.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -174,10 +174,10 @@ export default async function Home() {
                  <div className="w-8 h-8 bg-indigo-600/90 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 backdrop-blur-md">
                   <StoreIcon size={18} />
                 </div>
-                <span className="text-xl font-extrabold text-slate-900 tracking-tight">StoreVille</span>
+                <span className="text-xl font-extrabold text-slate-900 tracking-tight">ShopVille</span>
               </div>
               <p className="text-slate-500 text-sm leading-relaxed">
-                Empowering Ethiopian creators and businesses with a world-class digital storefront. Built for the future of commerce.
+                Empowering Ethiopian businesses  and shops with a world-class digital storefront. Built for the future of commerce.
               </p>
             </div>
 
@@ -224,7 +224,7 @@ export default async function Home() {
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-slate-400 text-sm font-medium">
-              © {new Date().getFullYear()} StoreVille Inc. All rights reserved.
+              © {new Date().getFullYear()} ShopVille Inc. All rights reserved.
             </p>
             
             <div className="flex items-center gap-4">

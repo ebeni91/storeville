@@ -27,13 +27,13 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-sm border border-white/20 text-center max-w-md w-full">
-          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400 backdrop-blur-sm">
+        <div className="bg-white/20 backdrop-blur-2xl p-10 rounded-3xl shadow-xl border border-white/30 text-center max-w-md w-full animate-[blob_0.5s_ease-out]">
+          <div className="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-500 backdrop-blur-sm border border-white/20">
             <ShoppingBag size={40} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Your cart is empty</h1>
-          <p className="text-slate-500 mb-8">Looks like you haven't added anything yet.</p>
-          <button onClick={() => router.back()} className="btn-primary w-full bg-indigo-600/90 hover:bg-indigo-700/90 backdrop-blur-md">
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Your cart is empty</h1>
+          <p className="text-slate-600 mb-8">Looks like you haven't added anything yet.</p>
+          <button onClick={() => router.back()} className="btn-primary w-full bg-indigo-600/90 hover:bg-indigo-700/90 backdrop-blur-md flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20">
             <ArrowLeft size={20} /> Continue Shopping
           </button>
         </div>
@@ -42,9 +42,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-32 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold text-slate-900 mb-8 flex items-center gap-3 drop-shadow-sm">
           <ShoppingBag className="text-indigo-600" /> Shopping Cart
         </h1>
 
@@ -54,10 +54,10 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => (
               // Glass Card
-              <div key={item.product.id} className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex gap-4 sm:gap-6 items-center shadow-sm">
+              <div key={item.product.id} className="bg-white/40 backdrop-blur-xl border border-white/40 rounded-3xl p-4 flex gap-4 sm:gap-6 items-center shadow-sm hover:shadow-lg transition-all duration-300">
                 
                 {/* Image */}
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white/20 rounded-xl overflow-hidden flex-shrink-0 border border-white/20">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white/50 rounded-2xl overflow-hidden flex-shrink-0 border border-white/30">
                   {item.product.image ? (
                     <img 
                       src={getPublicImageUrl(item.product.image) || ""} 
@@ -72,43 +72,43 @@ export default function CartPage() {
                 {/* Details */}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg text-slate-900 truncate">{item.product.name}</h3>
-                  <p className="text-indigo-600 font-bold mb-3">{item.product.price} ETB</p>
+                  <p className="text-indigo-600 font-extrabold mb-3 text-lg">{item.product.price} <span className="text-sm">ETB</span></p>
                   
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center border border-white/20 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm">
+                    <div className="flex items-center border border-white/30 rounded-xl overflow-hidden bg-white/30 backdrop-blur-sm">
                       <button 
                         onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
-                        className="p-2 hover:bg-white/20 transition text-slate-600"
+                        className="p-2.5 hover:bg-white/40 transition text-slate-700"
                         disabled={item.quantity <= 1}
                       >
-                        <Minus size={14} />
+                        <Minus size={16} />
                       </button>
-                      <span className="w-10 text-center font-semibold text-sm text-slate-900">{item.quantity}</span>
+                      <span className="w-12 text-center font-bold text-slate-900">{item.quantity}</span>
                       <button 
                          onClick={() => updateQuantity(item.product.id, Math.min(item.product.stock, item.quantity + 1))}
-                         className="p-2 hover:bg-white/20 transition text-slate-600"
+                         className="p-2.5 hover:bg-white/40 transition text-slate-700"
                          disabled={item.quantity >= item.product.stock}
                       >
-                        <Plus size={14} />
+                        <Plus size={16} />
                       </button>
                     </div>
                     <button 
                       onClick={() => removeFromCart(item.product.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 transition rounded-lg hover:bg-red-500/10"
+                      className="p-2.5 text-slate-400 hover:text-red-600 transition rounded-xl hover:bg-red-500/10"
                       title="Remove item"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={20} />
                     </button>
                   </div>
                 </div>
 
                 {/* Line Total */}
-                <div className="hidden sm:block text-right">
-                  <p className="font-bold text-slate-900 text-lg">
+                <div className="hidden sm:block text-right pr-4">
+                  <p className="font-bold text-slate-900 text-xl">
                     {(parseFloat(item.product.price) * item.quantity).toFixed(2)}
                   </p>
-                  <p className="text-xs text-slate-500">ETB</p>
+                  <p className="text-xs text-slate-500 font-medium">ETB</p>
                 </div>
               </div>
             ))}
@@ -116,33 +116,33 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 sticky top-8 shadow-sm">
+            <div className="bg-white/60 backdrop-blur-2xl border border-white/50 rounded-3xl p-8 sticky top-32 shadow-lg shadow-indigo-500/5">
               <h2 className="text-xl font-bold text-slate-900 mb-6">Order Summary</h2>
               
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-slate-600">
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between text-slate-600 font-medium">
                   <span>Subtotal</span>
                   <span>{total.toFixed(2)} ETB</span>
                 </div>
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-slate-600 font-medium">
                   <span>Taxes (0%)</span>
                   <span>0.00 ETB</span>
                 </div>
-                <div className="border-t border-white/20 pt-4 flex justify-between items-center">
+                <div className="border-t border-slate-200/50 pt-4 flex justify-between items-center">
                   <span className="font-bold text-lg text-slate-900">Total</span>
-                  <span className="font-extrabold text-2xl text-indigo-600">{total.toFixed(2)} ETB</span>
+                  <span className="font-extrabold text-3xl text-indigo-600">{total.toFixed(2)} <span className="text-sm text-indigo-400">ETB</span></span>
                 </div>
               </div>
 
               <button 
                 onClick={handleCheckout}
-                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600/90 hover:bg-indigo-700/90 backdrop-blur-md"
+                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600/90 hover:bg-indigo-700/90 backdrop-blur-md flex items-center justify-center gap-2 transition-transform hover:-translate-y-1"
               >
                 Proceed to Checkout <ArrowRight size={20} />
               </button>
               
-              <p className="text-xs text-center text-slate-400 mt-4 flex items-center justify-center gap-2">
-                <CreditCard size={14}/> Secure Checkout
+              <p className="text-xs text-center text-slate-400 mt-5 flex items-center justify-center gap-2 font-medium">
+                <CreditCard size={14}/> Secure Encrypted Checkout
               </p>
             </div>
           </div>

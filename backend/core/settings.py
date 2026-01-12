@@ -169,11 +169,11 @@ REST_FRAMEWORK = {
     ]
 }
 
-# 🎨 Jazzmin Admin Theme Configuration
+# Jazzmin Admin Theme Configuration
 JAZZMIN_SETTINGS = {
     "site_title": "StoreVille Admin",
     "site_header": "StoreVille",
-    "site_brand": "StoreVille HQ",
+    "site_brand": "StoreVille",
     "welcome_sign": "Welcome back, Admin!",
     "copyright": "StoreVille Inc",
     "search_model": "users.User",

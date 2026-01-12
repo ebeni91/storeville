@@ -68,7 +68,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
 
         <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-8">
           <div className="flex items-end gap-6">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl shadow-2xl p-1 rotate-3 flex-shrink-0 transition-transform hover:rotate-0 duration-300">
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl shadow-2xl p-1 flex-shrink-0 transition-transform hover:rotate-0 duration-300">
               <div className="w-full h-full bg-slate-50 rounded-2xl flex items-center justify-center text-4xl font-bold text-slate-400 uppercase border border-slate-100">
                 {store.name.substring(0, 2)}
               </div>

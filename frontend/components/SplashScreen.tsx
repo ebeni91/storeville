@@ -15,12 +15,12 @@ export default function SplashScreen() {
     // Start exit fade-out
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 2200);
+    }, 3200);
 
     // Unmount component
     const cleanup = setTimeout(() => {
       setShouldRender(false);
-    }, 3000);
+    }, 3200);
 
     return () => {
       clearTimeout(timer);
@@ -56,8 +56,8 @@ export default function SplashScreen() {
           startAnimation ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
         }`}
       >
-        <h1 className="text-5xl font-extrabold tracking-tight mb-3 text-slate-900 drop-shadow-sm">
-          StoreVille
+        <h1 className="text-5xl font-extrabold tracking-tight mb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+          ShopVille
         </h1>
         <p className="text-slate-600 text-lg font-medium tracking-wide">
           The Digital Mall of Ethiopia

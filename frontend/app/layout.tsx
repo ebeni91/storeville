@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import SplashScreen from "../components/SplashScreen"; 
 import AnimatedBackground from "../components/AnimatedBackground"; // 👈 Import here
+import ChatSupport from "../components/ChatSupport";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+        <ChatSupport />
       </body>
     </html>
   );

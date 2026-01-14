@@ -1,4 +1,3 @@
-import re
 from django.db.models import Q
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
@@ -6,29 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Store, Product
 from .serializers import StoreSerializer, ProductSerializer
+from .utils import parse_search_query # 👈 Now correctly importing from utils
 
 # ==========================================
-# 1. HELPER FUNCTION (For Chatbot)
-# ==========================================
-def parse_search_query(query):
-    """
-    Extracts price constraints and cleans the search query.
-    Returns: (cleaned_query, max_price)
-    Example: "cheap laptop under 50000" -> ("laptop", 50000)
-    """
-    price_pattern = r'(?:under|less than|below|cheaper than)\s+(\d+)'
-    match = re.search(price_pattern, query, re.IGNORECASE)
-    
-    max_price = None
-    if match:
-        max_price = float(match.group(1))
-        query = re.sub(price_pattern, '', query, flags=re.IGNORECASE)
-    
-    query = re.sub(r'\b(i want|looking for|buy|need|a|an|the)\b', '', query, flags=re.IGNORECASE).strip()
-    return query, max_price
-
-# ==========================================
-# 2. ORIGINAL VIEWSETS (Restored)
+# 1. STORE VIEWSET
 # ==========================================
 class StoreViewSet(viewsets.ModelViewSet): 
     serializer_class = StoreSerializer
@@ -53,6 +33,9 @@ class StoreViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response({}) 
 
+# ==========================================
+# 2. PRODUCT VIEWSET
+# ==========================================
 class ProductViewSet(viewsets.ModelViewSet): 
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -68,21 +51,27 @@ class ProductViewSet(viewsets.ModelViewSet):
             raise Exception("You must have a store to add products")
 
 # ==========================================
-# 3. NEW CHATBOT SEARCH VIEW (The missing piece)
+# 3. SMART CHATBOT SEARCH VIEW
 # ==========================================
 class ChatProductSearchView(APIView):
     """
-    AI-lite search that understands price limits and keywords.
+    AI-lite search that understands price limits, categories, and keywords.
     """
     def get(self, request):
         user_query = request.query_params.get('q', '')
         if not user_query:
             return Response([])
 
-        keyword, max_price = parse_search_query(user_query)
+        # 1. Parse intent (Now returns 3 values)
+        keyword, max_price, category = parse_search_query(user_query)
 
         products = Product.objects.all()
         
+        # 2. Filter by Category (if detected)
+        if category:
+            products = products.filter(store__category=category)
+
+        # 3. Filter by Keyword (if any remains)
         if keyword:
             products = products.filter(
                 Q(name__icontains=keyword) | 
@@ -90,9 +79,11 @@ class ChatProductSearchView(APIView):
                 Q(store__name__icontains=keyword)
             )
         
+        # 4. Filter by Price
         if max_price:
             products = products.filter(price__lte=max_price)
 
+        # 5. Sort & Limit
         if 'cheap' in user_query.lower():
             products = products.order_by('price')[:5]
         else:
@@ -100,7 +91,24 @@ class ChatProductSearchView(APIView):
 
         serializer = ProductSerializer(products, many=True, context={'request': request})
         
+        # 6. Build a smart response text
+        msg = f"I found {len(products)} "
+        if category:
+            msg += f"{category} "
+        msg += "items"
+        
+        if keyword:
+            msg += f" matching '{keyword}'"
+        
+        if max_price:
+            msg += f" under {max_price} ETB"
+        
+        msg += "."
+
+        if len(products) == 0:
+             msg = "I couldn't find any products matching that criteria. Try browsing our categories directly!"
+
         return Response({
-            "response_text": f"I found {len(products)} items for '{keyword}'" + (f" under {max_price} ETB." if max_price else "."),
+            "response_text": msg,
             "products": serializer.data
         })

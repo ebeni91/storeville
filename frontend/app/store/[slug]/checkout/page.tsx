@@ -6,7 +6,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { getBaseUrl } from "../../../../lib/api";
 import { 
   ArrowLeft, CreditCard, MapPin, Phone, User, CheckCircle, 
-  Truck, ShoppingBag, X 
+  Truck, ShoppingBag, X, Copy 
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -24,7 +24,10 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
     city: "Addis Ababa"
   });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false); 
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  // 👇 State to store the Reference Code returned by the API
+  const [orderReference, setOrderReference] = useState(""); 
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,12 +60,14 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json(); // 👈 Parse response
+
       if (res.ok) {
         clearCart();
+        setOrderReference(data.order_reference); // 👈 Save the reference code
         setShowSuccess(true);
       } else {
-        const errorData = await res.json();
-        alert(`Checkout Failed: ${JSON.stringify(errorData)}`);
+        alert(`Checkout Failed: ${JSON.stringify(data)}`);
       }
     } catch (error) {
       console.error(error);
@@ -72,10 +77,15 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
     }
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(orderReference);
+    alert("Copied to clipboard!");
+  };
+
   if (cart.length === 0 && !showSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-white/40 backdrop-blur-2xl p-10 rounded-3xl border border-white/40 text-center text-slate-900 font-bold shadow-xl animate-[blob_0.5s_ease-out]">
+        <div className="bg-white/40 backdrop-blur-2xl p-10 rounded-3xl border border-white/40 text-center text-slate-900 font-bold shadow-xl">
            <ShoppingBag size={48} className="mx-auto mb-4 text-slate-400 opacity-50"/>
            <p className="text-xl">Your cart is empty.</p>
            <button 
@@ -95,32 +105,43 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
       {/* ✨ SUCCESS GLASS POP-UP MODAL ✨ */}
       {showSuccess && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md transition-opacity" />
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" />
 
           <div className="relative bg-white/90 backdrop-blur-3xl p-8 sm:p-12 rounded-[2.5rem] shadow-2xl border border-white/60 max-w-md w-full text-center animate-[blob_0.4s_ease-out]">
             <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-200 animate-bounce">
               <CheckCircle size={48} strokeWidth={3} />
             </div>
             
-            <h2 className="text-3xl font-extrabold text-slate-900 mb-3 drop-shadow-sm">Order Confirmed!</h2>
-            <p className="text-slate-500 mb-8 text-lg font-medium leading-relaxed">
-              Thank you for your purchase. Your order has been placed successfully.
+            <h2 className="text-3xl font-extrabold text-slate-900 mb-2 drop-shadow-sm">Order Confirmed!</h2>
+            <p className="text-slate-500 mb-6 text-sm font-medium leading-relaxed">
+              Your order has been successfully placed.
             </p>
+
+            {/* 👇 Reference Code Display */}
+            <div className="bg-slate-100 p-4 rounded-xl mb-8 flex items-center justify-between border border-slate-200">
+              <div className="text-left">
+                <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Order Reference</p>
+                <p className="text-xl font-mono font-bold text-indigo-600">{orderReference}</p>
+              </div>
+              <button onClick={copyToClipboard} className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-indigo-600">
+                <Copy size={20} />
+              </button>
+            </div>
 
             <div className="space-y-3">
               <Link 
-                href={`/store/${urlParams.slug}`} 
+                href={`/track-order?ref=${orderReference}`} 
                 className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all"
               >
-                <ShoppingBag size={20} /> Continue Shopping
+                <Truck size={20} /> Track Order Status
               </Link>
               
-              {/* <Link 
-                href="/dashboard" 
+              <Link 
+                href={`/store/${urlParams.slug}`} 
                 className="block text-sm text-slate-400 hover:text-indigo-600 font-bold transition py-2"
               >
-                View Order History
-              </Link> */}
+                Continue Shopping
+              </Link>
             </div>
 
             <button 
@@ -133,7 +154,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
         </div>
       )}
 
-      {/* Main Checkout Content */}
+      {/* Main Checkout Content (Blurred when success modal is open) */}
       <div className={`max-w-4xl mx-auto transition-all duration-500 ${showSuccess ? 'blur-md scale-95 opacity-50 pointer-events-none' : ''}`}>
         <button onClick={() => router.back()} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 transition font-medium bg-white/30 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
           <ArrowLeft size={18} className="mr-2" /> Back to Cart
@@ -148,7 +169,6 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
           {/* Left Column: Shipping Form */}
           <div className="md:col-span-2 space-y-6">
             
-            {/* Shipping Info Card */}
             <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-sm border border-white/50">
               <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                 <MapPin size={24} className="text-indigo-600"/> Shipping Information
@@ -212,7 +232,6 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
               </form>
             </div>
 
-            {/* Payment Method Card */}
             <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-sm border border-white/50">
               <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                 <CreditCard size={24} className="text-indigo-600"/> Payment Method
@@ -232,53 +251,50 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
 
           </div>
 
-          {/* Right Column: Order Summary */}
-          <div>
-            <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-lg shadow-indigo-500/5 border border-white/50 sticky top-32">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Order Summary</h2>
-              
-              <div className="space-y-4 mb-8 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                {cart.map((item) => (
-                  <div key={item.product.id} className="flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="bg-white/50 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-white/40 backdrop-blur-sm">{item.quantity}x</span>
-                      <span className="text-slate-700 truncate max-w-[120px] font-semibold">{item.product.name}</span>
-                    </div>
-                    <span className="font-bold text-slate-900">
-                      {(parseFloat(item.product.price) * item.quantity).toFixed(2)}
-                    </span>
+          <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-lg shadow-indigo-500/5 border border-white/50 sticky top-32">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Order Summary</h2>
+            
+            <div className="space-y-4 mb-8 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              {cart.map((item) => (
+                <div key={item.product.id} className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="bg-white/50 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-white/40 backdrop-blur-sm">{item.quantity}x</span>
+                    <span className="text-slate-700 truncate max-w-[120px] font-semibold">{item.product.name}</span>
                   </div>
-                ))}
-              </div>
-
-              <div className="border-t border-slate-200/50 pt-5 space-y-3 mb-8">
-                <div className="flex justify-between text-slate-600 font-medium">
-                  <span>Subtotal</span>
-                  <span>{total.toFixed(2)} ETB</span>
+                  <span className="font-bold text-slate-900">
+                    {(parseFloat(item.product.price) * item.quantity).toFixed(2)}
+                  </span>
                 </div>
-                <div className="flex justify-between text-slate-600 font-medium">
-                  <span>Delivery Fee</span>
-                  <span>50.00 ETB</span>
-                </div>
-                <div className="flex justify-between items-center text-xl font-extrabold text-slate-900 pt-3 border-t border-dashed border-slate-300/50">
-                  <span>Total</span>
-                  <span className="text-indigo-600">{(total + 50).toFixed(2)} <span className="text-sm font-semibold">ETB</span></span>
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                form="checkout-form"
-                disabled={isProcessing}
-                className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 transition-all transform hover:-translate-y-1 font-bold rounded-xl"
-              >
-                {isProcessing ? "Processing..." : "Place Order"}
-              </button>
-              
-              <p className="text-xs text-center text-slate-400 mt-5 font-medium">
-                By placing this order, you agree to our Terms of Service.
-              </p>
+              ))}
             </div>
+
+            <div className="border-t border-slate-200/50 pt-5 space-y-3 mb-8">
+              <div className="flex justify-between text-slate-600 font-medium">
+                <span>Subtotal</span>
+                <span>{total.toFixed(2)} ETB</span>
+              </div>
+              <div className="flex justify-between text-slate-600 font-medium">
+                <span>Delivery Fee</span>
+                <span>50.00 ETB</span>
+              </div>
+              <div className="flex justify-between items-center text-xl font-extrabold text-slate-900 pt-3 border-t border-dashed border-slate-300/50">
+                <span>Total</span>
+                <span className="text-indigo-600">{(total + 50).toFixed(2)} <span className="text-sm font-semibold">ETB</span></span>
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              form="checkout-form"
+              disabled={isProcessing}
+              className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700 transition-all transform hover:-translate-y-1 font-bold rounded-xl"
+            >
+              {isProcessing ? "Processing..." : "Place Order"}
+            </button>
+            
+            <p className="text-xs text-center text-slate-400 mt-5 font-medium">
+              By placing this order, you agree to our Terms of Service.
+            </p>
           </div>
 
         </div>

@@ -4,7 +4,7 @@ import { Store } from "../types";
 import { 
   Search, Store as StoreIcon, ArrowRight, ShoppingBag, 
   Sparkles, TrendingUp, LayoutGrid, LogIn, 
-  Twitter, Facebook, Instagram, Linkedin, Mail, MapPin, Phone
+  Twitter, Facebook, Instagram, Linkedin, Truck // 👈 Added Truck icon
 } from "lucide-react";
 
 export default async function Home() {
@@ -27,10 +27,18 @@ export default async function Home() {
               <StoreIcon size={24} />
             </div>
             <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
-              ShopVille
+              StoreVille
             </span>
           </div>
           <div className="flex items-center gap-4">
+            
+            {/* 👇 NEW: Track Order Link */}
+            <Link href="/track-order" className="hidden sm:flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-medium transition">
+              <Truck size={18} /> Track Order
+            </Link>
+
+            <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
+
             <Link href="/login" className="hidden sm:flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-medium transition">
               <LogIn size={18} /> Seller Login
             </Link>
@@ -49,12 +57,12 @@ export default async function Home() {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-8 tracking-tight drop-shadow-sm">
-            Discover local <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">businesses</span> <br/>
-            & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">shops</span>.
+            Discover local <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">creators</span> <br/>
+            & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">businesses</span>.
           </h1>
           
           <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Shop directly from your favorite brands or start your own digital store in seconds.
+            Shop directly from your favorite brands or start your own digital store in seconds. No coding required.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -174,10 +182,10 @@ export default async function Home() {
                  <div className="w-8 h-8 bg-indigo-600/90 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 backdrop-blur-md">
                   <StoreIcon size={18} />
                 </div>
-                <span className="text-xl font-extrabold text-slate-900 tracking-tight">ShopVille</span>
+                <span className="text-xl font-extrabold text-slate-900 tracking-tight">StoreVille</span>
               </div>
               <p className="text-slate-500 text-sm leading-relaxed">
-                Empowering Ethiopian businesses  and shops with a world-class digital storefront. Built for the future of commerce.
+                Empowering Ethiopian creators and businesses with a world-class digital storefront. Built for the future of commerce.
               </p>
             </div>
 
@@ -196,10 +204,11 @@ export default async function Home() {
             <div>
               <h3 className="font-bold text-slate-900 mb-4">Support</h3>
               <ul className="space-y-3 text-sm text-slate-500">
+                {/* 👇 NEW: Track Order Link in Footer */}
+                <li><Link href="/track-order" className="hover:text-indigo-600 transition-colors">Track My Order</Link></li>
                 <li><Link href="#" className="hover:text-indigo-600 transition-colors">Help Center</Link></li>
                 <li><Link href="#" className="hover:text-indigo-600 transition-colors">Selling Fees</Link></li>
                 <li><Link href="#" className="hover:text-indigo-600 transition-colors">Terms of Service</Link></li>
-                <li><Link href="#" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
 
@@ -224,7 +233,7 @@ export default async function Home() {
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-slate-400 text-sm font-medium">
-              © {new Date().getFullYear()} ShopVille Inc. All rights reserved.
+              © {new Date().getFullYear()} StoreVille Inc. All rights reserved.
             </p>
             
             <div className="flex items-center gap-4">

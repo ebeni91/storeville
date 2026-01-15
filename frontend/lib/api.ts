@@ -38,3 +38,18 @@ export async function createOrder(orderData: any) {
 
   return res.json();
 }
+
+// ... (keep existing imports and functions)
+
+export async function getOrderStatus(ref: string) {
+  const res = await fetch(`${getBaseUrl()}/api/orders/status/?ref=${encodeURIComponent(ref)}`, {
+    cache: "no-store",
+  });
+  
+  if (!res.ok) {
+    // Return null or throw depending on preference, but here we return the error payload
+    return res.json().then(data => { throw new Error(data.message || "Failed to fetch status") });
+  }
+
+  return res.json();
+}

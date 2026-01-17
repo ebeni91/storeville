@@ -11,7 +11,6 @@ class Store(models.Model):
         ('art', 'Art & Crafts'),
     )
 
-    # Link store to a generic User (Seller)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stores')
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
@@ -22,9 +21,7 @@ class Store(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     
-    # Branding
     primary_color = models.CharField(max_length=7, default="#000000")
-    
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -43,7 +40,6 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField(default=0)
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
-
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

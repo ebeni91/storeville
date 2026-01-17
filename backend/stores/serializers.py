@@ -17,14 +17,14 @@ class ProductSerializer(serializers.ModelSerializer):
 class StoreSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
     
-    # 📍 New: Distance field (calculated on the fly)
+    # 📍 Distance field (calculated on the fly)
     distance = serializers.FloatField(read_only=True, required=False)
 
     class Meta:
         model = Store
         fields = [
             'id', 'name', 'slug', 'category', 'primary_color', 
-            'latitude', 'longitude', 'address', 'distance', # 👈 Added location fields
+            'latitude', 'longitude', 'address', 'distance', # 👈 Added fields
             'products', 'owner', 'created_at', 'is_active'
         ]
         read_only_fields = ['owner', 'slug', 'products', 'distance']

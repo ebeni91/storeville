@@ -16,9 +16,9 @@ export interface Store {
   primary_color: string;
   products: Product[];
   
-  // 📍 NEW LOCATION FIELDS
-  address?: string;          // Optional string
-  latitude?: number | null;  // Optional number or null
-  longitude?: number | null; // Optional number or null
-  distance?: number;         // Optional number (calculated by backend)
+  // 📍 RE-ADD THESE:
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  distance?: number; 
 }

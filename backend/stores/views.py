@@ -1,3 +1,4 @@
+import math
 from django.db.models import Q
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
@@ -5,10 +6,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Store, Product
 from .serializers import StoreSerializer, ProductSerializer
-from .utils import parse_search_query # 👈 Now correctly importing from utils
+from .utils import parse_search_query
 
 # ==========================================
-# 1. STORE VIEWSET
+# 1. STORE VIEWSET (With Location Logic)
 # ==========================================
 class StoreViewSet(viewsets.ModelViewSet): 
     serializer_class = StoreSerializer
@@ -20,7 +21,48 @@ class StoreViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
-        return Store.objects.filter(is_active=True)
+        queryset = Store.objects.filter(is_active=True)
+        
+        # 📍 GEOLOCATION LOGIC
+        user_lat = self.request.query_params.get('lat')
+        user_lng = self.request.query_params.get('lng')
+        radius = self.request.query_params.get('radius', 50) # Default search radius: 50km
+
+        if user_lat and user_lng:
+            try:
+                lat = float(user_lat)
+                lng = float(user_lng)
+                radius_val = float(radius)
+                
+                nearby_stores = []
+                for store in queryset:
+                    # Skip stores without location
+                    if store.latitude and store.longitude:
+                        dist = self.calculate_distance(lat, lng, store.latitude, store.longitude)
+                        if dist <= radius_val:
+                            # Attach distance to object so serializer sees it
+                            store.distance = round(dist, 1) 
+                            nearby_stores.append(store)
+                
+                # Sort by nearest first
+                nearby_stores.sort(key=lambda x: x.distance)
+                return nearby_stores
+
+            except ValueError:
+                pass # If params are invalid, return standard list
+
+        return queryset
+
+    # Helper: Haversine Formula (Calculate distance between two points)
+    def calculate_distance(self, lat1, lon1, lat2, lon2):
+        R = 6371  # Earth radius in km
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = math.sin(dlat / 2) * math.sin(dlat / 2) + \
+            math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * \
+            math.sin(dlon / 2) * math.sin(dlon / 2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -54,24 +96,18 @@ class ProductViewSet(viewsets.ModelViewSet):
 # 3. SMART CHATBOT SEARCH VIEW
 # ==========================================
 class ChatProductSearchView(APIView):
-    """
-    AI-lite search that understands price limits, categories, and keywords.
-    """
     def get(self, request):
         user_query = request.query_params.get('q', '')
         if not user_query:
             return Response([])
 
-        # 1. Parse intent (Now returns 3 values)
         keyword, max_price, category = parse_search_query(user_query)
 
         products = Product.objects.all()
         
-        # 2. Filter by Category (if detected)
         if category:
             products = products.filter(store__category=category)
 
-        # 3. Filter by Keyword (if any remains)
         if keyword:
             products = products.filter(
                 Q(name__icontains=keyword) | 
@@ -79,11 +115,9 @@ class ChatProductSearchView(APIView):
                 Q(store__name__icontains=keyword)
             )
         
-        # 4. Filter by Price
         if max_price:
             products = products.filter(price__lte=max_price)
 
-        # 5. Sort & Limit
         if 'cheap' in user_query.lower():
             products = products.order_by('price')[:5]
         else:
@@ -91,22 +125,15 @@ class ChatProductSearchView(APIView):
 
         serializer = ProductSerializer(products, many=True, context={'request': request})
         
-        # 6. Build a smart response text
         msg = f"I found {len(products)} "
-        if category:
-            msg += f"{category} "
+        if category: msg += f"{category} "
         msg += "items"
-        
-        if keyword:
-            msg += f" matching '{keyword}'"
-        
-        if max_price:
-            msg += f" under {max_price} ETB"
-        
+        if keyword: msg += f" matching '{keyword}'"
+        if max_price: msg += f" under {max_price} ETB"
         msg += "."
 
         if len(products) == 0:
-             msg = "I couldn't find any products matching that criteria. Try browsing our categories directly!"
+             msg = "I couldn't find any products matching that criteria."
 
         return Response({
             "response_text": msg,

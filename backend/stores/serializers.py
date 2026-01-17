@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Store, Product
 
-# 1. Product Serializer (Kept as is, assuming Product model has description)
 class ProductSerializer(serializers.ModelSerializer):
     store_slug = serializers.CharField(source='store.slug', read_only=True)
     store_name = serializers.CharField(source='store.name', read_only=True)
@@ -15,17 +14,17 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['store'] 
 
-# 2. Store Serializer (FIXED: Removed 'description', 'logo', 'banner')
 class StoreSerializer(serializers.ModelSerializer):
-    # This fetches all products related to this store
     products = ProductSerializer(many=True, read_only=True)
+    
+    # 📍 New: Distance field (calculated on the fly)
+    distance = serializers.FloatField(read_only=True, required=False)
 
     class Meta:
         model = Store
         fields = [
-            'id', 'name', 'slug', 'created_at', 'owner', 'products', 
-            'primary_color', 'category', 'is_active'
+            'id', 'name', 'slug', 'category', 'primary_color', 
+            'latitude', 'longitude', 'address', 'distance', # 👈 Added location fields
+            'products', 'owner', 'created_at', 'is_active'
         ]
-        # Removed 'description', 'logo', 'banner' from fields above ^
-        
-        read_only_fields = ['owner', 'slug', 'products']
+        read_only_fields = ['owner', 'slug', 'products', 'distance']

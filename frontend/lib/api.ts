@@ -8,9 +8,31 @@ export const getBaseUrl = () => {
   return "http://localhost:8000";
 };
 
-export async function fetchStores() {
-  const res = await fetch(`${getBaseUrl()}/api/stores/`, {
-    cache: "no-store", // Always fetch fresh data
+// export async function fetchStores() {
+//   const res = await fetch(`${getBaseUrl()}/api/stores/`, {
+//     cache: "no-store", // Always fetch fresh data
+//   });
+
+//   if (!res.ok) {
+//     throw new Error("Failed to fetch stores");
+//   }
+
+//   return res.json();
+// }
+
+
+
+// Update the fetchStores function signature
+export async function fetchStores(lat?: number, lng?: number, radius: number = 10) {
+  let url = `${getBaseUrl()}/api/stores/`;
+  
+  // Append location params if they exist
+  if (lat && lng) {
+    url += `?lat=${lat}&lng=${lng}&radius=${radius}`;
+  }
+
+  const res = await fetch(url, {
+    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -19,6 +41,7 @@ export async function fetchStores() {
 
   return res.json();
 }
+
 
 // ... (keep getBaseUrl and fetchStores) ...
 

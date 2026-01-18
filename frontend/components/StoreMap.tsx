@@ -8,7 +8,6 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
-// Fix for default Leaflet icons
 const icon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -18,6 +17,7 @@ const icon = L.icon({
   popupAnchor: [1, -34],
 });
 
+// Forces the map to fly to the new center when location changes
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
   useEffect(() => {
@@ -27,17 +27,22 @@ function MapUpdater({ center }: { center: [number, number] }) {
 }
 
 export default function StoreMap({ stores, userLocation }: { stores: Store[], userLocation: [number, number] | null }) {
-  const center: [number, number] = userLocation || [9.005401, 38.763611];
+  // 📍 DEFAULT: Jimma Coordinates
+  const defaultCenter: [number, number] = [7.6751, 36.8366];
+  
+  // Use user location if available, otherwise use default
+  const center = userLocation || defaultCenter;
 
   return (
     <div className="h-[500px] w-full rounded-3xl overflow-hidden shadow-xl border border-white/20 relative z-0">
       <MapContainer center={center} zoom={13} scrollWheelZoom={false} className="h-full w-full">
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          attribution='&copy; OpenStreetMap'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapUpdater center={center} />
 
+        {/* Show Blue User Dot only if GPS is active */}
         {userLocation && (
           <Marker position={userLocation} icon={
             L.divIcon({

@@ -3,17 +3,15 @@
 import { useState } from "react";
 import { fetchStores } from "../lib/api";
 import { Store } from "../types";
-import { LayoutGrid, Map as MapIcon, Navigation, Loader2, ArrowRight, MapPin } from "lucide-react";
+import { LayoutGrid, Map as MapIcon, Navigation, Loader2, ArrowRight, MapPin, XCircle } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-// Dynamic import for the Map
 const StoreMap = dynamic(() => import("./StoreMap"), { 
   ssr: false,
   loading: () => <div className="h-[500px] w-full bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center text-slate-400">Loading Map...</div>
 });
 
-// 👇 THIS IS THE FIX: Define 'initialStores' in the props
 export default function StoreExplorer({ initialStores }: { initialStores: Store[] }) {
   const [stores, setStores] = useState<Store[]>(initialStores);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
@@ -21,22 +19,43 @@ export default function StoreExplorer({ initialStores }: { initialStores: Store[
   const [loading, setLoading] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
+  // 📍 Permission Request Logic
   const handleGetLocation = () => {
     if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
     setLoading(true);
+    
+    // Request permission and get position
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         setLocation([lat, lng]);
+        
         try {
+          // Fetch stores near GPS location
           const nearbyStores = await fetchStores(lat, lng, 10);
           setStores(nearbyStores);
-          setViewMode("map");
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+          setViewMode("map"); // Auto-switch to map
+        } catch (e) { 
+          console.error(e); 
+        } finally { 
+          setLoading(false); 
+        }
       },
-      (error) => { console.error(error); setPermissionDenied(true); setLoading(false); }
+      (error) => { 
+        console.error(error); 
+        setPermissionDenied(true); 
+        setLoading(false); 
+        alert("Please enable location permissions in your browser to use this feature.");
+      }
     );
+  };
+
+  // 📍 Reset Logic (Show All)
+  const handleShowAll = () => {
+    setStores(initialStores);
+    setLocation(null);
+    setViewMode("grid");
   };
 
   return (
@@ -48,13 +67,19 @@ export default function StoreExplorer({ initialStores }: { initialStores: Store[
           </h2>
           <p className="text-slate-500 mt-1">{location ? `Found ${stores.length} stores within 10km.` : "Discover local businesses."}</p>
         </div>
+        
         <div className="flex items-center gap-3 bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/40 shadow-sm">
-          {!location && (
+          {!location ? (
             <button onClick={handleGetLocation} disabled={loading || permissionDenied} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${permissionDenied ? "bg-red-100 text-red-500 cursor-not-allowed" : "bg-indigo-600 text-white hover:bg-indigo-700"}`}>
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Navigation size={16} />}
               {permissionDenied ? "Location Denied" : "Find Near Me"}
             </button>
+          ) : (
+            <button onClick={handleShowAll} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-all">
+              <XCircle size={16} /> Show All Stores
+            </button>
           )}
+
           <div className="h-6 w-px bg-slate-300 mx-1"></div>
           <button onClick={() => setViewMode("grid")} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:bg-white/50'}`}><LayoutGrid size={20} /></button>
           <button onClick={() => setViewMode("map")} className={`p-2.5 rounded-xl transition-all ${viewMode === 'map' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:bg-white/50'}`}><MapIcon size={20} /></button>

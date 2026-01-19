@@ -27,6 +27,10 @@ export default function StoreExplorer({ initialStores }: { initialStores: Store[
     // Request permission and get position
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+
+// 👇 ADD THIS DEBUG LINE
+    console.log("📍 GPS Coordinates detected:", position.coords.latitude, position.coords.longitude);
+
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         setLocation([lat, lng]);

@@ -23,10 +23,11 @@ class OrderSerializer(serializers.ModelSerializer):
     tracking_token = serializers.CharField(read_only=True)
     buyer_name = serializers.CharField(required=False)
     buyer_phone = serializers.CharField(required=False)
+    payment_method = serializers.ChoiceField(choices=['cod','chapa','telebirr','mpesa'], required=False)
 
     class Meta:
         model = Order
-        fields = ['id', 'store', 'buyer_name', 'buyer_phone', 'total_amount', 'status', 'order_reference', 'tracking_token', 'items']
+        fields = ['id', 'store', 'buyer_name', 'buyer_phone', 'total_amount', 'status', 'order_reference', 'tracking_token', 'items', 'payment_method']
 
     def generate_ref(self):
         """Generates a short code like SV-9A2B3C"""
@@ -61,6 +62,24 @@ class OrderSerializer(serializers.ModelSerializer):
         else:
             buyer_name = "Guest"
 
+        # Validate payment method against store configuration
+        selected_method = validated_data.pop('payment_method', 'cod')
+        if selected_method not in ['cod','chapa','telebirr','mpesa']:
+            selected_method = 'cod'
+        # Enforce store configuration: non-COD must be enabled by the store
+        if selected_method != 'cod':
+            enabled_methods = getattr(store, 'payment_methods', []) or []
+            if selected_method not in enabled_methods:
+                raise serializers.ValidationError({
+                    'payment_method': 'Selected payment method is not enabled by this store.'
+                })
+            # Optional: ensure account detail exists
+            accounts = getattr(store, 'payment_accounts', {}) or {}
+            if not accounts.get(selected_method):
+                raise serializers.ValidationError({
+                    'payment_method': 'Store has no account information for the selected method.'
+                })
+
         # 🎲 Generate Unique Reference & Token
         ref = self.generate_ref()
         # Retry if collision (rare)
@@ -75,6 +94,7 @@ class OrderSerializer(serializers.ModelSerializer):
                 buyer_name=buyer_name,
                 buyer_phone=buyer_phone,
                 total_amount=0,
+                payment_method=selected_method,
                 order_reference=ref,   # 👈 Save Ref
                 tracking_token=token,  # 👈 Save Token
                 **validated_data

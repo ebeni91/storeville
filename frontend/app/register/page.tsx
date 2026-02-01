@@ -25,10 +25,15 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
       });
-
+      const contentType = res.headers.get("content-type") || "";
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(JSON.stringify(data));
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          throw new Error(JSON.stringify(data));
+        } else {
+          const text = await res.text();
+          throw new Error(text?.slice(0, 140) || "Registration failed");
+        }
       }
       router.push("/login");
     } catch (err: any) {

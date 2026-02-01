@@ -1,6 +1,12 @@
 export const getBaseUrl = () => {
+  // Server-side: hit backend via Docker network name
   if (typeof window === "undefined") return "http://backend:8000";
-  return "http://localhost:8000";
+  // Client-side:
+  // - If running the Next dev server on :3000, talk directly to Django (:8000)
+  // - Otherwise (e.g., behind Nginx/tunnel), use same-origin
+  const isDevOn3000 = window.location.hostname === "localhost" && window.location.port === "3000";
+  if (isDevOn3000) return "http://localhost:8000";
+  return window.location.origin;
 };
 
 // 📍 RE-ADD PARAMS HERE:
@@ -12,6 +18,12 @@ export async function fetchStores(lat?: number, lng?: number, radius: number = 1
 
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch stores");
+  return res.json();
+}
+
+export async function fetchStoreBySlug(slug: string) {
+  const res = await fetch(`${getBaseUrl()}/api/stores/${encodeURIComponent(slug)}/`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch store");
   return res.json();
 }
 

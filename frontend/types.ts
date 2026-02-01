@@ -21,4 +21,8 @@ export interface Store {
   latitude?: number | null;
   longitude?: number | null;
   distance?: number; 
+
+  // 💳 Payment configuration
+  payment_methods?: string[];
+  payment_accounts?: { [key: string]: string };
 }

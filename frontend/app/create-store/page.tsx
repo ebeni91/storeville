@@ -19,6 +19,8 @@ export default function CreateStorePage() {
   const [color, setColor] = useState("#3b82f6");
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
+  const [paymentAccounts, setPaymentAccounts] = useState<{chapa?: string; telebirr?: string; mpesa?: string}>({});
 
   const { token } = useAuth();
   const router = useRouter();
@@ -27,6 +29,23 @@ export default function CreateStorePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    // Validate payment account details for selected methods
+    if (paymentMethods.includes('chapa') && !paymentAccounts.chapa) {
+      alert('Please provide your Chapa account ID.');
+      setIsLoading(false);
+      return;
+    }
+    if (paymentMethods.includes('telebirr') && !paymentAccounts.telebirr) {
+      alert('Please provide your Telebirr phone number.');
+      setIsLoading(false);
+      return;
+    }
+    if (paymentMethods.includes('mpesa') && !paymentAccounts.mpesa) {
+      alert('Please provide your M-Pesa phone number.');
+      setIsLoading(false);
+      return;
+    }
     
     const slug = name.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 
@@ -38,7 +57,9 @@ export default function CreateStorePage() {
       primary_color: color,
       address,
       latitude: location?.lat,
-      longitude: location?.lng
+      longitude: location?.lng,
+      payment_methods: paymentMethods,
+      payment_accounts: paymentAccounts
     };
 
     const res = await fetch(`${getBaseUrl()}/api/stores/`, {
@@ -126,8 +147,83 @@ export default function CreateStorePage() {
             </div>
           </div>
 
+          {/* 💳 Payment Methods */}
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <label className="block text-sm font-bold text-slate-700 mb-3">Payment Methods</label>
+            <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
+              {/* Chapa */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="pm-chapa"
+                  checked={paymentMethods.includes('chapa')}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setPaymentMethods(prev => checked ? [...prev, 'chapa'] : prev.filter(m => m !== 'chapa'));
+                  }}
+                />
+                <label htmlFor="pm-chapa" className="font-medium text-slate-700">Chapa</label>
+                {paymentMethods.includes('chapa') && (
+                  <input
+                    type="text"
+                    placeholder="Chapa account ID"
+                    className="ml-auto w-1/2 px-3 py-2 rounded-xl border border-white/20 bg-white/10"
+                    value={paymentAccounts.chapa || ''}
+                    onChange={(e) => setPaymentAccounts(prev => ({...prev, chapa: e.target.value}))}
+                  />
+                )}
+              </div>
+
+              {/* Telebirr */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="pm-telebirr"
+                  checked={paymentMethods.includes('telebirr')}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setPaymentMethods(prev => checked ? [...prev, 'telebirr'] : prev.filter(m => m !== 'telebirr'));
+                  }}
+                />
+                <label htmlFor="pm-telebirr" className="font-medium text-slate-700">Telebirr</label>
+                {paymentMethods.includes('telebirr') && (
+                  <input
+                    type="tel"
+                    placeholder="Telebirr phone number"
+                    className="ml-auto w-1/2 px-3 py-2 rounded-xl border border-white/20 bg-white/10"
+                    value={paymentAccounts.telebirr || ''}
+                    onChange={(e) => setPaymentAccounts(prev => ({...prev, telebirr: e.target.value}))}
+                  />
+                )}
+              </div>
+
+              {/* M-Pesa */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="pm-mpesa"
+                  checked={paymentMethods.includes('mpesa')}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setPaymentMethods(prev => checked ? [...prev, 'mpesa'] : prev.filter(m => m !== 'mpesa'));
+                  }}
+                />
+                <label htmlFor="pm-mpesa" className="font-medium text-slate-700">M-Pesa</label>
+                {paymentMethods.includes('mpesa') && (
+                  <input
+                    type="tel"
+                    placeholder="M-Pesa phone number"
+                    className="ml-auto w-1/2 px-3 py-2 rounded-xl border border-white/20 bg-white/10"
+                    value={paymentAccounts.mpesa || ''}
+                    onChange={(e) => setPaymentAccounts(prev => ({...prev, mpesa: e.target.value}))}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
               <Palette size={16} /> Brand Color
             </label>
             <div className="flex gap-3 justify-center bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">

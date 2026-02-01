@@ -25,6 +25,14 @@ class Order(models.Model):
     
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    # 💳 Selected payment method for this order
+    PAYMENT_METHOD_CHOICES = (
+        ('cod', 'Cash on Delivery'),
+        ('chapa', 'Chapa'),
+        ('telebirr', 'Telebirr'),
+        ('mpesa', 'M-Pesa'),
+    )
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cod')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -16,7 +16,7 @@ const StoreMap = dynamic(() => import("./StoreMap"), {
 });
 
 export default function StoreExplorer({ initialStores }: { initialStores: Store[] }) {
-  const [stores, setStores] = useState<Store[]>(initialStores);
+  const [stores, setStores] = useState<Store[]>(initialStores || []);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,12 +57,7 @@ export default function StoreExplorer({ initialStores }: { initialStores: Store[
     );
   };
 
-  // 📍 Reset Logic
-  const handleShowAll = () => {
-    setStores(initialStores);
-    setLocation(null);
-    setViewMode("grid");
-  };
+  // Remove show-all: we pivot to location-based discovery only
 
   return (
     <div className="w-full">
@@ -75,12 +70,12 @@ export default function StoreExplorer({ initialStores }: { initialStores: Store[
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-8 tracking-tight drop-shadow-sm">
-            Find the best <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">shops</span> <br/>
-            near <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">you</span>.
+            Discover local <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Shops</span> <br/>
+            & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">businesses</span>.
           </h1>
           
           <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Instant delivery from local stores in your neighborhood. No walking, just shopping.
+            Shop directly from your favorite brands or start your own digital store in seconds.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -113,30 +108,20 @@ export default function StoreExplorer({ initialStores }: { initialStores: Store[
 
       {/* ================= RESULTS SECTION ================= */}
       <div id="results" className="scroll-mt-24">
-        {/* Control Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-              <LayoutGrid className="text-indigo-600" /> {location ? "Stores Near You" : "All Stores"}
-            </h2>
-            <p className="text-slate-500 mt-1">{location ? `Found ${stores.length} stores in your area.` : "Discover local businesses across Ethiopia."}</p>
-          </div>
-          
-          <div className="flex items-center gap-3 bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/40 shadow-sm">
-            {location && (
-              <button onClick={handleShowAll} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-all">
-                <XCircle size={16} /> Show All
-              </button>
-            )}
-
-            <div className="h-6 w-px bg-slate-300 mx-1"></div>
-            <button onClick={() => setViewMode("grid")} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:bg-white/50'}`}><LayoutGrid size={20} /></button>
-            <button onClick={() => setViewMode("map")} className={`p-2.5 rounded-xl transition-all ${viewMode === 'map' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:bg-white/50'}`}><MapIcon size={20} /></button>
-          </div>
+        {/* Centered View Toggle (shown only after location set) */}
+        <div className="flex items-center justify-center mb-10">
+          {location && (
+            <div className="flex items-center gap-3 bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/40 shadow-sm">
+              <button onClick={() => setViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:bg-white/50'}`}><LayoutGrid size={20} /></button>
+              <button onClick={() => setViewMode('map')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'map' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:bg-white/50'}`}><MapIcon size={20} /></button>
+            </div>
+          )}
         </div>
 
         {/* Content */}
-        {viewMode === "map" ? (
+        {!location ? (
+          <></>
+        ) : viewMode === "map" ? (
           <StoreMap stores={stores} userLocation={location} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -168,8 +153,7 @@ export default function StoreExplorer({ initialStores }: { initialStores: Store[
             )) : (
               <div className="col-span-full text-center py-20 text-slate-500">
                 <MapIcon size={48} className="mx-auto mb-4 opacity-20" />
-                <p>No stores found in this location.</p>
-                <button onClick={handleShowAll} className="text-indigo-600 font-bold mt-2 hover:underline">Show all stores</button>
+                <p>No stores found near you. Try a wider radius.</p>
               </div>
             )}
           </div>

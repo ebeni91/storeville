@@ -1,8 +1,14 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 
 class Store(models.Model):
+    PAYMENT_CHOICES = (
+        ('chapa', 'Chapa'),
+        ('telebirr', 'Telebirr'),
+        ('mpesa', 'M-Pesa'),
+    )
     CATEGORY_CHOICES = (
         ('electronics', 'Electronics'),
         ('fashion', 'Fashion'),
@@ -24,6 +30,15 @@ class Store(models.Model):
     primary_color = models.CharField(max_length=7, default="#000000")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # 💳 Payment configuration selected by seller
+    payment_methods = ArrayField(
+        base_field=models.CharField(max_length=20, choices=PAYMENT_CHOICES),
+        default=list,
+        blank=True,
+        help_text="Enabled payment methods for this store"
+    )
+    payment_accounts = models.JSONField(default=dict, blank=True, help_text="Accounts/phones keyed by method name")
 
     def save(self, *args, **kwargs):
         if not self.slug:

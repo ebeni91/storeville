@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-s3)c9!a&!88n==mn+bu+tmofbks5%b@32l0$)##g^nj5=fh!-r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend']
+# Allow hosts via environment for easy testing behind proxies/tunnels
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,backend').split(',')
 
 
 # Application definition
@@ -154,15 +155,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # CORS CONFIGURATION
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+# Prefer env-driven origins; default to localhost ports used in dev
+_cors_env = os.environ.get('CORS_ALLOWED_ORIGINS')
+if _cors_env:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(',') if o.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost",
+        "http://localhost:80",
+        "http://localhost:3000",
+    ]
+
+# Optional: allow all origins via env toggle for quick external testing
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'false').lower() == 'true'
 
 # REST FRAMEWORK CONFIGURATION
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication', # <--- ENABLE TOKENS
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',

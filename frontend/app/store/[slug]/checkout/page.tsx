@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "../../../../context/CartContext";
 import { useAuth } from "../../../../context/AuthContext";
-import { getBaseUrl } from "../../../../lib/api";
+import { getBaseUrl, fetchStoreBySlug } from "../../../../lib/api";
 import { 
   ArrowLeft, CreditCard, MapPin, Phone, User, CheckCircle, 
   Truck, ShoppingBag, X, Copy 
@@ -16,6 +16,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
   const { token, isAuthenticated } = useAuth();
   const router = useRouter();
   const urlParams = useParams(); 
+  const [storeInfo, setStoreInfo] = useState<any | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -25,15 +26,34 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<string>("cod");
   
   // 👇 State to store the Reference Code returned by the API
   const [orderReference, setOrderReference] = useState(""); 
+
+  // Load store info for payment methods
+  useEffect(() => {
+    const slug = (urlParams as any)?.slug as string;
+    if (!slug) return;
+    fetchStoreBySlug(slug)
+      .then(setStoreInfo)
+      .catch(() => setStoreInfo(null));
+  }, [urlParams]);
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
       router.push("/login");
       return;
+    }
+
+    // Basic validation: ensure account details exist for selected non-COD method
+    if (selectedPayment !== "cod") {
+      const acct = storeInfo?.payment_accounts?.[selectedPayment];
+      if (!acct) {
+        alert("Selected payment method is missing account details. Please choose another method or use Cash on Delivery.");
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -49,6 +69,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
         buyer_name: formData.name,
         buyer_phone: formData.phone,
         shipping_address: `${formData.address}, ${formData.city}`,
+        payment_method: selectedPayment,
       };
 
       const res = await fetch(`${getBaseUrl()}/api/orders/`, {
@@ -234,18 +255,45 @@ export default function CheckoutPage({ params }: { params: Promise<{ slug: strin
 
             <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-sm border border-white/50">
               <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <CreditCard size={24} className="text-indigo-600"/> Payment Method
+                <CreditCard size={24} className="text-indigo-600"/> Payment Options
               </h2>
               <div className="space-y-4">
                 <label className="flex items-center gap-4 p-5 border border-indigo-500/30 bg-indigo-50/60 rounded-2xl cursor-pointer backdrop-blur-sm shadow-sm transition-all hover:bg-indigo-100/50">
-                  <input type="radio" name="payment" defaultChecked className="w-5 h-5 text-indigo-600 accent-indigo-600" />
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="cod"
+                    checked={selectedPayment === "cod"}
+                    onChange={(e) => setSelectedPayment(e.target.value)}
+                    className="w-5 h-5 text-indigo-600 accent-indigo-600"
+                  />
                   <span className="font-bold text-slate-900 text-lg">Cash on Delivery</span>
                   <Truck size={20} className="ml-auto text-indigo-600"/>
                 </label>
-                <label className="flex items-center gap-4 p-5 border border-white/30 rounded-2xl cursor-not-allowed opacity-60 bg-white/40 backdrop-blur-sm">
-                  <input type="radio" name="payment" disabled className="w-5 h-5" />
-                  <span className="font-medium text-slate-500">Telebirr (Coming Soon)</span>
-                </label>
+
+                {/* Dynamic seller-provided methods */}
+                {storeInfo?.payment_methods?.length ? (
+                  <div className="space-y-3">
+                    {storeInfo.payment_methods.map((m: string) => (
+                      <div key={m} className="flex items-center gap-4 p-4 border border-white/30 rounded-2xl bg-white/40 backdrop-blur-sm">
+                        <input
+                          type="radio"
+                          name="payment"
+                          value={m}
+                          checked={selectedPayment === m}
+                          onChange={(e) => setSelectedPayment(e.target.value)}
+                          className="w-5 h-5"
+                        />
+                        <div className="flex-1">
+                          <span className="font-bold text-slate-900 capitalize">{m}</span>
+                          <p className="text-sm text-slate-600 mt-1">{storeInfo.payment_accounts?.[m] || 'Details not provided'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-sm">No digital payment options set by this store.</p>
+                )}
               </div>
             </div>
 

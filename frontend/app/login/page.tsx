@@ -26,8 +26,19 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.non_field_errors || "Login failed");
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        let message = "Login failed";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          message = data?.non_field_errors || data?.detail || message;
+        } else {
+          const text = await res.text();
+          message = text?.slice(0, 140) || message;
+        }
+        throw new Error(message);
+      }
+      const data = contentType.includes("application/json") ? await res.json() : await res.text().then(() => ({}));
       login(data.token);
       router.push("/dashboard");
     } catch (err: any) {

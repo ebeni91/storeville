@@ -9,7 +9,7 @@ export default function SplashScreen() {
   const [startAnimation, setStartAnimation] = useState(false);
 
   useEffect(() => {
-    // 🔒 LOCK SCROLL: Prevent user from scrolling the homepage while splash is on
+    // LOCK SCROLL: Prevent user from scrolling the homepage while splash is on
     if (typeof window !== "undefined") {
       document.body.style.overflow = "hidden";
     }

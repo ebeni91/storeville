@@ -29,6 +29,10 @@ DEBUG = True
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,backend').split(',')
 
 
+# for localhost tests only
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend']
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -156,6 +160,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS CONFIGURATION
 # Prefer env-driven origins; default to localhost ports used in dev
+
+
 _cors_env = os.environ.get('CORS_ALLOWED_ORIGINS')
 if _cors_env:
     CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(',') if o.strip()]
@@ -166,6 +172,13 @@ else:
         "http://localhost:3000",
     ]
 
+
+# For Local test only
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+# ]
+
 # Optional: allow all origins via env toggle for quick external testing
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'false').lower() == 'true'
 
@@ -173,6 +186,7 @@ CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'false').lower
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',#for localhost only
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',

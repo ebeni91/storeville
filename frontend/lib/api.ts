@@ -4,9 +4,14 @@ export const getBaseUrl = () => {
   // Client-side:
   // - If running the Next dev server on :3000, talk directly to Django (:8000)
   // - Otherwise (e.g., behind Nginx/tunnel), use same-origin
+ 
+ 
   const isDevOn3000 = window.location.hostname === "localhost" && window.location.port === "3000";
   if (isDevOn3000) return "http://localhost:8000";
   return window.location.origin;
+
+
+    // return "http://localhost:8000";
 };
 
 // 📍 RE-ADD PARAMS HERE:

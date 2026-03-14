@@ -22,7 +22,12 @@ export interface Store {
   distance: number // Populated by Django's Haversine formula!
 }
 
-export const fetchNearbyStores = async (lat: number, lon: number, radius = 10): Promise<Store[]> => {
-  const response = await api.get(`/stores/discovery/nearby/?lat=${lat}&lon=${lon}&radius=${radius}`)
-  return response.data
+export const fetchNearbyStores = async (lat: number, lon: number, radius = 10, category?: string): Promise<Store[]> => {
+  // If a category is provided, append it to the Django API query
+  const query = category 
+    ? `/stores/discovery/nearby/?lat=${lat}&lon=${lon}&radius=${radius}&category=${category}`
+    : `/stores/discovery/nearby/?lat=${lat}&lon=${lon}&radius=${radius}`;
+    
+  const response = await api.get(query);
+  return response.data;
 }

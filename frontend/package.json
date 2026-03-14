@@ -9,18 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query": "^5.90.21",
     "axios": "^1.6.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.290.0",
-    "mapbox-gl": "^3.20.0",
     "next": "14.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-map-gl": "^8.1.0",
+    "react-leaflet": "^4.2.1",
     "zustand": "^4.4.0"
   },
   "devDependencies": {
-    "@types/mapbox-gl": "^3.4.1",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20.19.37",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",

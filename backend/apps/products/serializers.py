@@ -11,6 +11,5 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'image', 'stock', 'is_active', 'category', 'category_detail']
-        # The store is injected automatically by the backend, so we make it read-only
-        read_only_fields = ['id', 'store', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'price', 'stock', 'image', 'is_active', 'created_at']
+        read_only_fields = ['id', 'created_at']

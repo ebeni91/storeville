@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions
 from core.permissions import IsSeller
+from rest_framework.exceptions import PermissionDenied
 from .models import Product
 from .serializers import ProductSerializer
 

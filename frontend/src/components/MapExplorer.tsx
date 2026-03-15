@@ -6,8 +6,6 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useQuery } from '@tanstack/react-query'
 import { fetchNearbyStores, Store } from '@/lib/api'
-import ReactDOMServer from 'react-dom/server'
-import { Store as StoreIcon } from 'lucide-react'
 
 const DEFAULT_VIEWPORT = {
   latitude: 8.9806,
@@ -26,32 +24,34 @@ export default function MapExplorer({ mode = 'retail' }: MapExplorerProps) {
   const modeHoverClass = mode === 'food' ? 'hover:bg-orange-600' : 'hover:bg-indigo-700'
   const spinnerColor = mode === 'food' ? 'border-orange-500' : 'border-indigo-600'
 
-  // Custom Leaflet DivIcon to use our Tailwind styles and Lucide Icons
+  // Use raw HTML/SVG instead of ReactDOMServer
   const createCustomIcon = () => {
-    const iconHtml = ReactDOMServer.renderToString(
-      <div className={`${modeColorClass} text-white p-2 rounded-full shadow-lg ring-2 ring-white flex items-center justify-center`} style={{ width: '36px', height: '36px' }}>
-        <StoreIcon size={18} />
+    const iconHtml = `
+      <div class="${modeColorClass} text-white p-2 rounded-full shadow-lg ring-2 ring-white flex items-center justify-center" style="width: 36px; height: 36px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
+          <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"></path>
+          <path d="M12 3v6"></path>
+        </svg>
       </div>
-    )
+    `
 
     return L.divIcon({
       html: iconHtml,
       className: 'custom-leaflet-icon bg-transparent border-none',
       iconSize: [36, 36],
-      iconAnchor: [18, 36], // Anchor to bottom center
-      popupAnchor: [0, -36] // Popup opens above the icon
+      iconAnchor: [18, 36], 
+      popupAnchor: [0, -36] 
     })
   }
 
   const { data: stores, isLoading } = useQuery({
     queryKey: ['stores', DEFAULT_VIEWPORT.latitude, DEFAULT_VIEWPORT.longitude, mode],
-    // Passing the mode to the Django backend filter
     queryFn: () => fetchNearbyStores(DEFAULT_VIEWPORT.latitude, DEFAULT_VIEWPORT.longitude, 15, mode),
   })
 
   return (
     <div className="w-full h-full relative bg-gray-100 z-0 rounded-[2.5rem]">
-      {/* Leaflet Map */}
       <MapContainer
         center={[DEFAULT_VIEWPORT.latitude, DEFAULT_VIEWPORT.longitude]}
         zoom={DEFAULT_VIEWPORT.zoom}
@@ -59,7 +59,7 @@ export default function MapExplorer({ mode = 'retail' }: MapExplorerProps) {
         style={{ width: '100%', height: '100%', zIndex: 10, borderRadius: '2.5rem' }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
@@ -68,9 +68,7 @@ export default function MapExplorer({ mode = 'retail' }: MapExplorerProps) {
             key={store.id}
             position={[store.latitude, store.longitude]}
             icon={createCustomIcon()}
-            eventHandlers={{
-              click: () => setSelectedStore(store),
-            }}
+            eventHandlers={{ click: () => setSelectedStore(store) }}
           >
             <Popup className="rounded-2xl overflow-hidden border-none shadow-xl">
               <div className="p-1 text-center min-w-[160px]">

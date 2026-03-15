@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Store
-from .models import Product
 class StoreDiscoverySerializer(serializers.ModelSerializer):
     distance = serializers.FloatField(read_only=True) # Populated by our LocationService
 
@@ -15,11 +14,3 @@ class StoreManagementSerializer(serializers.ModelSerializer):
         model = Store
         fields = '__all__'
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        # We don't include 'store' because the backend will auto-assign it!
-        fields = ['id', 'name', 'description', 'price', 'stock', 'image', 'is_active', 'created_at']
-        read_only_fields = ['id', 'created_at']

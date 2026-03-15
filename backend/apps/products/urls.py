@@ -1,12 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import SellerProductViewSet, PublicProductViewSet
+from .views import ProductViewSet, CategoryViewSet
 
 router = DefaultRouter()
-# /api/products/manage/ -> For the seller dashboard
-router.register(r'manage', SellerProductViewSet, basename='product-manage')
-# /api/products/catalog/ -> For the public storefronts
-router.register(r'catalog', PublicProductViewSet, basename='product-catalog')
+router.register(r'manage', ProductViewSet, basename='product-manage')
+router.register(r'categories', CategoryViewSet, basename='category-manage')
 
 urlpatterns = [
     path('', include(router.urls)),

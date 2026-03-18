@@ -7,11 +7,15 @@ from core.permissions import IsSeller, IsStoreOwner
 from .serializers import StoreManagementSerializer, StoreDiscoverySerializer
 from .services import LocationService
 from .models import Store
-class StoreDiscoveryViewSet(viewsets.ViewSet):
+class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Public API for the map-based discovery interface.
     """
-    permission_classes = [AllowAny] # Anyone can browse the map
+    queryset = Store.objects.filter(is_active=True) # Only show active stores!
+    serializer_class = StoreDiscoverySerializer
+    permission_classes = [AllowAny] 
+    lookup_field = 'slug' # <--- This lets Next.js fetch by the store's URL name!
+    
 
     @action(detail=False, methods=['get'])
     def nearby(self, request):

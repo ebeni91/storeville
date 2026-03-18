@@ -1,103 +1,144 @@
-import { ShoppingBag, Store as StoreIcon } from 'lucide-react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
+import { Loader2, ShoppingBag, MapPin } from 'lucide-react'
 
-// Define our TypeScript interface for the Django Product model
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: string
-  stock_quantity: number
-  is_active: boolean
+interface StoreData {
+  name: string; description: string; logo: string | null; banner: string | null; city: string;
+  theme: string; primary_color: string; secondary_color: string; background_color: string;
+  heading_font: string; card_style: string; announcement_is_active: boolean;
+  announcement_text: string; announcement_color: string; social_instagram: string;
 }
 
-// This function runs securely on the Next.js server
-async function fetchStoreProducts(subdomain: string): Promise<Product[]> {
-  try {
-    // We hit the Django backend and spoof the Host header so our 
-    // SubdomainStoreMiddleware automatically filters the products!
-    const response = await api.get('/products/', {
-      headers: {
-        'Host': `${subdomain}.storeville.app` 
-      }
-    })
-    
-    // Django REST Framework uses pagination by default, so data is inside .results
-    return response.data.results || response.data
-  } catch (error) {
-    console.error(`Failed to fetch products for ${subdomain}:`, error)
-    return []
+interface Product { id: number; name: string; description: string; price: string; image: string | null; category_name: string | null; }
+
+export default function StorefrontPage({ params }: { params: { subdomain: string } }) {
+  const [store, setStore] = useState<StoreData | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStorefront = async () => {
+      try {
+        const storeRes = await api.get(`/stores/discovery/${params.subdomain}/`)
+        setStore(storeRes.data)
+        const prodRes = await api.get(`/products/storefront/?store=${params.subdomain}`)
+        setProducts(Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.results || [])
+      } catch (err) { console.error("Failed to load", err) } 
+      finally { setIsLoading(false) }
+    }
+    fetchStorefront()
+  }, [params.subdomain])
+
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gray-400" size={48} /></div>
+  if (!store) return <div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold opacity-50">Store Not Found</h1></div>
+
+  // --- DYNAMIC ENGINE ---
+  const themeStyles = { backgroundColor: store.background_color, color: store.secondary_color, fontFamily: `"${store.heading_font}", sans-serif` }
+  const btnStyle = { backgroundColor: store.primary_color, color: store.background_color }
+
+  let cardClass = ""
+  let cardStyle = {}
+  if (store.card_style === 'luxury-glass') {
+    cardClass = "rounded-3xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] hover:shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] border backdrop-blur-md"
+    cardStyle = { backgroundColor: `${store.secondary_color}03`, borderColor: `${store.secondary_color}15` }
+  } else if (store.card_style === 'minimal-border') {
+    cardClass = "rounded-none border-b hover:-translate-y-2"
+    cardStyle = { backgroundColor: 'transparent', borderColor: `${store.secondary_color}30` }
+  } else {
+    cardClass = "rounded-2xl border-2 hover:-translate-y-1 hover:shadow-xl"
+    cardStyle = { backgroundColor: store.background_color, borderColor: store.secondary_color }
   }
-}
-
-export default async function Storefront({ params }: { params: { subdomain: string } }) {
-  // Fetch the real products from PostgreSQL via Django
-  const products = await fetchStoreProducts(params.subdomain)
-
-  // Format the store name beautifully (e.g., "abel-electronics" -> "Abel Electronics")
-  const storeName = params.subdomain
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Store Header */}
-      <header className="bg-white shadow-sm border-b pb-6 pt-12 px-8 text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-32 bg-primary/10"></div>
-        <div className="relative z-10">
-          <div className="w-24 h-24 bg-primary text-white rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold shadow-lg border-4 border-white">
-            {params.subdomain.charAt(0).toUpperCase()}
-          </div>
-          <h1 className="text-4xl font-extrabold text-gray-900">{storeName}</h1>
-          <p className="text-gray-500 mt-2 font-medium flex items-center justify-center gap-2">
-            <StoreIcon size={16} /> Official StoreVille Partner
-          </p>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24 transition-colors duration-700 font-sans" style={themeStyles}>
+      
+      {/* GLOBAL ANIMATION STYLES */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes marquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+        .marquee-container { width: 100%; overflow: hidden; position: relative; white-space: nowrap; }
+        .marquee-content { display: inline-block; animation: marquee 25s linear infinite; }
+        .marquee-content:hover { animation-play-state: paused; }
+      `}} />
 
-      {/* Product Grid */}
-      <section className="max-w-7xl mx-auto p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-gray-800">Available Products</h2>
-          <button className="flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-full font-medium hover:bg-gray-800 shadow-md transition-all">
-            <ShoppingBag size={20} />
-            <span>Cart (0)</span>
-          </button>
+      {/* 🚀 EXTRAORDINARY MARQUEE ANNOUNCEMENT BAR */}
+      {store.announcement_is_active && store.announcement_text && (
+        <div className="marquee-container py-3 shadow-md z-50 sticky top-0" style={{ backgroundColor: store.announcement_color, color: store.background_color }}>
+          <div className="marquee-content text-xs sm:text-sm font-black tracking-[0.2em] uppercase">
+            {store.announcement_text} &nbsp;&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;&nbsp; {store.announcement_text} &nbsp;&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;&nbsp; {store.announcement_text}
+          </div>
+        </div>
+      )}
+
+      {/* LUXURY HEADER */}
+      <div className="relative">
+        <div className="w-full h-72 sm:h-96 overflow-hidden relative">
+          {store.banner ? (
+            <img src={store.banner} alt="Banner" className="w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 opacity-10" style={{ backgroundColor: store.primary_color }}></div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 relative -mt-24 sm:-mt-32 z-10">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-[6px] shadow-2xl overflow-hidden flex items-center justify-center mb-6 transition-transform hover:scale-105 duration-500" style={{ borderColor: store.background_color, backgroundColor: store.background_color }}>
+               {store.logo ? <img src={store.logo} alt="Logo" className="w-full h-full object-cover" /> : <ShoppingBag size={56} style={{ color: store.primary_color }} />}
+            </div>
+            
+            <h1 className="text-5xl sm:text-7xl font-black tracking-tighter mb-4">{store.name}</h1>
+            <p className="flex items-center gap-2 font-bold tracking-widest uppercase text-sm opacity-60 mb-8"><MapPin size={16} /> {store.city}</p>
+            {store.description && <p className="max-w-2xl text-lg sm:text-xl opacity-80 leading-relaxed font-medium">{store.description}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* PREMIUM PRODUCT GRID */}
+      <div className="max-w-7xl mx-auto px-6 mt-24">
+        <div className="flex items-end justify-between mb-12 border-b-2 pb-6" style={{ borderColor: `${store.secondary_color}20` }}>
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight">Curated Collection</h2>
+          <span className="font-bold tracking-widest uppercase text-sm opacity-50">{products.length} Items</span>
         </div>
 
         {products.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-            <StoreIcon size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-gray-600">No products found</h3>
-            <p className="text-gray-400 mt-2">This store hasn't added any inventory yet.</p>
-          </div>
+           <div className="text-center py-32 opacity-50"><ShoppingBag size={64} className="mx-auto mb-6" /><h3 className="text-2xl font-black tracking-widest uppercase">Collection Empty</h3></div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-lg transition-all flex flex-col h-full group">
-                {/* Image Placeholder */}
-                <div className="bg-gray-100 w-full h-48 rounded-lg mb-4 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                  <span className="text-gray-400 font-medium text-sm">No Image</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+            {products.map(product => (
+              <div key={product.id} className={`group transition-all duration-500 flex flex-col overflow-hidden ${cardClass}`} style={cardStyle}>
+                
+                <div className="aspect-[4/5] relative overflow-hidden bg-black/5">
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center opacity-20"><ShoppingBag size={48} /></div>
+                  )}
+                  {product.category_name && (
+                    <div className="absolute top-4 left-4 px-3 py-1.5 backdrop-blur-md bg-white/80 rounded-sm text-[10px] font-black uppercase tracking-widest text-black shadow-lg">
+                      {product.category_name}
+                    </div>
+                  )}
                 </div>
                 
-                <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{product.name}</h3>
-                <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-grow">{product.description}</p>
-                
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="font-extrabold text-xl text-primary">Br {parseFloat(product.price).toFixed(2)}</span>
-                  <button 
-                    disabled={!product.is_active || product.stock_quantity <= 0}
-                    className="bg-primary/10 text-primary px-4 py-2 rounded-lg font-bold hover:bg-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Add
-                  </button>
+                <div className="p-6 flex flex-col flex-1">
+                  <h3 className="font-black text-xl mb-2 line-clamp-1 tracking-tight">{product.name}</h3>
+                  <p className="text-sm opacity-60 line-clamp-2 mb-8 font-medium leading-relaxed flex-1">{product.description}</p>
+                  
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className="font-black text-2xl tracking-tighter">Br {product.price}</span>
+                    <button className="px-6 py-3 font-black text-sm tracking-widest uppercase hover:opacity-90 transition-opacity hover:scale-105 duration-300 rounded-sm" style={btnStyle}>
+                      Add To Cart
+                    </button>
+                  </div>
                 </div>
+
               </div>
             ))}
           </div>
         )}
-      </section>
+      </div>
     </main>
   )
 }

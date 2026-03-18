@@ -62,3 +62,25 @@ class ProductViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You cannot assign a product to another store's category.")
             
         serializer.save(store=store) 
+
+
+# Add this right below your existing ProductViewSet
+class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Public API for buyers to browse products on a specific storefront.
+    """
+    serializer_class = ProductSerializer
+    permission_classes = [permissions.AllowAny] # Anyone can view
+
+    def get_queryset(self):
+        # Get the store slug from the URL query params
+        store_slug = self.request.query_params.get('store')
+        if not store_slug:
+            return Product.objects.none()
+        
+        # Only return ACTIVE products with STOCK > 0 for this specific store
+        return Product.objects.filter(
+            store__slug=store_slug, 
+            is_active=True, 
+            stock__gt=0
+        ).order_by('-created_at')

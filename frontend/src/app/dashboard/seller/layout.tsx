@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore'
 import { Store as StoreIcon, Package, ShoppingBag, LayoutDashboard, Settings, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
+import { Palette } from 'lucide-react'
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuthStore()
   const pathname = usePathname()
@@ -44,6 +44,10 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
             </Link>
             <Link href="/dashboard/seller/orders" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller/orders') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
               <ShoppingBag size={20} /> Incoming Orders
+            </Link>
+            <Link href="/dashboard/seller/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller/settings') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-palette"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+              Store Settings
             </Link>
           </div>
 

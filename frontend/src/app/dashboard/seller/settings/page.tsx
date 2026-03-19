@@ -31,7 +31,7 @@ export default function StoreSettingsPage() {
     heading_font: 'Inter',
     card_style: 'rounded-shadow',
     announcement_is_active: false,
-    announcement_text: '✦ FREE SHIPPING ON ALL ORDERS OVER BR 1000 ✦ WELCOME TO OUR GRAND OPENING ✦',
+    announcement_text: '✦ FREE SHIPPING ON ALL ORDERS OVER BR 1000 ✦',
     announcement_color: '#171717',
   })
 
@@ -57,7 +57,7 @@ export default function StoreSettingsPage() {
             secondary_color: store.secondary_color || '#171717',
             background_color: store.background_color || '#FAFAFA',
             heading_font: store.heading_font || 'Inter',
-            card_style: store.card_style || 'rounded-shadow',
+            card_style: store.card_style || 'luxury-glass',
             announcement_is_active: store.announcement_is_active || false,
             announcement_text: store.announcement_text || '',
             announcement_color: store.announcement_color || '#171717',
@@ -128,17 +128,9 @@ export default function StoreSettingsPage() {
 
   return (
     <main className="p-4 md:p-8 h-full flex flex-col xl:flex-row gap-8">
-      {/* Animation Styles for the Preview Marquee */}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        .animate-marquee {
-          display: inline-block;
-          white-space: nowrap;
-          animation: marquee 15s linear infinite;
-        }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 15s linear infinite; }
       `}} />
 
       {/* LEFT COLUMN: SETTINGS */}
@@ -154,7 +146,6 @@ export default function StoreSettingsPage() {
         </div>
 
         <form onSubmit={handleSave} className="space-y-6">
-          {/* THEMES */}
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h2 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2"><Palette className="text-indigo-600" size={20} /> Designer Themes</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -174,7 +165,6 @@ export default function StoreSettingsPage() {
             </div>
           </div>
 
-          {/* BASIC INFO */}
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h2 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2"><LayoutTemplate className="text-indigo-600" size={20} /> Store Identity</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -199,14 +189,13 @@ export default function StoreSettingsPage() {
             </div>
           </div>
 
-          {/* ADVANCED */}
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h2 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2"><Megaphone className="text-indigo-600" size={20} /> Advanced Features</h2>
             <div className="mb-6">
                <label className="block text-sm font-bold text-gray-700 mb-2">Product Card Style</label>
                <select name="card_style" value={formData.card_style} onChange={handleInputChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 outline-none font-medium">
-                  <option value="luxury-glass">Luxury Glass (Soft Blur & Shadow)</option>
-                  <option value="minimal-border">Minimalist (Thin Borders, No Shadow)</option>
+                  <option value="luxury-glass">Luxury Glass (Modern Grid)</option>
+                  <option value="minimal-border">Minimalist (Thin Borders)</option>
                   <option value="bold-flat">Bold & Flat (High Contrast)</option>
                </select>
             </div>
@@ -229,14 +218,13 @@ export default function StoreSettingsPage() {
         </form>
       </div>
 
-      {/* RIGHT COLUMN: THE LIVE PREVIEW */}
+      {/* RIGHT COLUMN: THE LIVE PREVIEW (NOW WITH THE NEW LUXURY DESIGN!) */}
       <div className="xl:w-[450px] shrink-0 sticky top-8 self-start">
         <div className="bg-gray-200 rounded-[2.5rem] p-3 shadow-2xl border-[6px] border-gray-800 h-[800px] flex flex-col overflow-hidden relative">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-3xl z-50"></div>
 
           <div className="flex-1 rounded-[2rem] overflow-y-auto no-scrollbar relative transition-colors duration-500" style={{ backgroundColor: formData.background_color, color: formData.secondary_color }}>
             
-            {/* 🚀 THE MARQUEE PREVIEW */}
             {formData.announcement_is_active && (
               <div className="w-full py-2 overflow-hidden relative text-[10px] font-black tracking-widest uppercase" style={{ backgroundColor: formData.announcement_color, color: formData.background_color }}>
                 <div className="animate-marquee">{formData.announcement_text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{formData.announcement_text}</div>
@@ -245,31 +233,50 @@ export default function StoreSettingsPage() {
 
             <div className="w-full h-32 relative overflow-hidden flex items-center justify-center">
                {bannerPreview ? <img src={bannerPreview} className="w-full h-full object-cover opacity-90" alt="Banner" /> : <div className="absolute inset-0 opacity-20 transition-colors duration-500" style={{ backgroundColor: formData.primary_color }}></div>}
+               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
             </div>
 
             <div className="px-5 relative -mt-10 mb-6 flex flex-col items-center text-center">
-               <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-xl overflow-hidden flex items-center justify-center mb-3">
+               <div className="w-20 h-20 bg-white rounded-full border-[3px] shadow-xl overflow-hidden flex items-center justify-center mb-3" style={{ borderColor: formData.background_color }}>
                  {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" alt="Logo" /> : <ShoppingBag size={24} style={{ color: formData.primary_color }} />}
                </div>
                <h3 className="text-2xl font-black tracking-tight leading-none mb-2">{formData.name || "Store Name"}</h3>
-               <p className="text-xs font-medium opacity-60 flex items-center gap-1 justify-center"><MapPin size={12}/> {formData.city}</p>
+               <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 flex items-center gap-1 justify-center"><MapPin size={10}/> {formData.city}</p>
             </div>
 
-            <div className="px-5 text-sm opacity-80 mb-8 line-clamp-3 text-center font-medium leading-relaxed">
+            <div className="px-5 text-sm opacity-80 mb-8 line-clamp-2 text-center font-medium leading-relaxed">
               {formData.description || "Your store description will appear here..."}
             </div>
 
             <div className="px-5 pb-8">
-               <h4 className="text-xs font-black uppercase tracking-widest opacity-40 mb-4 text-center">Featured Collection</h4>
+               <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 text-center">Curated Collection</h4>
                <div className="grid grid-cols-2 gap-4">
                  {[1, 2].map((i) => (
-                    <div key={i} className={`overflow-hidden flex flex-col ${formData.card_style === 'minimal-border' ? 'border rounded-none' : formData.card_style === 'bold-flat' ? 'rounded-2xl border-2' : 'rounded-2xl shadow-lg border border-white/20 backdrop-blur-sm'}`} style={{ backgroundColor: formData.card_style === 'luxury-glass' ? `${formData.secondary_color}05` : formData.background_color, borderColor: formData.card_style === 'luxury-glass' ? `${formData.secondary_color}10` : formData.secondary_color }}>
-                       <div className="aspect-square relative opacity-80" style={{ backgroundColor: `${formData.secondary_color}10` }}></div>
-                       <div className="p-4 flex flex-col items-center text-center">
-                         <div className="h-2 w-3/4 rounded mb-3" style={{ backgroundColor: `${formData.secondary_color}40` }}></div>
-                         <div className="h-3 w-1/2 rounded mb-4" style={{ backgroundColor: `${formData.secondary_color}80` }}></div>
-                         <div className="h-8 w-full rounded-lg transition-colors duration-500 flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: formData.primary_color, color: formData.background_color }}>ADD TO CART</div>
+                    
+                    // NEW PREVIEW PRODUCT CARDS
+                    <div key={i} className="group flex flex-col overflow-hidden transition-all duration-300">
+                       
+                       {/* 4/5 Aspect Ratio Image Wrapper */}
+                       <div 
+                         className={`aspect-[4/5] relative overflow-hidden bg-black/5 ${formData.card_style === 'luxury-glass' ? 'rounded-xl border shadow-sm' : formData.card_style === 'minimal-border' ? 'rounded-none border-b' : 'rounded-xl border-2'}`}
+                         style={{ backgroundColor: `${formData.secondary_color}05`, borderColor: `${formData.secondary_color}10` }}
+                       >
+                         {/* Badge */}
+                         <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-white/90 backdrop-blur-sm rounded-sm text-[8px] font-black uppercase tracking-widest text-black shadow-sm">NEW</div>
+                         
+                         {/* Hover Effect Simulation */}
+                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                            <div className="w-full py-2 rounded-sm font-black text-[8px] tracking-widest uppercase text-center" style={{ backgroundColor: formData.primary_color, color: formData.background_color }}>Add To Cart</div>
+                         </div>
                        </div>
+
+                       {/* Content Below Image */}
+                       <div className="p-3 flex flex-col items-center text-center">
+                         <div className="h-2 w-3/4 rounded mb-2" style={{ backgroundColor: `${formData.secondary_color}40` }}></div>
+                         <div className="h-1 w-1/2 rounded mb-3" style={{ backgroundColor: `${formData.secondary_color}20` }}></div>
+                         <div className="font-black text-sm tracking-tighter" style={{ color: formData.secondary_color }}>Br 2,500</div>
+                       </div>
+
                     </div>
                  ))}
                </div>

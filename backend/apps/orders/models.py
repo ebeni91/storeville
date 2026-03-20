@@ -22,46 +22,58 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
 class Order(models.Model):
-    class Status(models.TextChoices):
-        PENDING = 'PENDING', 'Pending'
-        CONFIRMED = 'CONFIRMED', 'Confirmed'
-        PREPARING = 'PREPARING', 'Preparing'
-        READY = 'READY', 'Ready for Pickup/Delivery'
-        OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY', 'Out for Delivery'
-        DELIVERED = 'DELIVERED', 'Delivered'
-        CANCELLED = 'CANCELLED', 'Cancelled'
+    DELIVERY_CHOICES = [
+        ('ASAP_DELIVERY', 'ASAP Delivery (Food)'),
+        ('PICKUP_FOOD', 'Pick Up In-Store (Food)'),
+        ('STANDARD_DELIVERY', 'Standard Local Delivery'),
+        ('EXPRESS_COURIER', 'Express Courier (2 Hours)'),
+        ('STORE_PICKUP_RETAIL', 'Store Pickup (Retail)'),
+    ]
 
-    class DeliveryMethod(models.TextChoices):
-        # Food / Cafe Options
-        DELIVERY_ASAP = 'DELIVERY_ASAP', 'Delivery (ASAP)'
-        PICKUP = 'PICKUP', 'Store Pickup'
-        # Retail Options
-        STANDARD_DELIVERY = 'STANDARD_DELIVERY', 'Standard Delivery'
-        EXPRESS_COURIER = 'EXPRESS_COURIER', 'Express Courier'
+    PAYMENT_CHOICES = [
+        ('COD', 'Cash on Delivery'),
+        ('TELEBIRR', 'Telebirr'),
+    ]
 
-    class PaymentStatus(models.TextChoices):
-        PENDING = 'PENDING', 'Pending'
-        PAID = 'PAID', 'Paid'
-        FAILED = 'FAILED', 'Failed'
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('ACCEPTED', 'Accepted by Seller'),
+        ('PREPARING', 'Preparing / Packing'),
+        ('ON_THE_WAY', 'Out for Delivery'),
+        ('READY_FOR_PICKUP', 'Ready for Pickup'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='orders')
-    store = models.ForeignKey(Store, on_delete=models.PROTECT, related_name='orders')
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='orders')
     
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-    payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
-    delivery_method = models.CharField(max_length=20, choices=DeliveryMethod.choices)
+    # 🌟 FIX: Use settings.AUTH_USER_MODEL instead of User
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     
-    # Store address as simple text for now; we will normalize this in the delivery phase
-    delivery_address = models.TextField(null=True, blank=True)
-    
-    total_price = models.DecimalField(max_digits=11, decimal_places=2, default=0.00)
+    delivery_method = models.CharField(max_length=30, choices=DELIVERY_CHOICES, default='STANDARD_DELIVERY')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='COD')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+
+    customer_name = models.CharField(max_length=100, default="Guest")
+    contact_phone = models.CharField(max_length=20, default="0000000000")
+    delivery_address = models.TextField(blank=True, null=True, help_text="Written address or directions")
+    delivery_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    delivery_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Order {self.id} - {self.store.name}"
 
 class OrderItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    quantity = models.PositiveIntegerField()
-    # SNAPSHOT: The exact price paid at the time of checkout
-    price_at_checkout = models.DecimalField(max_digits=11, decimal_places=2)
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    product_name = models.CharField(max_length=255, default="Unknown Product")
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product_name}"

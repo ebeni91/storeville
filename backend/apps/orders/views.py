@@ -1,102 +1,94 @@
-from rest_framework import viewsets, views, status
+from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 
-from core.permissions import IsSeller
-from apps.products.models import Product
-from .models import Cart, CartItem, Order
+from apps.stores.models import Store
+from .models import Cart, CartItem, Order, OrderItem
 from .serializers import (
-    CartSerializer, CartItemSerializer, CheckoutSerializer, OrderSerializer
+    CartSerializer, 
+    CartItemSerializer, 
+    OrderSerializer, 
+    CheckoutSerializer
 )
-from .services import CheckoutService
 
-class CartViewSet(viewsets.ViewSet):
-    """
-    API for Customers to manage their cart on a specific store's subdomain.
-    """
+class CartViewSet(viewsets.ModelViewSet):
+    serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_cart(self, request):
-        if not hasattr(request, 'store_context') or not request.store_context:
-            return Response({"error": "Must be accessed from a store subdomain."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        cart, _ = Cart.objects.get_or_create(user=request.user, store=request.store_context)
-        return cart
+    def get_queryset(self):
+        return Cart.objects.filter(user=self.request.user)
 
-    def list(self, request):
-        cart = self.get_cart(request)
-        if isinstance(cart, Response): return cart # Handle missing store context
-        serializer = CartSerializer(cart)
-        return Response(serializer.data)
-
-    def create(self, request): # Add item to cart
-        cart = self.get_cart(request)
-        if isinstance(cart, Response): return cart
-
-        serializer = CartItemSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        product = get_object_or_404(Product, id=serializer.validated_data['product_id'], store=request.store_context)
-        
-        # Check if item exists, update quantity if it does
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart, product=product,
-            defaults={'quantity': serializer.validated_data.get('quantity', 1)}
-        )
-        
-        if not created:
-            cart_item.quantity += serializer.validated_data.get('quantity', 1)
-            cart_item.save()
-
-        return Response(CartSerializer(cart).data)
-
-
-class CheckoutView(views.APIView):
-    """
-    Endpoint to convert the current store's Cart into an Order.
-    """
+class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request):
-        if not hasattr(request, 'store_context') or not request.store_context:
-            return Response({"error": "Must be accessed from a store subdomain."}, status=status.HTTP_400_BAD_REQUEST)
-
+        # 1. Validate the incoming checkout data (GPS, Delivery Method, etc.)
         serializer = CheckoutSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        data = serializer.validated_data
+        store = get_object_or_404(Store, id=data['store_id'])
 
+        # 2. Find the user's active cart for this specific store
         try:
-            # Call our robust service layer
-            order = CheckoutService.process_checkout(
-                user=request.user,
-                store=request.store_context,
-                delivery_method=serializer.validated_data['delivery_method'],
-                delivery_address=serializer.validated_data.get('delivery_address')
-            )
-            return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
-            
-        except DjangoValidationError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            cart = Cart.objects.get(user=request.user, store=store)
+        except Cart.DoesNotExist:
+            return Response({"error": "No active cart found for this store."}, status=status.HTTP_404_NOT_FOUND)
 
+        cart_items = cart.items.all()
+        if not cart_items.exists():
+            return Response({"error": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 3. Calculate the total order amount
+        total_amount = sum(item.product.price * item.quantity for item in cart_items)
+
+        # 4. Create the Order (Super App Aware)
+        order = Order.objects.create(
+            store=store,
+            customer=request.user,
+            customer_name=data['customer_name'],
+            contact_phone=data['contact_phone'],
+            delivery_address=data.get('delivery_address', ''),
+            delivery_method=data['delivery_method'],
+            payment_method=data['payment_method'],
+            delivery_latitude=data.get('delivery_latitude'),
+            delivery_longitude=data.get('delivery_longitude'),
+            total_amount=total_amount,
+            status='PENDING'
+        )
+
+        # 5. Move items from the Cart to the Order
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product_name=item.product.name,
+                price=item.product.price,
+                quantity=item.quantity
+            )
+
+        # 6. Destroy the cart now that the order is placed!
+        cart.delete()
+
+        # 7. Return the completed order back to Next.js
+        result_serializer = OrderSerializer(order)
+        return Response(result_serializer.data, status=status.HTTP_201_CREATED)
 
 class CustomerOrderViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Allows a customer to view their order history across all stores.
-    """
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Order.objects.filter(customer=self.request.user).order_by('-created_at')
 
-
 class SellerOrderViewSet(viewsets.ModelViewSet):
-    """
-    Allows a seller to view and update the status of orders placed at their stores.
-    """
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated, IsSeller]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        # Sellers only see orders for the stores they own
         return Order.objects.filter(store__owner=self.request.user).order_by('-created_at')

@@ -6,6 +6,16 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class Store(models.Model):
+    STORE_TYPE_CHOICES = [
+        ('RETAIL', 'Retail Shop (Fashion, Tech, etc.)'),
+        ('FOOD', 'Food & Coffee (Cafes, Restaurants)'),
+    ]
+    store_type = models.CharField(
+        max_length=20, 
+        choices=STORE_TYPE_CHOICES, 
+        default='RETAIL',
+        help_text="Determines which map gateway this store appears on."
+    )
     # Security & Ownership
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(

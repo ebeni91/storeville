@@ -61,22 +61,24 @@ api.interceptors.response.use(
   }
 )
 
+
+// inside frontend/src/lib/api.ts
+
 export interface Store {
   id: string
   name: string
-  slug: string
+  slug: string         // 🌟 We use SLUG, not subdomain
+  store_type?: string  
   category: string
+  city?: string        
   logo: string | null
   latitude: number
   longitude: number
   distance: number
 }
 
-export const fetchNearbyStores = async (lat: number, lon: number, radius = 10, category?: string): Promise<Store[]> => {
-  const query = category 
-    ? `/stores/discovery/nearby/?lat=${lat}&lon=${lon}&radius=${radius}&category=${category}`
-    : `/stores/discovery/nearby/?lat=${lat}&lon=${lon}&radius=${radius}`;
-    
-  const response = await api.get(query);
+export const fetchNearbyStores = async (lat: number, lon: number, radius = 10, mode = 'retail'): Promise<Store[]> => {
+  const storeType = mode === 'food' ? 'FOOD' : 'RETAIL';
+  const response = await api.get(`/stores/discovery/nearby/?lat=${lat}&lon=${lon}&radius=${radius}&type=${storeType}`);
   return response.data;
 }

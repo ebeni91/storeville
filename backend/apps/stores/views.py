@@ -7,33 +7,32 @@ from core.permissions import IsSeller, IsStoreOwner
 from .serializers import StoreManagementSerializer, StoreDiscoverySerializer
 from .services import LocationService
 from .models import Store
+
 class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Public API for the map-based discovery interface.
-    """
-    queryset = Store.objects.filter(is_active=True) # Only show active stores!
+    queryset = Store.objects.filter(is_active=True)
     serializer_class = StoreDiscoverySerializer
     permission_classes = [AllowAny] 
-    lookup_field = 'slug' # <--- This lets Next.js fetch by the store's URL name!
-    
+    lookup_field = 'slug' 
 
     @action(detail=False, methods=['get'])
     def nearby(self, request):
         lat = request.query_params.get('lat')
-        lon = request.query_params.get('lon')
+        lon = request.query_params.get('lon') or request.query_params.get('lng')
         radius = request.query_params.get('radius', 10)
-        category = request.query_params.get('category')
+        
+        # 🌟 GET THE STORE TYPE FROM NEXT.JS
+        store_type = request.query_params.get('type')
 
         if not lat or not lon:
             return Response({"error": "Latitude and longitude are required."}, status=400)
 
         try:
-            # Pass to our service layer
+            # 🌟 PASS THE STORE TYPE TO THE SERVICE
             stores = LocationService.get_nearby_stores(
                 user_lat=lat, 
                 user_lon=lon, 
                 radius_km=float(radius), 
-                category=category
+                store_type=store_type 
             )
             
             serializer = StoreDiscoverySerializer(stores, many=True)
@@ -43,16 +42,11 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": "Invalid coordinate format."}, status=400)
         
 class StoreManagementViewSet(viewsets.ModelViewSet):
-    """
-    CRUD API for Sellers to manage their own stores.
-    """
     serializer_class = StoreManagementSerializer
     permission_classes = [IsAuthenticated, IsSeller, IsStoreOwner]
 
     def get_queryset(self):
-        # A seller should only ever see their own stores in the list view
         return Store.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        # Hardcode the owner to the user making the request. 
         serializer.save(owner=self.request.user)

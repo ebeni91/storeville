@@ -6,10 +6,10 @@ class StoreDiscoverySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Store
-        # Includes the premium visual fields so the public store page can render them
+        # 🌟 REMOVED 'subdomain' AND ADDED 'city'. Kept 'slug' and 'store_type'.
         fields = [
-            'id', 'name', 'slug', 'category', 'description', 'logo', 'banner', 
-            'latitude', 'longitude', 'distance', 'theme', 'primary_color', 
+            'id', 'name', 'slug', 'store_type', 'category', 'description', 'logo', 'banner', 
+            'latitude', 'longitude', 'distance', 'city', 'theme', 'primary_color', 
             'secondary_color', 'background_color', 'heading_font', 'body_font',
             'header_layout', 'card_style', 'announcement_is_active', 
             'announcement_text', 'announcement_color', 'social_instagram', 

@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
 import { useQuery } from '@tanstack/react-query'
 import { fetchNearbyStores, Store } from '@/lib/api'
 import { LocateFixed, Store as StoreIcon, Navigation, ArrowRight } from 'lucide-react'
@@ -12,69 +14,22 @@ const DEFAULT_VIEWPORT = {
   zoom: 14 
 }
 
-interface MapExplorerProps {
+interface MapCoreProps {
   mode?: 'retail' | 'food'
 }
 
-export default function MapExplorer({ mode = 'retail' }: MapExplorerProps) {
-  const [isMounted, setIsMounted] = useState(false)
-  const [Leaflet, setLeaflet] = useState<any>(null)
-  const [ReactLeaflet, setReactLeaflet] = useState<any>(null)
-  
+function MapController({ center }: { center: [number, number] }) {
+  const map = useMap()
+  useEffect(() => {
+    map.flyTo(center, 15, { animate: true, duration: 1.5 })
+  }, [center, map])
+  return null
+}
+
+export default function MapCore({ mode = 'retail' }: MapCoreProps) {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [userLoc, setUserLoc] = useState<[number, number]>([DEFAULT_VIEWPORT.latitude, DEFAULT_VIEWPORT.longitude])
   const [isLocating, setIsLocating] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-    Promise.all([
-      import('leaflet'),
-      import('react-leaflet')
-    ]).then(([L, RL]) => {
-      setLeaflet(L.default || L)
-      setReactLeaflet(RL)
-    })
-  }, [])
-
-  const { data: stores, isLoading } = useQuery({
-    queryKey: ['stores', userLoc[0], userLoc[1], mode],
-    queryFn: () => fetchNearbyStores(userLoc[0], userLoc[1], 15, mode),
-  })
-
-  const locateUser = () => {
-    setIsLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLoc([pos.coords.latitude, pos.coords.longitude])
-        setIsLocating(false)
-      },
-      (err) => {
-        console.error("GPS Error:", err)
-        alert("Could not find your location. Please ensure location services are enabled.")
-        setIsLocating(false)
-      }
-    )
-  }
-
-  if (!isMounted || !Leaflet || !ReactLeaflet) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm rounded-[2.5rem]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-600 mb-4"></div>
-        <p className="text-indigo-900 font-bold tracking-widest uppercase text-xs">Booting Map Engine...</p>
-      </div>
-    )
-  }
-
-  const { MapContainer, TileLayer, Marker, Popup, useMap } = ReactLeaflet
-  const L = Leaflet
-
-  const MapController = ({ center }: { center: [number, number] }) => {
-    const map = useMap()
-    useEffect(() => {
-      map.flyTo(center, 15, { animate: true, duration: 1.5 })
-    }, [center, map])
-    return null
-  }
 
   const modeColorClass = mode === 'food' ? 'bg-orange-500' : 'bg-indigo-600'
   const modeHoverClass = mode === 'food' ? 'hover:bg-orange-600' : 'hover:bg-indigo-700'
@@ -102,19 +57,35 @@ export default function MapExplorer({ mode = 'retail' }: MapExplorerProps) {
     })
   }
 
+  const { data: stores, isLoading } = useQuery({
+    queryKey: ['stores', userLoc[0], userLoc[1], mode],
+    queryFn: () => fetchNearbyStores(userLoc[0], userLoc[1], 15, mode),
+  })
+
+  const locateUser = () => {
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLoc([pos.coords.latitude, pos.coords.longitude])
+        setIsLocating(false)
+      },
+      (err) => {
+        console.error("GPS Error:", err)
+        alert("Could not find your location. Please ensure location services are enabled.")
+        setIsLocating(false)
+      }
+    )
+  }
+
   return (
     <div className="w-full h-full relative bg-gray-100 z-0">
       
-      {/* 🌟 PREMIUM "FIND MY LOCATION" FLOATING PILL */}
       <button 
         onClick={locateUser} 
         disabled={isLocating}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] bg-gray-900 text-white px-6 py-4 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:bg-black hover:scale-105 transition-all duration-300 disabled:opacity-70 disabled:hover:scale-100 border border-gray-700 flex items-center gap-3 group focus:outline-none focus:ring-4 focus:ring-gray-900/30"
+        className="absolute bottom-6 right-6 z-[1000] bg-white p-3.5 rounded-2xl shadow-[0_10px_20px_rgba(0,0,0,0.1)] hover:scale-105 transition-all text-gray-700 hover:text-indigo-600 disabled:opacity-50 border border-gray-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20"
       >
-        <LocateFixed size={20} className={isLocating ? 'animate-spin text-indigo-400' : 'text-indigo-400 group-hover:animate-pulse'} />
-        <span className="font-black text-sm tracking-widest uppercase">
-          {isLocating ? 'Locating...' : 'Find My Location'}
-        </span>
+        <LocateFixed size={22} className={isLocating ? 'animate-spin text-indigo-600' : ''} />
       </button>
 
       <MapContainer

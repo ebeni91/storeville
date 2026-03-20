@@ -8,6 +8,7 @@ router.register(r'my-orders', CustomerOrderViewSet, basename='customer-orders')
 router.register(r'store-orders', SellerOrderViewSet, basename='seller-orders')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # THIS MUST BE FIRST
     path('checkout/', CheckoutView.as_view(), name='api-checkout'),
+    path('', include(router.urls)),
 ]

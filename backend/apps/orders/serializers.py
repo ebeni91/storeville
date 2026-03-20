@@ -42,16 +42,21 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'customer', 'total_amount', 'status', 'created_at', 'updated_at']
 
+class CheckoutItemSerializer(serializers.Serializer):
+    product_id = serializers.UUIDField()
+    name = serializers.CharField(max_length=255)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    quantity = serializers.IntegerField(default=1)
+
 class CheckoutSerializer(serializers.Serializer):
     store_id = serializers.UUIDField()
     customer_name = serializers.CharField(max_length=100)
     contact_phone = serializers.CharField(max_length=20)
     delivery_address = serializers.CharField(required=False, allow_blank=True)
-    
-    # 🌟 NEW: Match the exact fields from our updated Order model
     delivery_method = serializers.ChoiceField(choices=Order.DELIVERY_CHOICES)
     payment_method = serializers.ChoiceField(choices=Order.PAYMENT_CHOICES)
-    
-    # 🌟 NEW: GPS Coordinates for the Map App
     delivery_latitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
     delivery_longitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    
+    # 🌟 NEW: Attaches the items to the payload validation
+    items = CheckoutItemSerializer(many=True)

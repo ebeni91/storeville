@@ -22,32 +22,26 @@ class CartViewSet(viewsets.ModelViewSet):
         return Cart.objects.filter(user=self.request.user)
 
 class CheckoutView(APIView):
+    # Enforces the Auth check as requested
     permission_classes = [IsAuthenticated]
 
     @transaction.atomic
     def post(self, request):
-        # 1. Validate the incoming checkout data (GPS, Delivery Method, etc.)
         serializer = CheckoutSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         data = serializer.validated_data
         store = get_object_or_404(Store, id=data['store_id'])
+        items_data = data.get('items', [])
 
-        # 2. Find the user's active cart for this specific store
-        try:
-            cart = Cart.objects.get(user=request.user, store=store)
-        except Cart.DoesNotExist:
-            return Response({"error": "No active cart found for this store."}, status=status.HTTP_404_NOT_FOUND)
+        if not items_data:
+            return Response({"error": "Cart payload is empty."}, status=status.HTTP_400_BAD_REQUEST)
 
-        cart_items = cart.items.all()
-        if not cart_items.exists():
-            return Response({"error": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
+        # Calculate the total from the frontend payload
+        total_amount = sum(item['price'] * item['quantity'] for item in items_data)
 
-        # 3. Calculate the total order amount
-        total_amount = sum(item.product.price * item.quantity for item in cart_items)
-
-        # 4. Create the Order (Super App Aware)
+        # Create the Order
         order = Order.objects.create(
             store=store,
             customer=request.user,
@@ -62,19 +56,15 @@ class CheckoutView(APIView):
             status='PENDING'
         )
 
-        # 5. Move items from the Cart to the Order
-        for item in cart_items:
+        # Move items into the order
+        for item in items_data:
             OrderItem.objects.create(
                 order=order,
-                product_name=item.product.name,
-                price=item.product.price,
-                quantity=item.quantity
+                product_name=item['name'],
+                price=item['price'],
+                quantity=item['quantity']
             )
 
-        # 6. Destroy the cart now that the order is placed!
-        cart.delete()
-
-        # 7. Return the completed order back to Next.js
         result_serializer = OrderSerializer(order)
         return Response(result_serializer.data, status=status.HTTP_201_CREATED)
 

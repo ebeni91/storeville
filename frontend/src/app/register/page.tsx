@@ -61,6 +61,7 @@ export default function RegisterPage() {
           description: description,
           category: gateway,
           business_type: businessType,
+          store_type: gateway.toUpperCase(),
           latitude: Number(location.lat).toFixed(6),
           longitude: Number(location.lng).toFixed(6)
         }
@@ -98,7 +99,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen relative flex items-center justify-center p-4 font-sans text-gray-900 selection:bg-indigo-500 selection:text-white overflow-hidden bg-[#fafafa]">
       
-      {/* 🌈 LOGIN PAGE BACKGROUND SYSTEM: Blurred Gradient Blobs */}
+      {/*  LOGIN PAGE BACKGROUND SYSTEM: Blurred Gradient Blobs */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Top Left Indigo Glow */}
         <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] max-w-[800px] max-h-[800px] bg-indigo-500/20 blur-[120px] rounded-full mix-blend-multiply animate-[pulse_8s_ease-in-out_infinite]"></div>

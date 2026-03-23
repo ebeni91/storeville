@@ -20,6 +20,7 @@ class StoreRegistrationSerializer(serializers.Serializer):
     description = serializers.CharField(allow_blank=True, required=False)
     category = serializers.CharField(max_length=50)
     business_type = serializers.CharField(max_length=100)
+    store_type = serializers.CharField(max_length=50)
     latitude = serializers.FloatField()  # Changed to FloatField
     longitude = serializers.FloatField() # Changed to FloatField
 class RegisterSerializer(serializers.ModelSerializer):
@@ -74,7 +75,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 slug=slug,
                 category=store_data['category'],
                 description=store_data.get('description', ''),
-                # Safely convert the floats back to decimals for the database
+                store_type=store_data['store_type'],
                 latitude=round(store_data['latitude'], 6),
                 longitude=round(store_data['longitude'], 6)
             )

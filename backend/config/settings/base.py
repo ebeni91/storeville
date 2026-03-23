@@ -18,6 +18,7 @@ BASE_DOMAIN = os.environ.get('BASE_DOMAIN', 'storeville.app')
 
 # Application definition
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -136,4 +137,76 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+
+# ==============================================================================
+# JAZZMIN ADMIN DASHBOARD SETTINGS
+# ==============================================================================
+JAZZMIN_SETTINGS = {
+    "site_title": "StoreVille Admin",
+    "site_header": "StoreVille",
+    "site_brand": "StoreVille HQ",
+    "site_logo": None, # You can add a path to your logo in static files later
+    "welcome_sign": "Welcome to StoreVille Command Center",
+    "copyright": "StoreVille Technology",
+    "search_model": ["accounts.User", "stores.Store", "orders.Order"],
+    "user_avatar": None,
+    
+    # Top Menu
+    "topmenu_links": [
+        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Visit Site", "url": "http://localhost:3000", "new_window": True},
+        {"model": "accounts.User"},
+    ],
+
+    # Custom Icons for Apps and Models
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "accounts.User": "fas fa-user-shield",
+        "stores.Store": "fas fa-store",
+        "products.Product": "fas fa-box-open",
+        "products.Category": "fas fa-tags",
+        "orders.Order": "fas fa-shopping-cart",
+        "orders.OrderItem": "fas fa-receipt",
+        "payments.PaymentTransaction": "fas fa-credit-card",
+        "delivery.Delivery": "fas fa-truck",
+    },
+    
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-indigo",
+    "accent": "accent-indigo",
+    "navbar": "navbar-indigo navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-indigo",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "default",
+    "dark_mode_theme": "darkly",
+    "button_classes": {
+        "primary": "btn-indigo",
+        "secondary": "btn-outline-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
 }

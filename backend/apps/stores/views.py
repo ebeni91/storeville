@@ -18,14 +18,17 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
     def nearby(self, request):
         lat = request.query_params.get('lat')
         lon = request.query_params.get('lon') or request.query_params.get('lng')
-        radius = request.query_params.get('radius', 10)
-        
-        # 🌟 GET THE STORE TYPE FROM NEXT.JS
+        radius = float(request.query_params.get('radius', 15))
         store_type = request.query_params.get('type')
 
         if not lat or not lon:
             return Response({"error": "Latitude and longitude are required."}, status=400)
-
+        queryset = Store.objects.filter(is_active=True)
+        
+        # 🌟 Filter by RETAIL or FOOD if the parameter exists
+        if store_type:
+            queryset = queryset.filter(store_type=store_type.upper())
+        
         try:
             # 🌟 PASS THE STORE TYPE TO THE SERVICE
             stores = LocationService.get_nearby_stores(
@@ -35,7 +38,7 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
                 store_type=store_type 
             )
             
-            serializer = StoreDiscoverySerializer(stores, many=True)
+            serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
             
         except ValueError:

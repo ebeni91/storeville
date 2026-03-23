@@ -2,16 +2,27 @@
 
 build:
 	docker compose build
-
+build-frontend:
+	docker compose build frontend
+build-backend:
+	docker compose build backend
 up:
 # 	docker compose up -d
 	docker-compose up --build 
-
+up-frontend:
+	docker compose up -d frontend
+up-backend:
+	docker compose up -d backend
 down:
 	docker compose down
-	
 restart:
 	docker compose restart
+
+restart-backend:
+	docker compose restart backend
+
+restart-frontend:
+	docker compose restart frontend
 
 logs:
 	docker compose logs -f backend

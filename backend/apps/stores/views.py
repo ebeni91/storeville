@@ -14,6 +14,22 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny] 
     lookup_field = 'slug' 
 
+    # 🌟 THE FIX: Add the by_slug endpoint Next.js is looking for
+    @action(detail=False, methods=['get'])
+    def by_slug(self, request):
+        slug = request.query_params.get('slug')
+        
+        if not slug:
+            return Response({"error": "Store slug is required."}, status=400)
+            
+        try:
+            # Find the active store matching this subdomain/slug
+            store = Store.objects.get(slug=slug, is_active=True)
+            serializer = self.get_serializer(store)
+            return Response(serializer.data)
+        except Store.DoesNotExist:
+            return Response({"error": "Store not found."}, status=404)
+
     @action(detail=False, methods=['get'])
     def nearby(self, request):
         lat = request.query_params.get('lat')
@@ -23,14 +39,15 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not lat or not lon:
             return Response({"error": "Latitude and longitude are required."}, status=400)
+            
         queryset = Store.objects.filter(is_active=True)
         
-        # 🌟 Filter by RETAIL or FOOD if the parameter exists
+        # Filter by RETAIL or FOOD if the parameter exists
         if store_type:
             queryset = queryset.filter(store_type=store_type.upper())
         
         try:
-            # 🌟 PASS THE STORE TYPE TO THE SERVICE
+            # PASS THE STORE TYPE TO THE SERVICE
             stores = LocationService.get_nearby_stores(
                 user_lat=lat, 
                 user_lon=lon, 

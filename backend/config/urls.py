@@ -18,10 +18,10 @@ urlpatterns = [
     # Active App Routes
     path('api/accounts/', include('apps.accounts.urls')),
     path('api/stores/', include('apps.stores.urls')),
-    path('api/products/', include('apps.products.urls')),
-    
-    # Pending Apps
-    path('api/orders/', include('apps.orders.urls')),
+   path('api/retail/', include('apps.retail_catalog.urls')),
+    path('api/food/', include('apps.food_menu.urls')),
+    path('api/orders/retail/', include('apps.retail_orders.urls')),
+    path('api/orders/food/', include('apps.food_orders.urls')),
     # path('api/payments/', include('apps.payments.urls')),
     # path('api/delivery/', include('apps.delivery.urls')),
 ]

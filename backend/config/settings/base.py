@@ -35,8 +35,11 @@ INSTALLED_APPS = [
     # Local Domain Apps
     'apps.accounts',
     'apps.stores',
-    'apps.products',
-    'apps.orders',
+    'apps.retail_catalog', 
+    'apps.food_menu',
+    'apps.retail_orders', 
+    'apps.food_orders',
+    # 'apps.orders',
     'apps.payments',
     'apps.delivery',
 ]
@@ -150,7 +153,7 @@ JAZZMIN_SETTINGS = {
     "site_logo": None, # You can add a path to your logo in static files later
     "welcome_sign": "Welcome to StoreVille Command Center",
     "copyright": "StoreVille Technology",
-    "search_model": ["accounts.User", "stores.Store", "orders.Order"],
+    # "search_model": ["accounts.User", "stores.Store", "orders.Order","retail_orders.RetailOrder","food_orders.FoodOrder"],
     "user_avatar": None,
     
     # Top Menu
@@ -171,6 +174,19 @@ JAZZMIN_SETTINGS = {
         "products.Category": "fas fa-tags",
         "orders.Order": "fas fa-shopping-cart",
         "orders.OrderItem": "fas fa-receipt",
+        "payments.PaymentTransaction": "fas fa-credit-card",
+        "delivery.Delivery": "fas fa-truck",
+        # The Food Engine
+        "food_menu.MenuCategory": "fas fa-list",
+        "food_menu.MenuItem": "fas fa-hamburger",
+        "food_orders.FoodOrder": "fas fa-motorcycle",
+        
+        # The Retail Engine
+        "retail_catalog.RetailCategory": "fas fa-tags",
+        "retail_catalog.RetailProduct": "fas fa-box-open",
+        "retail_orders.RetailOrder": "fas fa-shopping-cart",
+        
+        # Logistics & Finance
         "payments.PaymentTransaction": "fas fa-credit-card",
         "delivery.Delivery": "fas fa-truck",
     },

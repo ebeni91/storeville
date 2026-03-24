@@ -31,3 +31,5 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
+SESSION_COOKIE_DOMAIN = '.localhost' # Use '.storeville.com' in production
+CSRF_COOKIE_DOMAIN = '.localhost'

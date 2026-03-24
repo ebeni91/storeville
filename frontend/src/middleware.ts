@@ -11,7 +11,9 @@ export function middleware(req: NextRequest) {
   }
 
   const subdomain = hostname.split('.')[0]
-  url.pathname = `/store/${subdomain}${url.pathname}`
+  // url.pathname = `/store/${subdomain}${url.pathname}`
+  const path = url.pathname === '/' ? '' : url.pathname
+  url.pathname = `/store/${subdomain}${path}`
   return NextResponse.rewrite(url)
 }
 

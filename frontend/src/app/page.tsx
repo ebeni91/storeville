@@ -2,16 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Store as StoreIcon, Truck, Coffee, ShoppingBag, LayoutGrid, Map as MapIcon, MessageCircle, ArrowRight, Instagram, Twitter, Facebook } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/store/authStore'
+import { Store as StoreIcon, Truck, Coffee, ShoppingBag, LayoutGrid, Map as MapIcon, MessageCircle, ArrowRight, Instagram, Twitter, Facebook, User, LogOut } from 'lucide-react'
 import StoreGrid from '@/components/StoreGrid'
 import MapExplorer from '@/components/MapExplorer' 
 
 export default function Home() {
+  const router = useRouter()
+  const { token, logout } = useAuthStore()
+  const [isMounted, setIsMounted] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  
   const [mode, setMode] = useState<'retail' | 'food' | null>(null)
   const [viewMode, setViewMode] = useState<'map' | 'grid'>('map')
   const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -25,7 +33,7 @@ export default function Home() {
         <div className="absolute inset-0 opacity-[0.25] mix-blend-overlay bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]"></div>
       </div>
 
-      {/* 🧭 NAVIGATION BAR (Restored: Light Premium Glass) */}
+      {/* 🧭 NAVIGATION BAR */}
       <div className="fixed top-0 inset-x-0 z-50 flex justify-center px-4 pt-4 md:pt-6 pointer-events-none">
         <header className={`pointer-events-auto flex items-center justify-between w-full max-w-[1400px] transition-all duration-500 ${isScrolled ? 'bg-white/70 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 py-4 px-8 rounded-full' : 'bg-transparent py-5 px-4 md:px-8'}`}>
           
@@ -44,18 +52,55 @@ export default function Home() {
             </button>
             <div className="hidden md:block w-px h-5 bg-gray-300"></div>
             
-            <Link href="/login" className="hover:text-indigo-600 transition-colors hidden sm:block">
-               Log In
-            </Link>
-            
-            <Link href="/register" className="bg-gray-900 text-white px-7 py-3.5 rounded-full shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:bg-black hover:shadow-[0_8px_25px_rgb(0,0,0,0.2)] transition-all duration-300 transform hover:-translate-y-0.5 tracking-wide">
-              Open Your Store
-            </Link>
+            <div className="flex items-center gap-4">
+              {isMounted && token ? (
+                /* 🌟 LOGGED IN: SHOW UNIVERSAL PROFILE DROPDOWN */
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} 
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 hover:shadow-md transition-all"
+                  >
+                    <User size={20} className="text-indigo-600" />
+                  </button>
+                  
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 p-2 z-[100] animate-in fade-in slide-in-from-top-2">
+                      <div className="px-3 py-2 border-b border-gray-100 mb-2">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">My Account</p>
+                      </div>
+                      <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors flex items-center gap-3">
+                        <User size={16} className="text-indigo-500" /> Global Profile
+                      </button>
+                      <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors flex items-center gap-3 mt-1">
+                        <ShoppingBag size={16} className="text-indigo-500" /> My Orders
+                      </button>
+                      <button onClick={() => {
+                        logout()
+                        setIsUserMenuOpen(false)
+                        window.location.reload()
+                      }} className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1">
+                        <LogOut size={16} /> Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* 🌟 LOGGED OUT: SHOW DEFAULT BUTTONS */
+                <>
+                  <Link href="/login" className="hover:text-indigo-600 transition-colors hidden sm:block">
+                     Log In
+                  </Link>
+                  <Link href="/register" className="bg-gray-900 text-white px-7 py-3.5 rounded-full shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:bg-black hover:shadow-[0_8px_25px_rgb(0,0,0,0.2)] transition-all duration-300 transform hover:-translate-y-0.5 tracking-wide">
+                    Open Your Store
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
         </header>
       </div>
 
-      {/* ⚡ HERO & EXPLORER SECTION (Flex-1 ensures footer stays at the very bottom) */}
+      {/* ⚡ HERO & EXPLORER SECTION */}
       <div className={`relative z-10 flex flex-col items-center px-4 w-full max-w-[1600px] mx-auto transition-all duration-1000 ease-out flex-1 ${mode ? 'pt-32 md:pt-36' : 'pt-[25vh]'}`}>
         
         <div className="max-w-4xl mx-auto text-center w-full mb-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
@@ -133,7 +178,6 @@ export default function Home() {
               <span className="text-3xl font-black tracking-tighter">Store<span className="text-indigo-500">Ville</span></span>
             </Link>
             
-            {/* Restored Typography for brand text */}
             <p className="text-gray-400 text-lg font-medium max-w-sm leading-relaxed mb-6">
               The premium digital mall of Ethiopia. Discover, shop, and support local businesses with instant delivery.
             </p>
@@ -176,9 +220,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 🌟 OVERSIZED PREMIUM WATERMARK (Restored & Preserved) */}
+        {/* 🌟 OVERSIZED PREMIUM WATERMARK */}
         <div className="mt-auto relative flex flex-col items-center justify-end overflow-hidden pt-6 border-t border-gray-800/50">
-           {/* Text-transparent and bg-clip-text creates the beautiful fade-in effect from the dark background */}
            <h1 className="text-[14vw] font-black tracking-[-0.04em] leading-[0.75] select-none pointer-events-none text-transparent bg-clip-text bg-gradient-to-b from-gray-800/80 to-gray-900">
              STOREVILLE
            </h1>

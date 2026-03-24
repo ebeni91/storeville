@@ -10,5 +10,7 @@ class FoodOrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Users can only see their own orders
-        return FoodOrder.objects.filter(customer=self.request.user).order_by('-created_at')
+        user = self.request.user
+        if user.role == 'SELLER':
+            return FoodOrder.objects.filter(store__owner=user).order_by('-created_at')
+        return FoodOrder.objects.filter(customer=user).order_by('-created_at')

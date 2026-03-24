@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchNearbyStores, Store } from '@/lib/api'
 import { Store as StoreIcon, MapPin, ArrowRight, Clock, Star, Navigation } from 'lucide-react'
-import Link from 'next/link'
 
 export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food' }) {
   const { data: stores, isLoading } = useQuery({
@@ -56,9 +55,9 @@ export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food'
     <div className="w-full h-full p-4 md:p-8 overflow-y-auto bg-gray-50/30 hide-scrollbar">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
         {stores.map((store: Store) => (
-         <Link 
+         <a 
             key={store.id} 
-            // 🌟 CHANGED from store.subdomain to store.slug
+            // 🌟 Using a standard anchor tag forces a hard reload for subdomain navigation!
             href={`http://${store.slug}.localhost:3000`} 
             className={`group bg-white/90 backdrop-blur-xl border border-white shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 transform hover:-translate-y-2 p-4 md:p-5 rounded-[2rem] flex flex-col relative ring-1 ring-transparent ${modeRing}`}
           >
@@ -116,7 +115,7 @@ export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food'
                 <ArrowRight size={16} />
               </div>
             </div>
-          </Link>
+          </a>
         ))}
       </div>
     </div>

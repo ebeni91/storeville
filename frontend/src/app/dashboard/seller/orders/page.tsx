@@ -1,40 +1,36 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Loader2, Eye, X, Package, Truck, CheckCircle, Clock, MapPin, Phone, CreditCard, ChefHat, ShoppingBag } from 'lucide-react'
+import { Search, Loader2, Eye, X, Package, Truck, CheckCircle, Clock, MapPin, Phone, CreditCard, ChefHat, ShoppingBag, FileText, Flame } from 'lucide-react'
 import { api } from '@/lib/api'
 
-// Define the shape of our Super App Order data
-interface OrderItem {
-  id: string;
-  product_name: string;
-  quantity: number;
-  price: string;
-}
-
-interface Order {
-  id: string; 
-  customer_name: string;
-  contact_phone: string;
-  delivery_address: string;
-  delivery_method: string;
-  payment_method: string;
-  total_amount: string;
-  status: 'PENDING' | 'ACCEPTED' | 'PREPARING' | 'ON_THE_WAY' | 'READY_FOR_PICKUP' | 'COMPLETED' | 'CANCELLED';
-  created_at: string;
-  items: OrderItem[];
-}
-
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const [store, setStore] = useState<any>(null)
+  const [orders, setOrders] = useState<any[]>([])
   const [isFetching, setIsFetching] = useState(true)
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const fetchOrders = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const res = await api.get('/orders/store-orders/') 
+      setIsFetching(true)
+      
+      // 1. Get Store Profile
+      const storeRes = await api.get('/stores/manage/')
+      const storeList = storeRes.data.results || storeRes.data || []
+      const currentStore = storeList[0]
+
+      if (!currentStore) {
+        setIsFetching(false)
+        return
+      }
+      setStore(currentStore)
+
+      // 2. Fetch the correct orders based on engine
+      const endpoint = currentStore.store_type === 'FOOD' ? '/orders/food/' : '/orders/retail/'
+      const res = await api.get(endpoint)
+      
       const data = Array.isArray(res.data) ? res.data : res.data.results || []
       setOrders(data)
     } catch (err) {
@@ -45,16 +41,18 @@ export default function OrdersPage() {
   }
 
   useEffect(() => {
-    fetchOrders()
+    fetchDashboardData()
   }, [])
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     setIsUpdating(true)
     try {
-      await api.patch(`/orders/store-orders/${orderId}/`, { status: newStatus })
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus as any } : o))
+      const endpoint = store.store_type === 'FOOD' ? `/orders/food/${orderId}/` : `/orders/retail/${orderId}/`
+      await api.patch(endpoint, { status: newStatus })
+      
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
       if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus as any })
+        setSelectedOrder({ ...selectedOrder, status: newStatus })
       }
     } catch (err) {
       alert("Failed to update status")
@@ -64,8 +62,9 @@ export default function OrdersPage() {
     }
   }
 
+  const isFood = store?.store_type === 'FOOD'
+
   const filteredOrders = orders.filter(o => 
-    o.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     o.id.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -73,25 +72,30 @@ export default function OrdersPage() {
     switch (status) {
       case 'PENDING': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-yellow-100 text-yellow-700 flex items-center gap-1.5 w-max"><Clock size={12}/> Pending</span>
       case 'ACCEPTED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-100 text-blue-700 flex items-center gap-1.5 w-max"><CheckCircle size={12}/> Accepted</span>
-      case 'PREPARING': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-purple-100 text-purple-700 flex items-center gap-1.5 w-max"><ChefHat size={12}/> Preparing</span>
-      case 'ON_THE_WAY': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-indigo-100 text-indigo-700 flex items-center gap-1.5 w-max"><Truck size={12}/> On the Way</span>
-      case 'READY_FOR_PICKUP': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-orange-100 text-orange-700 flex items-center gap-1.5 w-max"><ShoppingBag size={12}/> Ready for Pickup</span>
-      case 'COMPLETED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-100 text-emerald-700 flex items-center gap-1.5 w-max"><CheckCircle size={12}/> Completed</span>
+      case 'COOKING': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-orange-100 text-orange-700 flex items-center gap-1.5 w-max"><Flame size={12}/> In Kitchen</span>
+      case 'PROCESSING': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-purple-100 text-purple-700 flex items-center gap-1.5 w-max"><Package size={12}/> Packing</span>
+      case 'READY': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-indigo-100 text-indigo-700 flex items-center gap-1.5 w-max"><ShoppingBag size={12}/> Ready for Pickup</span>
+      case 'SHIPPED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-100 text-blue-700 flex items-center gap-1.5 w-max"><Truck size={12}/> Shipped</span>
+      case 'OUT_FOR_DELIVERY': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-indigo-100 text-indigo-700 flex items-center gap-1.5 w-max"><Truck size={12}/> On the Way</span>
+      case 'DELIVERED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-100 text-emerald-700 flex items-center gap-1.5 w-max"><CheckCircle size={12}/> Delivered</span>
       case 'CANCELLED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-red-100 text-red-700 flex items-center gap-1.5 w-max"><X size={12}/> Cancelled</span>
       default: return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-gray-100 text-gray-700">{status}</span>
     }
   }
 
-  // Helper to make delivery methods look nice
-  const formatDeliveryMethod = (method: string) => {
-    return method.replace(/_/g, ' ')
-  }
+  // Dynamic Statuses based on Engine
+  const foodStatuses = ['PENDING', 'ACCEPTED', 'COOKING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED']
+  const retailStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']
+  const availableStatuses = isFood ? foodStatuses : retailStatuses
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-[1600px] mx-auto flex flex-col">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-gray-900">Incoming Orders</h1>
+          <h1 className="text-3xl font-black tracking-tight text-gray-900 flex items-center gap-3">
+            {isFood ? <ChefHat size={32} className="text-orange-500"/> : <Package size={32} className="text-indigo-600"/>}
+            {isFood ? 'Kitchen Orders' : 'Store Orders'}
+          </h1>
           <p className="text-gray-500 font-medium mt-1 text-sm">Manage and fulfill your customer purchases.</p>
         </div>
       </div>
@@ -101,7 +105,7 @@ export default function OrdersPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input 
             type="text" 
-            placeholder="Search by Order ID or Customer..." 
+            placeholder="Search by Order ID..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-black outline-none text-sm font-bold transition-all" 
@@ -116,8 +120,7 @@ export default function OrdersPage() {
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-400 text-[10px] uppercase tracking-widest font-black">
                 <th className="p-5">Order ID</th>
                 <th className="p-5">Date</th>
-                <th className="p-5">Customer</th>
-                <th className="p-5">Logistics</th>
+                <th className="p-5">Customer (ID)</th>
                 <th className="p-5">Total</th>
                 <th className="p-5">Status</th>
                 <th className="p-5 text-right">Actions</th>
@@ -125,24 +128,24 @@ export default function OrdersPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isFetching ? (
-                <tr><td colSpan={7} className="p-12 text-center text-gray-500"><Loader2 className="animate-spin mx-auto mb-3" size={32} /> Loading orders...</td></tr>
+                <tr><td colSpan={6} className="p-12 text-center text-gray-500"><Loader2 className="animate-spin mx-auto mb-3" size={32} /> Loading orders...</td></tr>
               ) : filteredOrders.length === 0 ? (
-                <tr><td colSpan={7} className="p-16 text-center text-gray-400 font-medium">No orders found. Keep marketing your store!</td></tr>
+                <tr><td colSpan={6} className="p-16 text-center text-gray-400 font-medium">No orders found. Keep marketing your store!</td></tr>
               ) : (
                 filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="p-5 font-black text-gray-900 text-sm">#{order.id.toString().slice(0,8).toUpperCase()}</td>
-                    <td className="p-5 font-medium text-gray-500 text-xs">{new Date(order.created_at).toLocaleDateString()}</td>
-                    <td className="p-5">
-                      <p className="font-bold text-gray-900 text-sm">{order.customer_name}</p>
-                      <p className="font-medium text-gray-500 text-xs mt-0.5">{order.contact_phone}</p>
+                    <td className="p-5 font-black text-gray-900 text-sm">
+                      #{order.id.toString().slice(0,8).toUpperCase()}
+                      {isFood && order.is_asap && <span className="ml-2 bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] uppercase">ASAP</span>}
+                    </td>
+                    <td className="p-5 font-medium text-gray-500 text-xs">
+                      {new Date(order.created_at).toLocaleDateString()} <br/>
+                      <span className="text-[10px]">{new Date(order.created_at).toLocaleTimeString()}</span>
                     </td>
                     <td className="p-5">
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest inline-block mb-1">
-                        {formatDeliveryMethod(order.delivery_method)}
-                      </span>
+                      <p className="font-bold text-gray-900 text-sm">User #{order.customer}</p>
                     </td>
-                    <td className="p-5 font-black text-gray-900">Br {order.total_amount}</td>
+                    <td className="p-5 font-black text-gray-900">Br {parseFloat(order.total_amount).toFixed(2)}</td>
                     <td className="p-5"><StatusBadge status={order.status} /></td>
                     <td className="p-5 text-right">
                       <button onClick={() => setSelectedOrder(order)} className="p-2.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-xl transition-all inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
@@ -165,7 +168,10 @@ export default function OrdersPage() {
           <div className="relative w-full sm:w-[500px] bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 ease-out">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-gray-900">#{selectedOrder.id.toString().slice(0,8).toUpperCase()}</h2>
+                <h2 className="text-2xl font-black tracking-tight text-gray-900">
+                  #{selectedOrder.id.toString().slice(0,8).toUpperCase()}
+                  {isFood && selectedOrder.is_asap && <span className="ml-3 bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] uppercase align-middle">ASAP</span>}
+                </h2>
                 <p className="text-xs text-gray-500 font-bold tracking-widest uppercase mt-1">{new Date(selectedOrder.created_at).toLocaleString()}</p>
               </div>
               <button onClick={() => setSelectedOrder(null)} className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
@@ -185,52 +191,36 @@ export default function OrdersPage() {
                     onChange={(e) => handleUpdateStatus(selectedOrder.id, e.target.value)}
                     disabled={isUpdating}
                   >
-                    <option value="PENDING">Pending (Awaiting Confirmation)</option>
-                    <option value="ACCEPTED">Accepted</option>
-                    <option value="PREPARING">Preparing / Packing</option>
-                    <option value="ON_THE_WAY">Out for Delivery</option>
-                    <option value="READY_FOR_PICKUP">Ready for Pickup</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CANCELLED">Cancelled</option>
+                    {availableStatuses.map(status => (
+                      <option key={status} value={status}>{status.replace(/_/g, ' ')}</option>
+                    ))}
                   </select>
                   {isUpdating && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-gray-400" size={18} />}
                 </div>
               </div>
 
-              {/* Customer & Logistics */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Customer</h3>
-                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 h-full">
-                    <p className="font-black text-gray-900 text-sm mb-1">{selectedOrder.customer_name}</p>
-                    <p className="text-xs font-bold text-gray-500 flex items-center gap-1.5"><Phone size={12}/> {selectedOrder.contact_phone}</p>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Logistics</h3>
-                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 h-full">
-                    <span className="bg-black text-white px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest inline-block mb-2">
-                      {formatDeliveryMethod(selectedOrder.delivery_method)}
-                    </span>
-                    <p className="text-xs font-bold text-gray-500 flex items-start gap-1.5 leading-relaxed">
-                      <MapPin size={14} className="shrink-0 mt-0.5"/> 
-                      {selectedOrder.delivery_address || 'No address provided'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Details */}
+              {/* Logistics */}
               <div>
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Payment</h3>
-                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-gray-100">
-                    <CreditCard size={18} className="text-gray-900"/>
-                  </div>
-                  <div>
-                    <p className="font-black text-gray-900 text-sm">Via {selectedOrder.payment_method === 'COD' ? 'Cash on Delivery' : 'Telebirr'}</p>
-                    <p className="text-xs font-bold text-gray-500">Collect upon delivery</p>
-                  </div>
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Location Details</h3>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 h-full">
+                  <p className="text-sm font-bold text-gray-900 flex items-start gap-2 leading-relaxed">
+                    <MapPin size={16} className="shrink-0 mt-0.5 text-indigo-500"/> 
+                    {isFood ? selectedOrder.delivery_address : selectedOrder.shipping_address}
+                  </p>
+                  
+                  {isFood && selectedOrder.delivery_instructions && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1 flex items-center gap-1"><FileText size={12}/> Instructions</p>
+                      <p className="text-xs font-medium text-gray-600 italic">"{selectedOrder.delivery_instructions}"</p>
+                    </div>
+                  )}
+
+                  {!isFood && selectedOrder.tracking_number && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Truck size={12}/> Tracking</p>
+                      <p className="text-xs font-bold text-gray-900 font-mono">{selectedOrder.tracking_number}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -238,13 +228,22 @@ export default function OrdersPage() {
               <div>
                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Purchased Items ({selectedOrder.items?.length || 0})</h3>
                 <div className="space-y-3">
-                  {selectedOrder.items?.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-4 border border-gray-100 rounded-2xl bg-white shadow-sm">
-                      <div>
-                        <p className="font-black text-gray-900 text-sm mb-0.5 line-clamp-1">{item.product_name}</p>
-                        <p className="text-xs text-gray-500 font-bold tracking-widest uppercase">Qty: {item.quantity}</p>
+                  {selectedOrder.items?.map((item: any, idx: number) => (
+                    <div key={idx} className="flex flex-col p-4 border border-gray-100 rounded-2xl bg-white shadow-sm gap-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-black text-gray-900 text-sm mb-0.5">{isFood ? item.menu_item_name : item.product_name}</p>
+                          <p className="text-xs text-gray-500 font-bold tracking-widest uppercase">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="font-black text-gray-900">Br {parseFloat(item.price_at_time).toFixed(2)}</p>
                       </div>
-                      <p className="font-black text-gray-900">Br {item.price}</p>
+                      
+                      {isFood && item.special_requests && (
+                         <div className="mt-2 bg-orange-50 px-3 py-2 rounded-lg border border-orange-100">
+                           <p className="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-0.5">Kitchen Note:</p>
+                           <p className="text-xs font-medium text-orange-800">"{item.special_requests}"</p>
+                         </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -254,9 +253,13 @@ export default function OrdersPage() {
 
             {/* Total Footer */}
             <div className="p-6 bg-gray-900 text-white rounded-t-[2rem] mt-auto relative z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-              <div className="flex justify-between items-center">
-                <span className="font-black tracking-widest uppercase text-sm opacity-70">Total Amount</span>
-                <span className="font-black text-2xl">Br {selectedOrder.total_amount}</span>
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-bold text-sm opacity-70">{isFood ? 'Delivery Fee' : 'Shipping Fee'}</span>
+                <span className="font-bold text-sm opacity-70">Br {parseFloat(isFood ? selectedOrder.delivery_fee : selectedOrder.shipping_fee).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                <span className="font-black tracking-widest uppercase text-sm">Total Amount</span>
+                <span className="font-black text-2xl">Br {parseFloat(selectedOrder.total_amount).toFixed(2)}</span>
               </div>
             </div>
 

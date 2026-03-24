@@ -3,13 +3,20 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-import { Loader2, ShoppingBag, MapPin, Search, Heart, User, SlidersHorizontal, ArrowRight, X, Check, Menu, Star, CheckCircle, Lock,Plus } from 'lucide-react'
+import { Loader2, ShoppingBag, MapPin, Search, Heart, User, SlidersHorizontal, ArrowRight, X, Check, Menu, Star, CheckCircle, Lock, Plus, LogOut } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
 
 interface RetailCategory { id: string; name: string; slug: string }
 interface RetailProduct { id: string; category: string; category_name: string; name: string; description: string; price: string; image: string | null; stock_quantity: number }
 
 export default function RetailStorefront({ store }: { store: any }) {
   const router = useRouter()
+  
+  // 🌟 UNIVERSAL AUTH STATE
+  const { token, logout } = useAuthStore()
+  const [isMounted, setIsMounted] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+
   const [categories, setCategories] = useState<RetailCategory[]>([])
   const [products, setProducts] = useState<RetailProduct[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -22,27 +29,36 @@ export default function RetailStorefront({ store }: { store: any }) {
   const [cartItems, setCartItems] = useState<any[]>([])
 
   // Auth States
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
-  const [authData, setAuthData] = useState({ email: '', password: '', username: '' })
+  const [authData, setAuthData] = useState({ 
+    email: '', password: '', username: '', first_name: '', last_name: '', phone_number: '' 
+  })
   const [authLoading, setAuthLoading] = useState(false)
 
   useEffect(() => {
-    // 1. Check Auth Status
-    const token = localStorage.getItem('access_token') || localStorage.getItem('token')
-    if (token) {
-      setIsAuthenticated(true)
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    setIsMounted(true) // Prevent hydration mismatch
+  }, [])
+ useEffect(() => {
+    const wakeUpAuth = async () => {
+      if (!token) {
+        try {
+          await api.get('/accounts/profile/')
+        } catch (e) {
+          // If this fails, they are genuinely logged out. Do nothing.
+        }
+      }
     }
-
-    // 2. Load Cart
+    wakeUpAuth()
+  }, [token])
+  useEffect(() => {
+    // 1. Load Cart
     const savedCart = localStorage.getItem(`cart_retail_${store.id}`)
     if (savedCart) {
       try { setCartItems(JSON.parse(savedCart)) } catch (e) {}
     }
 
-    // 3. Fetch New Retail Architecture
+    // 2. Fetch New Retail Architecture
     const fetchCatalog = async () => {
       try {
         const [catRes, prodRes] = await Promise.all([
@@ -85,7 +101,7 @@ export default function RetailStorefront({ store }: { store: any }) {
   const removeFromCart = (productId: string) => setCartItems(cartItems.filter(item => item.id !== productId))
 
   const handleProceedToCheckout = () => {
-    if (isAuthenticated) router.push(`/store/${store.slug}/checkout`)
+    if (token) router.push(`/store/${store.slug}/checkout`)
     else setIsAuthModalOpen(true)
   }
 
@@ -94,19 +110,46 @@ export default function RetailStorefront({ store }: { store: any }) {
     setAuthLoading(true)
     try {
       const endpoint = authMode === 'login' ? '/accounts/token/' : '/accounts/register/' 
-      const payload = authMode === 'login' ? { email: authData.email, password: authData.password } : { email: authData.email, password: authData.password, username: authData.username }
-      const res = await api.post(endpoint, payload)
-      const token = res.data.access || res.data.token || res.data.key
       
-      if (token) {
-        localStorage.setItem('access_token', token)
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-        setIsAuthenticated(true)
-        setIsAuthModalOpen(false)
-        router.push(`/store/${store.slug}/checkout`)
+      const payload = authMode === 'login' 
+        ? { email: authData.email, password: authData.password } 
+        : { 
+            email: authData.email, 
+            password: authData.password, 
+            username: authData.username,
+            first_name: authData.first_name,
+            last_name: authData.last_name,
+            phone_number: authData.phone_number
+          }
+          
+      const res = await api.post(endpoint, payload)
+      const accessToken = res.data.access || res.data.token || res.data.key
+      
+      if (accessToken) {
+        useAuthStore.getState().setToken(accessToken)
       }
+      
+      setIsAuthModalOpen(false)
+      router.push(`/store/${store.slug}/checkout`)
+      
     } catch (err: any) {
-      alert("Authentication failed. Please check credentials.")
+      console.error("Auth Error Details:", err.response || err)
+      
+      // If CORS or Network Error happens, err.response will be undefined
+      if (!err.response) {
+        alert("Network Error: Could not reach the server. Please check CORS settings.")
+        return
+      }
+
+      const data = err.response?.data
+      const errorMsg = data?.detail 
+        || data?.username?.[0] 
+        || data?.email?.[0] 
+        || data?.password?.[0] 
+        || data?.non_field_errors?.[0]
+        || "Authentication failed. Please check your details."
+      
+      alert(errorMsg)
     } finally {
       setAuthLoading(false)
     }
@@ -148,14 +191,30 @@ export default function RetailStorefront({ store }: { store: any }) {
 
           <form onSubmit={handleAuthSubmit} className="space-y-4">
             {authMode === 'register' && (
-              <div>
-                <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Username</label>
-                <input type="text" required value={authData.username} onChange={e => setAuthData({...authData, username: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="Username" />
-              </div>
+              <>
+                <div>
+                  <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Username</label>
+                  <input type="text" required value={authData.username} onChange={e => setAuthData({...authData, username: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="StorevilleUser" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">First Name</label>
+                    <input type="text" required value={authData.first_name} onChange={e => setAuthData({...authData, first_name: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="John" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Last Name</label>
+                    <input type="text" required value={authData.last_name} onChange={e => setAuthData({...authData, last_name: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="Doe" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Phone Number</label>
+                  <input type="tel" required value={authData.phone_number} onChange={e => setAuthData({...authData, phone_number: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="+251 911 234 567" />
+                </div>
+              </>
             )}
             <div>
-              <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Email</label>
-              <input type="email" required value={authData.email} onChange={e => setAuthData({...authData, email: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="email@example.com" />
+              <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Email Address</label>
+              <input type="email" required value={authData.email} onChange={e => setAuthData({...authData, email: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="you@example.com" />
             </div>
             <div>
               <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Password</label>
@@ -206,8 +265,36 @@ export default function RetailStorefront({ store }: { store: any }) {
           </div>
 
           <div className="flex items-center gap-6 md:gap-8">
-            <User size={22} className="cursor-pointer hover:scale-110 transition-transform hidden md:block" />
             <Heart size={22} className="cursor-pointer hover:scale-110 transition-transform hidden md:block" />
+            
+            {/* 🌟 UNIVERSAL BUYER PROFILE DROPDOWN */}
+            <div className="relative">
+              <button 
+                onClick={() => (isMounted && token) ? setIsUserMenuOpen(!isUserMenuOpen) : setIsAuthModalOpen(true)} 
+                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+              >
+                <User size={22} className={(isMounted && token) ? "text-indigo-600" : ""} />
+              </button>
+              
+              {isUserMenuOpen && isMounted && token && (
+                <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 p-2 z-[100] animate-in fade-in slide-in-from-top-2" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
+                  <div className="px-3 py-2 border-b border-gray-100 mb-2">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">My Account</p>
+                  </div>
+                  <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors flex items-center gap-3">
+                    <User size={16} /> Global Profile & Orders
+                  </button>
+                  <button onClick={() => {
+                    logout()
+                    setIsUserMenuOpen(false)
+                    window.location.reload()
+                  }} className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1">
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="relative cursor-pointer hover:scale-110 transition-transform" onClick={() => setIsCartOpen(true)}>
               <ShoppingBag size={22} />
               {cartItems.length > 0 && (
@@ -380,7 +467,7 @@ export default function RetailStorefront({ store }: { store: any }) {
                 <span style={{ color: store.primary_color }}>Br {cartTotal}</span>
               </div>
               <button onClick={handleProceedToCheckout} className="w-full py-3.5 rounded-xl text-sm font-black tracking-widest uppercase shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2" style={{ backgroundColor: store.primary_color, color: store.background_color }}>
-                {!isAuthenticated && <Lock size={16} />} Secure Checkout
+                {(!isMounted || !token) && <Lock size={16} />} Secure Checkout
               </button>
             </div>
           )}

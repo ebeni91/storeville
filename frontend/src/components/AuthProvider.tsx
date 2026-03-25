@@ -1,14 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
-import axios from 'axios'
+import { api } from '@/lib/api'
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isHydrating, setIsHydrating] = useState(true)
-  const { token, login, logout } = useAuthStore()
+  const { token, logout } = useAuthStore()
+  
+  // Prevents React 18 Strict Mode from double-firing the hydration check
+  const hasAttempted = useRef(false) 
 
   useEffect(() => {
+    if (hasAttempted.current) return;
+    hasAttempted.current = true;
+
     const restoreSession = async () => {
       if (token) {
         setIsHydrating(false)
@@ -16,25 +22,22 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       }
 
       try {
-        const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://api.storeville.test:8000/api'
-        // Base axios bypasses the interceptor trap
-        const res = await axios.post(`${baseURL}/accounts/refresh/`, {}, { 
-            withCredentials: true 
-        })
-        
-        const { access, user } = res.data
-        login(user, access)
+        // We trigger a protected route. 
+        // If there is no token in RAM, this gets a 401, triggers the Mutex Lock 
+        // in api.ts, safely rotates the HttpOnly cookie, and retries successfully.
+        await api.get('/accounts/profile/')
       } catch (error) {
-        logout() // No valid cookie found
+        // If it still fails, the cookie is truly dead/missing.
+        logout() 
       } finally {
         setIsHydrating(false)
       }
     }
 
     restoreSession()
-  }, [token, login, logout])
+  }, [token, logout])
 
-  if (isHydrating) return null // Prevents UI flashing
+  if (isHydrating) return null 
 
   return <>{children}</>
 }

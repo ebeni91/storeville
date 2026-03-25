@@ -35,7 +35,6 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = []
 }
 
-// The Silent Refresh Interceptor with Mutex Lock
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -43,12 +42,11 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       
-      // If a refresh is already happening, add to queue
       if (isRefreshing) {
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject })
         }).then(token => {
-          originalRequest.headers.Authorization = 'Bearer ' + token
+          originalRequest.headers.Authorization = `Bearer ${token}`
           return api(originalRequest)
         }).catch(err => {
           return Promise.reject(err)
@@ -59,13 +57,21 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        // Use standard axios to prevent interceptor loops
+        // Use raw axios here to avoid interceptor loops
+        const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://api.storeville.test:8000/api'
         const res = await axios.post(`${baseURL}/accounts/refresh/`, {}, { 
           withCredentials: true 
         })
 
         const newAccessToken = res.data.access
-        useAuthStore.getState().setToken(newAccessToken)
+        const user = res.data.user // This comes from our CustomTokenRefreshSerializer
+        
+        // CRITICAL: Hydrate the user profile state across subdomains
+        if (user) {
+          useAuthStore.getState().login(user, newAccessToken)
+        } else {
+          useAuthStore.getState().setToken(newAccessToken)
+        }
 
         processQueue(null, newAccessToken)
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
@@ -76,13 +82,15 @@ api.interceptors.response.use(
         useAuthStore.getState().logout()
         
         if (typeof window !== 'undefined') {
-          // Redirect to the main platform login
           const protocol = window.location.protocol;
           const baseDomain = window.location.hostname.includes('test') 
             ? 'storeville.test:3000' 
             : 'storeville.app'; 
             
-          window.location.href = `${protocol}//${baseDomain}/login`;
+          // Prevent infinite redirect loops if they are already on auth pages
+          if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+             window.location.href = `${protocol}//${baseDomain}/login`;
+          }
         }
         return Promise.reject(refreshError)
       } finally {

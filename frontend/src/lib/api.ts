@@ -1,17 +1,17 @@
 import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://api.storeville.test:8000/api'
 
 export const api = axios.create({
   baseURL,
-  withCredentials: true, // CRITICAL: Tells the browser to send/receive the HttpOnly cookies
+  withCredentials: true, // CRITICAL: Send the HttpOnly cookie
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-// 1. Request Interceptor: Attach the short-lived Access Token from Memory
+// Attach the Access Token from Memory
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
   if (token && config.headers) {
@@ -20,48 +20,79 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// 2. Response Interceptor: The Silent Refresh Magic
+// --- CONCURRENCY LOCK VARIABLES ---
+let isRefreshing = false
+let failedQueue: any[] = []
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
+
+// The Silent Refresh Interceptor with Mutex Lock
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
 
-    // If the API says our Access Token is dead (401), and we haven't tried refreshing yet...
     if (error.response?.status === 401 && !originalRequest._retry) {
+      
+      // If a refresh is already happening, add to queue
+      if (isRefreshing) {
+        return new Promise(function(resolve, reject) {
+          failedQueue.push({ resolve, reject })
+        }).then(token => {
+          originalRequest.headers.Authorization = 'Bearer ' + token
+          return api(originalRequest)
+        }).catch(err => {
+          return Promise.reject(err)
+        })
+      }
+
       originalRequest._retry = true
+      isRefreshing = true
 
       try {
-        // Hit the refresh endpoint. We don't need to send a body because 
-        // the browser automatically includes the 'refresh_token' HttpOnly cookie!
+        // Use standard axios to prevent interceptor loops
         const res = await axios.post(`${baseURL}/accounts/refresh/`, {}, { 
           withCredentials: true 
         })
 
         const newAccessToken = res.data.access
-
-        // Save the new token back to memory
         useAuthStore.getState().setToken(newAccessToken)
 
-        // Update the failed request with the new token and retry it seamlessly
+        processQueue(null, newAccessToken)
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
         return api(originalRequest)
 
       } catch (refreshError) {
-        // If the refresh fails (e.g., 7 days have passed and the cookie expired)
-        // Log the user out and send them to the login page
+        processQueue(refreshError, null)
         useAuthStore.getState().logout()
+        
         if (typeof window !== 'undefined') {
-          window.location.href = '/login'
+          // Redirect to the main platform login
+          const protocol = window.location.protocol;
+          const baseDomain = window.location.hostname.includes('test') 
+            ? 'storeville.test:3000' 
+            : 'storeville.app'; 
+            
+          window.location.href = `${protocol}//${baseDomain}/login`;
         }
         return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
       }
     }
 
     return Promise.reject(error)
   }
 )
-
-
 // inside frontend/src/lib/api.ts
 
 export interface Store {

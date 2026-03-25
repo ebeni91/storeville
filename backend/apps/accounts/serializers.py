@@ -6,6 +6,9 @@ import uuid
 from apps.stores.models import Store
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.state import token_backend
+
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
@@ -129,3 +132,25 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             }
         
         raise AuthenticationFailed('Invalid email/phone or password.')
+    
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Decode the refresh token to identify the user
+        decoded_payload = token_backend.decode(attrs['refresh'], verify=True)
+        user_id = decoded_payload.get('user_id')
+        
+        try:
+            user = User.objects.get(id=user_id)
+            # Inject the exact payload the Next.js frontend expects
+            data['user'] = {
+                'id': str(user.id),
+                'email': user.email,
+                'phone_number': user.phone_number,
+                'role': user.role,
+            }
+        except User.DoesNotExist:
+            pass
+            
+        return data

@@ -1,10 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import FoodOrderViewSet
+from .views import CartDetailView, FoodOrderViewSet, CartMergeView
 
 router = DefaultRouter()
 router.register(r'', FoodOrderViewSet, basename='food-orders')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('cart/merge/', CartMergeView.as_view(), name='food-cart-merge'),
+    path('cart/', CartDetailView.as_view(), name='cart-detail'),
+    path('', include(router.urls))
 ]

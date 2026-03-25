@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { Loader2, ShoppingBag, MapPin, Search, Heart, User, ArrowRight, X, Check, Menu, Star, Clock, Bike, Lock, Flame, Leaf, Plus, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
+import { useCartStore } from '@/store/cartStore' // <-- NEW IMPORT
 
 interface MenuCategory { id: string; name: string; order: number }
 interface MenuItem { id: string; category: string; category_name: string; name: string; description: string; price: string; image: string | null; preparation_time_minutes: number; is_vegetarian: boolean; is_vegan: boolean; is_spicy: boolean }
@@ -12,10 +13,15 @@ interface MenuItem { id: string; category: string; category_name: string; name: 
 export default function FoodStorefront({ store }: { store: any }) {
   const router = useRouter()
   
-  // 🌟 UNIVERSAL AUTH STATE
-  const { token, logout } = useAuthStore()
+  // 🌟 UNIVERSAL AUTH & CART STATES
+  const { token, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useAuthStore()
+  const { carts, addItem, removeItem, mergeCartWithBackend } = useCartStore()
+
   const [isMounted, setIsMounted] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+
+  // Grab the specific cart for this store safely to avoid hydration errors
+  const cartItems = isMounted ? (carts[store.id] || []) : []
 
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
@@ -23,13 +29,11 @@ export default function FoodStorefront({ store }: { store: any }) {
   const [activeCategory, setActiveCategory] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // UI & Cart States
+  // UI States
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [cartItems, setCartItems] = useState<any[]>([])
 
-  // Auth States
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  // Auth Modal Forms
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [authData, setAuthData] = useState({ 
     email: '', password: '', username: '', first_name: '', last_name: '', phone_number: '' 
@@ -37,28 +41,19 @@ export default function FoodStorefront({ store }: { store: any }) {
   const [authLoading, setAuthLoading] = useState(false)
 
   useEffect(() => {
-    setIsMounted(true) // Prevent hydration mismatch
+    setIsMounted(true) 
   }, [])
-    useEffect(() => {
-    const wakeUpAuth = async () => {
-      if (!token) {
-        try {
-          await api.get('/accounts/profile/')
-        } catch (e) {
-          // If this fails, they are genuinely logged out. Do nothing.
-        }
-      }
-    }
-    wakeUpAuth()
-  }, [token])
-  useEffect(() => {
-    // 1. Load Cart
-    const savedCart = localStorage.getItem(`cart_food_${store.id}`)
-    if (savedCart) {
-      try { setCartItems(JSON.parse(savedCart)) } catch (e) {}
-    }
 
-    // 2. Fetch Menu Architecture
+//   useEffect(() => {
+//     const wakeUpAuth = async () => {
+//       if (!token) {
+//         try { await api.get('/accounts/profile/') } catch (e) {}
+//       }
+//     }
+//     wakeUpAuth()
+//   }, [token])
+
+  useEffect(() => {
     const fetchMenu = async () => {
       try {
         const [catRes, itemRes] = await Promise.all([
@@ -76,10 +71,6 @@ export default function FoodStorefront({ store }: { store: any }) {
     if (store?.id) fetchMenu()
   }, [store.id])
 
-  useEffect(() => {
-    if (store) localStorage.setItem(`cart_food_${store.id}`, JSON.stringify(cartItems))
-  }, [cartItems, store])
-
   const safeItems = Array.isArray(items) ? items : []
   const filteredItems = safeItems.filter(item => {
     const matchesCategory = activeCategory === 'ALL' || item.category === activeCategory
@@ -87,40 +78,30 @@ export default function FoodStorefront({ store }: { store: any }) {
     return matchesCategory && matchesSearch
   })
 
+  // 🛒 USING ZUSTAND CART
   const handleAddToCart = (item: any) => {
-    const existing = cartItems.find(cartItem => cartItem.id === item.id)
-    if (existing) {
-      setCartItems(cartItems.map(cartItem => cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem))
-    } else {
-      setCartItems([...cartItems, { ...item, quantity: 1 }])
-    }
+    addItem(store.id, { ...item, quantity: 1 })
     setToastMessage(`Added ${item.name} to order.`)
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  const removeFromCart = (itemId: string) => setCartItems(cartItems.filter(item => item.id !== itemId))
+  const removeFromCart = (itemId: string) => removeItem(store.id, itemId)
 
+  // 🛡️ THE CHECKOUT INTERCEPTOR
   const handleProceedToCheckout = () => {
     if (token) router.push(`/store/${store.slug}/checkout`)
-    else setIsAuthModalOpen(true)
+    else openAuthModal()
   }
 
+  // 🤝 THE SILENT MERGE HANDSHAKE
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthLoading(true)
     try {
       const endpoint = authMode === 'login' ? '/accounts/token/' : '/accounts/register/' 
-      
       const payload = authMode === 'login' 
         ? { email: authData.email, password: authData.password } 
-        : { 
-            email: authData.email, 
-            password: authData.password, 
-            username: authData.username,
-            first_name: authData.first_name,
-            last_name: authData.last_name,
-            phone_number: authData.phone_number
-          }
+        : { email: authData.email, password: authData.password, username: authData.username, first_name: authData.first_name, last_name: authData.last_name, phone_number: authData.phone_number }
           
       const res = await api.post(endpoint, payload)
       const accessToken = res.data.access || res.data.token || res.data.key
@@ -129,27 +110,16 @@ export default function FoodStorefront({ store }: { store: any }) {
         useAuthStore.getState().setToken(accessToken)
       }
       
-      setIsAuthModalOpen(false)
+      // MAGIC HAPPENS HERE: We tell Django about the guest cart items
+      // Notice we pass 'FOOD' as the storeType
+      await mergeCartWithBackend(store.id, 'FOOD')
+      
+      closeAuthModal()
       router.push(`/store/${store.slug}/checkout`)
       
     } catch (err: any) {
-      console.error("Auth Error Details:", err.response || err)
-      
-      // If CORS or Network Error happens, err.response will be undefined
-      if (!err.response) {
-        alert("Network Error: Could not reach the server. Please check CORS settings.")
-        return
-      }
-
-      const data = err.response?.data
-      const errorMsg = data?.detail 
-        || data?.username?.[0] 
-        || data?.email?.[0] 
-        || data?.password?.[0] 
-        || data?.non_field_errors?.[0]
-        || "Authentication failed. Please check your details."
-      
-      alert(errorMsg)
+      console.error("Auth Error:", err)
+      alert("Authentication failed. Please check your details.")
     } finally {
       setAuthLoading(false)
     }
@@ -178,11 +148,11 @@ export default function FoodStorefront({ store }: { store: any }) {
         </div>
       </div>
 
-      {/* AUTH MODAL */}
+      {/* GLOBAL AUTH MODAL */}
       <div className={`fixed inset-0 z-[300] flex items-center justify-center transition-all duration-500 ${isAuthModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsAuthModalOpen(false)}></div>
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={closeAuthModal}></div>
         <div className="relative w-full max-w-md p-8 rounded-[2rem] shadow-2xl border transition-transform duration-500 scale-100" style={{ backgroundColor: `rgba(${bgRgb}, 0.95)`, color: store.secondary_color, borderColor: `rgba(${textRgb}, 0.1)` }}>
-          <button onClick={() => setIsAuthModalOpen(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/5 transition-colors"><X size={20} /></button>
+          <button onClick={closeAuthModal} className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/5 transition-colors"><X size={20} /></button>
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner" style={{ backgroundColor: `rgba(${textRgb}, 0.05)` }}>
             <Lock size={28} style={{ color: store.primary_color }} />
           </div>
@@ -268,7 +238,7 @@ export default function FoodStorefront({ store }: { store: any }) {
             {/* 🌟 UNIVERSAL BUYER PROFILE DROPDOWN */}
             <div className="relative">
               <button 
-                onClick={() => (isMounted && token) ? setIsUserMenuOpen(!isUserMenuOpen) : setIsAuthModalOpen(true)} 
+                onClick={() => (isMounted && token) ? setIsUserMenuOpen(!isUserMenuOpen) : openAuthModal()} 
                 className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
               >
                 <User size={22} className={(isMounted && token) ? "text-indigo-600" : ""} />

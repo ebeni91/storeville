@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-import { Loader2, MapPin, CreditCard, ArrowRight, CheckCircle, Clock, FileText, ChevronLeft, ShoppingBag } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
+import { Loader2, MapPin, CreditCard, ChevronLeft, CheckCircle, Clock, FileText, ShoppingBag } from 'lucide-react'
 
 export default function CheckoutPage({ params }: { params: { subdomain: string } }) {
   const router = useRouter()
+  const { token, isAuthModalOpen, openAuthModal } = useAuthStore()
   
   // Core States
   const [store, setStore] = useState<any>(null)
@@ -17,46 +19,44 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
 
   // Form States
   const [address, setAddress] = useState('')
-  const [instructions, setInstructions] = useState('') // For Food
-  const [isAsap, setIsAsap] = useState(true) // For Food
+  const [instructions, setInstructions] = useState('') 
+  const [isAsap, setIsAsap] = useState(true) 
 
   useEffect(() => {
     const fetchCheckoutData = async () => {
       try {
-        // 1. Verify User is Authenticated
-        const token = localStorage.getItem('access_token') || localStorage.getItem('token')
+        // 1. Validate Session. If they bypassed the system and got here without a token, kick them back.
         if (!token) {
           router.push(`/store/${params.subdomain}`)
           return
         }
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
         // 2. Fetch Store Profile
         const storeRes = await api.get(`/stores/discovery/by_slug/?slug=${params.subdomain}`)
         const storeData = storeRes.data
         setStore(storeData)
 
-        // 3. Load the correct cart based on architecture
-        const cartKey = storeData.store_type === 'FOOD' ? `cart_food_${storeData.id}` : `cart_retail_${storeData.id}`
-        const savedCart = localStorage.getItem(cartKey)
-        
-        if (savedCart) {
-          setCartItems(JSON.parse(savedCart))
-        } else {
-          setCartItems([])
-        }
+        // 3. SECURE FETCH: Grab the official database cart from Django
+        const cartEndpoint = storeData.store_type === 'FOOD' 
+            ? `/food_orders/cart/?store_id=${storeData.id}` 
+            : `/retail_orders/cart/?store_id=${storeData.id}`
+            
+        const cartRes = await api.get(cartEndpoint)
+        setCartItems(cartRes.data.items || [])
+
       } catch (err) {
         console.error("Checkout Initialization Error", err)
+        // If the 401 interceptor fires here, they will automatically be safely redirected.
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchCheckoutData()
-  }, [params.subdomain, router])
+  }, [params.subdomain, router, token])
 
   const subtotal = cartItems.reduce((acc, curr) => acc + (parseFloat(curr.price) * curr.quantity), 0)
-  const deliveryFee = store?.store_type === 'FOOD' ? 50.00 : 150.00 // Example dynamic fees
+  const deliveryFee = store?.store_type === 'FOOD' ? 50.00 : 150.00 
   const total = subtotal + deliveryFee
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
@@ -77,8 +77,10 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
             special_requests: item.special_requests || ''
           }))
         }
-        await api.post('/orders/food/', payload)
-        localStorage.removeItem(`cart_food_${store.id}`)
+        await api.post('/food_orders/', payload)
+        
+        // Wipe the official database cart after successful order
+        await api.delete(`/food_orders/cart/?store_id=${store.id}`)
         
       } else {
         // 🛍️ SUBMIT TO RETAIL ENGINE
@@ -90,8 +92,10 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
             quantity: item.quantity
           }))
         }
-        await api.post('/orders/retail/', payload)
-        localStorage.removeItem(`cart_retail_${store.id}`)
+        await api.post('/retail_orders/', payload)
+        
+        // Wipe the official database cart after successful order
+        await api.delete(`/retail_orders/cart/?store_id=${store.id}`)
       }
 
       setOrderComplete(true)
@@ -240,8 +244,8 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
             <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 mb-6">
               {cartItems.map((item, idx) => (
                 <div key={idx} className="flex gap-4 items-center">
-                  <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                    {item.image && <img src={item.image} className="w-full h-full object-cover" />}
+                  <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200 flex items-center justify-center">
+                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ShoppingBag size={20} className="text-gray-300" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-gray-900 truncate">{item.name}</h4>

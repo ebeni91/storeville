@@ -40,3 +40,37 @@ class RetailOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}x {self.product.name if self.product else 'Deleted Product'}"
+
+# ==========================================
+# NEW MODELS FOR LAZY AUTHENTICATION CARTS
+# ==========================================
+
+class Cart(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='retail_carts')
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='carts')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # A user can only have one active cart per store at a time
+        unique_together = ('user', 'store')
+
+    def __str__(self):
+        return f"Cart for {self.user.email} at {self.store.name}"
+
+class CartItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(RetailProduct, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Prevent duplicate rows for the same product in the same cart
+        unique_together = ('cart', 'product')
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product.name} in Cart {self.cart.id}"

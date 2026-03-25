@@ -12,26 +12,31 @@ interface AuthState {
   user: User | null
   token: string | null
   isAuthenticated: boolean
+  isAuthModalOpen: boolean // <-- NEW
   login: (user: User, token: string) => void
   setToken: (token: string) => void
   logout: () => void
+  openAuthModal: () => void // <-- NEW
+  closeAuthModal: () => void // <-- NEW
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      token: null, // Token starts empty in RAM
+      token: null, 
       isAuthenticated: false,
+      isAuthModalOpen: false, 
+      
       login: (user, token) => set({ user, token, isAuthenticated: true }),
       setToken: (token) => set({ token, isAuthenticated: true }),
       logout: () => set({ user: null, token: null, isAuthenticated: false }),
+      openAuthModal: () => set({ isAuthModalOpen: true }),
+      closeAuthModal: () => set({ isAuthModalOpen: false }),
     }),
     {
       name: 'storeville-auth',
-      // ENTERPRISE SECURITY MAGIC: 
-      // We only save the user profile and auth flag to the browser. 
-      // The JWT token is excluded, keeping it strictly in RAM!
+      // We exclude 'isAuthModalOpen' so the modal doesn't stay stuck open if they refresh
       partialize: (state) => ({ 
         user: state.user, 
         isAuthenticated: state.isAuthenticated 

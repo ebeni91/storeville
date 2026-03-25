@@ -45,3 +45,35 @@ class FoodOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}x {self.menu_item.name if self.menu_item else 'Deleted Item'}"
+
+# ==========================================
+# NEW MODELS FOR LAZY AUTHENTICATION CARTS
+# ==========================================
+
+class Cart(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='food_carts')
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='food_carts_at_store')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'store')
+
+    def __str__(self):
+        return f"Food Cart for {self.user.email} at {self.store.name}"
+
+class CartItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('cart', 'menu_item')
+
+    def __str__(self):
+        return f"{self.quantity}x {self.menu_item.name} in Cart {self.cart.id}"

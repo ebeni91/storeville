@@ -78,20 +78,12 @@ api.interceptors.response.use(
         return api(originalRequest)
 
       } catch (refreshError) {
+        // 1. Clear the queue
         processQueue(refreshError, null)
+        
+        // 2. Wipe the frontend state (tell Zustand they are a guest)
         useAuthStore.getState().logout()
         
-        if (typeof window !== 'undefined') {
-          const protocol = window.location.protocol;
-          const baseDomain = window.location.hostname.includes('test') 
-            ? 'storeville.test:3000' 
-            : 'storeville.app'; 
-            
-          // Prevent infinite redirect loops if they are already on auth pages
-          if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-             window.location.href = `${protocol}//${baseDomain}/login`;
-          }
-        }
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

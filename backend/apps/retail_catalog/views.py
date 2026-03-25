@@ -5,11 +5,14 @@ from apps.stores.models import Store
 
 class IsStoreOwnerOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS: return True
+        if request.method in permissions.SAFE_METHODS: 
+            return True
         return request.user and request.user.is_authenticated
+        
     def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS: return True
-        return obj.store.owner == request.request.user
+        if request.method in permissions.SAFE_METHODS: 
+            return True
+        return obj.store.owner == request.user # Fixed the request.request.user typo
 
 class RetailCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = RetailCategorySerializer
@@ -17,8 +20,13 @@ class RetailCategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         store_id = self.request.query_params.get('store_id')
-        if store_id: return RetailCategory.objects.filter(store_id=store_id)
-        if self.request.user.is_authenticated: return RetailCategory.objects.filter(store__owner=self.request.user)
+        if store_id: 
+            # Added order_by to fix the UnorderedObjectListWarning
+            return RetailCategory.objects.filter(store_id=store_id).order_by('name')
+        
+        if self.request.user.is_authenticated: 
+            return RetailCategory.objects.filter(store__owner=self.request.user).order_by('name')
+            
         return RetailCategory.objects.none()
 
     def perform_create(self, serializer):
@@ -30,8 +38,13 @@ class RetailProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         store_id = self.request.query_params.get('store_id')
-        if store_id: return RetailProduct.objects.filter(store_id=store_id, is_active=True)
-        if self.request.user.is_authenticated: return RetailProduct.objects.filter(store__owner=self.request.user)
+        if store_id: 
+            # Added order_by to fix the UnorderedObjectListWarning
+            return RetailProduct.objects.filter(store_id=store_id, is_active=True).order_by('-id')
+            
+        if self.request.user.is_authenticated: 
+            return RetailProduct.objects.filter(store__owner=self.request.user).order_by('-id')
+            
         return RetailProduct.objects.none()
 
     def perform_create(self, serializer):

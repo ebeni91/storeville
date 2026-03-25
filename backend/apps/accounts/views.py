@@ -46,28 +46,42 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         return response
 
 class CookieTokenRefreshView(TokenRefreshView):
-    serializer_class = CustomTokenRefreshSerializer # <--- Use the new serializer
+    serializer_class = CustomTokenRefreshSerializer
 
     def post(self, request, *args, **kwargs):
+        # 1. Grab the cookie
         refresh_token = request.COOKIES.get('refresh_token')
         
         if not refresh_token:
             raise InvalidToken('No valid refresh token found in cookies.')
-            
-        request.data['refresh'] = refresh_token
-        response = super().post(request, *args, **kwargs)
 
-        if response.status_code == 200 and 'refresh' in response.data:
-            new_refresh_token = response.data.get('refresh')
-            del response.data['refresh']
+        # 2. Feed it directly to the serializer (bypassing request.data immutability)
+        serializer = self.get_serializer(data={'refresh': refresh_token})
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            raise InvalidToken(e.args[0])
+
+        # 3. Success! Grab the new tokens
+        data = serializer.validated_data
+        new_refresh_token = data.get('refresh')
+        
+        if new_refresh_token:
+            del data['refresh']
             
+        response = Response(data, status=200)
+
+        # 4. Set the new rotating cookie
+        if new_refresh_token:
             response.set_cookie(
                 key='refresh_token',
                 value=new_refresh_token,
-                domain=get_cookie_domain(), # <--- Share across subdomains
+                domain=get_cookie_domain(), # .storeville.test
                 httponly=True,
                 secure=not settings.DEBUG,
                 samesite='Lax',
                 max_age=24 * 60 * 60 * 7
             )
+            
         return response

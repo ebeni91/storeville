@@ -44,14 +44,14 @@ export default function RetailStorefront({ store }: { store: any }) {
     setIsMounted(true) 
   }, [])
 
-//   useEffect(() => {
-//     const wakeUpAuth = async () => {
-//       if (!token) {
-//         try { await api.get('/accounts/profile/') } catch (e) {}
-//       }
-//     }
-//     wakeUpAuth()
-//   }, [token])
+  useEffect(() => {
+    const wakeUpAuth = async () => {
+      if (!token) {
+        try { await api.get('/accounts/profile/') } catch (e) {}
+      }
+    }
+    wakeUpAuth()
+  }, [token])
 
   useEffect(() => {
     const fetchCatalog = async () => {

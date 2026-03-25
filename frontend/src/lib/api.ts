@@ -1,15 +1,26 @@
 import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://api.storeville.test:8000/api'
+// 1. We dynamically ensure the API points to the same base domain we are browsing on
+// so the browser doesn't block the cookie for being "Cross-Site"
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    const isTestDomain = window.location.hostname.includes('test');
+    // Align with the backend ALLOWED_HOSTS & CORS configuration
+    return isTestDomain ? 'http://api.storeville.test:8000/api' : 'http://localhost:8000/api';
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://api.storeville.test:8000/api';
+}
 
 export const api = axios.create({
-  baseURL,
-  withCredentials: true, // CRITICAL: Send the HttpOnly cookie
+  // Dynamically assigned base URL to prevent hardcoded domain mismatch
+  baseURL: getBaseURL(), 
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // CRITICAL: Tells the browser to attach the cookie
 })
+// ... keep your interceptors below exactly as they are ...
 
 // Attach the Access Token from Memory
 api.interceptors.request.use((config) => {
@@ -58,7 +69,7 @@ api.interceptors.response.use(
 
       try {
         // Use raw axios here to avoid interceptor loops
-        const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://api.storeville.test:8000/api'
+        const baseURL = getBaseURL()
         const res = await axios.post(`${baseURL}/accounts/refresh/`, {}, { 
           withCredentials: true 
         })
@@ -83,7 +94,7 @@ api.interceptors.response.use(
         
         // 2. Wipe the frontend state (tell Zustand they are a guest)
         useAuthStore.getState().logout()
-        
+
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

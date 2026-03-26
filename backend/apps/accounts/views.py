@@ -1,10 +1,12 @@
-from rest_framework import generics, permissions
-from .serializers import UserSerializer, RegisterSerializer
+from rest_framework import generics, permissions,status
+from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.conf import settings
-from .serializers import CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
+
 User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
@@ -14,15 +16,10 @@ class RegisterView(generics.CreateAPIView):
 
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
-    # Uses the default IsAuthenticated permission from settings
 
     def get_object(self):
-        # Security: A user can only fetch their own profile, not someone else's via ID
         return self.request.user
     
-def get_cookie_domain():
-    return f".{settings.BASE_DOMAIN}" if hasattr(settings, 'BASE_DOMAIN') else None
-
 class CookieTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer 
     
@@ -34,10 +31,10 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             if refresh_token:
                 del response.data['refresh']
                 
+                # Simplified secure cookie setting
                 response.set_cookie(
                     key='refresh_token',
                     value=refresh_token,
-                    domain=get_cookie_domain(), # <--- Share across subdomains
                     httponly=True,
                     secure=not settings.DEBUG, 
                     samesite='Lax',
@@ -46,16 +43,16 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         return response
 
 class CookieTokenRefreshView(TokenRefreshView):
-    serializer_class = CustomTokenRefreshSerializer
+    serializer_class = CustomTokenRefreshSerializer 
 
     def post(self, request, *args, **kwargs):
-        # 1. Grab the cookie
+        # 1. Safely grab the cookie
         refresh_token = request.COOKIES.get('refresh_token')
         
         if not refresh_token:
             raise InvalidToken('No valid refresh token found in cookies.')
 
-        # 2. Feed it directly to the serializer (bypassing request.data immutability)
+        # 2. Feed directly to serializer
         serializer = self.get_serializer(data={'refresh': refresh_token})
         
         try:
@@ -63,7 +60,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         except Exception as e:
             raise InvalidToken(e.args[0])
 
-        # 3. Success! Grab the new tokens
+        # 3. Format Response
         data = serializer.validated_data
         new_refresh_token = data.get('refresh')
         
@@ -72,16 +69,25 @@ class CookieTokenRefreshView(TokenRefreshView):
             
         response = Response(data, status=200)
 
-        # 4. Set the new rotating cookie
+        # 4. Set the new cookie
         if new_refresh_token:
             response.set_cookie(
                 key='refresh_token',
                 value=new_refresh_token,
-                domain=get_cookie_domain(), # .storeville.test
                 httponly=True,
                 secure=not settings.DEBUG,
                 samesite='Lax',
                 max_age=24 * 60 * 60 * 7
             )
-            
+        return response
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        response = Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
+        
+        response.delete_cookie('refresh_token')
+        
         return response

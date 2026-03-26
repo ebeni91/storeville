@@ -30,7 +30,7 @@ export default function MapCore({ mode = 'retail' }: MapCoreProps) {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [userLoc, setUserLoc] = useState<[number, number]>([DEFAULT_VIEWPORT.latitude, DEFAULT_VIEWPORT.longitude])
   const [isLocating, setIsLocating] = useState(false)
-  const baseDomain = window.location.hostname.includes('test') ? 'storeville.test:3000' : 'storeville.app';
+  
   const modeColorClass = mode === 'food' ? 'bg-orange-500' : 'bg-indigo-600'
   const modeHoverClass = mode === 'food' ? 'hover:bg-orange-600' : 'hover:bg-indigo-700'
   const spinnerColor = mode === 'food' ? 'border-orange-500' : 'border-indigo-600'
@@ -136,7 +136,8 @@ export default function MapCore({ mode = 'retail' }: MapCoreProps) {
                 </div>
 
                 <a
-                  href={`http://${store.slug}.${baseDomain}`}
+                  // 🌟 NEW: Standard relative path!
+                  href={`/store/${store.slug}`}
                   className={`flex items-center justify-center gap-2 w-full ${modeColorClass} text-white text-[11px] font-black tracking-widest uppercase py-3.5 rounded-xl shadow-lg ${modeHoverClass} transition-all transform hover:-translate-y-0.5 focus:ring-4 focus:ring-indigo-500/30`}
                 >
                   Visit Store <ArrowRight size={14} />

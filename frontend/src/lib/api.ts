@@ -1,26 +1,15 @@
 import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
 
-// 1. We dynamically ensure the API points to the same base domain we are browsing on
-// so the browser doesn't block the cookie for being "Cross-Site"
-const getBaseURL = () => {
-  if (typeof window !== 'undefined') {
-    const isTestDomain = window.location.hostname.includes('test');
-    // Align with the backend ALLOWED_HOSTS & CORS configuration
-    return isTestDomain ? 'http://api.storeville.test:8000/api' : 'http://localhost:8000/api';
-  }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://api.storeville.test:8000/api';
-}
-
+// 1. Point directly to your backend natively. 
+// No more dynamic domain guessing needed!
 export const api = axios.create({
-  // Dynamically assigned base URL to prevent hardcoded domain mismatch
-  baseURL: getBaseURL(), 
+  baseURL: 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true, // CRITICAL: Tells the browser to attach the cookie
 })
-// ... keep your interceptors below exactly as they are ...
 
 // Attach the Access Token from Memory
 api.interceptors.request.use((config) => {
@@ -31,81 +20,48 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// --- CONCURRENCY LOCK VARIABLES ---
-let isRefreshing = false
-let failedQueue: any[] = []
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error)
-    } else {
-      prom.resolve(token)
-    }
-  })
-  failedQueue = []
-}
-
+// A passive interceptor for silent token refresh (No Mutex Locks needed)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
 
+    // If 401 Unauthorized and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
-      
-      if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
-          failedQueue.push({ resolve, reject })
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`
-          return api(originalRequest)
-        }).catch(err => {
-          return Promise.reject(err)
-        })
-      }
-
       originalRequest._retry = true
-      isRefreshing = true
 
       try {
-        // Use raw axios here to avoid interceptor loops
-        const baseURL = getBaseURL()
-        const res = await axios.post(`${baseURL}/accounts/refresh/`, {}, { 
+        // Silently ask Django for a new access token
+        const res = await axios.post('http://localhost:8000/api/accounts/refresh/', {}, { 
           withCredentials: true 
         })
 
         const newAccessToken = res.data.access
-        const user = res.data.user // This comes from our CustomTokenRefreshSerializer
+        const user = res.data.user 
         
-        // CRITICAL: Hydrate the user profile state across subdomains
+        // Hydrate the user profile state safely
         if (user) {
           useAuthStore.getState().login(user, newAccessToken)
         } else {
           useAuthStore.getState().setToken(newAccessToken)
         }
 
-        processQueue(null, newAccessToken)
+        // Update the failed request and retry it
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
         return api(originalRequest)
 
       } catch (refreshError) {
-        // 1. Clear the queue
-        processQueue(refreshError, null)
-        
-        // 2. Wipe the frontend state (tell Zustand they are a guest)
+        // If refresh fails, they are a true guest. 
+        // Just clear RAM and let the UI handle it natively without forcing a redirect.
         useAuthStore.getState().logout()
-
         return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
       }
     }
 
     return Promise.reject(error)
   }
 )
-// inside frontend/src/lib/api.ts
-
 export interface Store {
   id: string
   name: string

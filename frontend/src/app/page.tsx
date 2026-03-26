@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore'
 import { Store as StoreIcon, Truck, Coffee, ShoppingBag, LayoutGrid, Map as MapIcon, MessageCircle, ArrowRight, Instagram, Twitter, Facebook, User, LogOut } from 'lucide-react'
 import StoreGrid from '@/components/StoreGrid'
 import MapExplorer from '@/components/MapExplorer' 
+import { api } from '@/lib/api'
 
 export default function Home() {
   const router = useRouter()
@@ -24,7 +25,18 @@ export default function Home() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
+  // The clean, extracted logout function
+  const handleSignOut = async () => {
+    try {
+      await api.post('/accounts/logout/')
+    } catch (err) {
+      console.error("Logout error:", err)
+    } finally {
+      logout()
+      setIsUserMenuOpen(false) // Close the dropdown menu
+      window.location.reload() // Hard reload to clear all guest states cleanly
+    }
+  }
   return (
     <main className="min-h-screen relative font-sans text-gray-900 overflow-x-hidden selection:bg-indigo-500 selection:text-white flex flex-col">
       
@@ -74,13 +86,12 @@ export default function Home() {
                       <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors flex items-center gap-3 mt-1">
                         <ShoppingBag size={16} className="text-indigo-500" /> My Orders
                       </button>
-                      <button onClick={() => {
-                        logout()
-                        setIsUserMenuOpen(false)
-                        window.location.reload()
-                      }} className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1">
-                        <LogOut size={16} /> Sign Out
-                      </button>
+                     <button 
+  onClick={handleSignOut} 
+  className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1"
+>
+  <LogOut size={16} /> Sign Out
+</button>
                     </div>
                   )}
                 </div>

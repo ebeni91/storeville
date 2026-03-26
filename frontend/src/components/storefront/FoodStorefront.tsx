@@ -131,7 +131,17 @@ export default function FoodStorefront({ store }: { store: any }) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#ffffff');
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
   }
-  
+  const handleSignOut = async () => {
+    try {
+      await api.post('/accounts/logout/')
+    } catch (err) {
+      console.error("Logout error:", err)
+    } finally {
+      logout()
+      setIsUserMenuOpen(false) // Close the dropdown menu
+      window.location.reload() // Hard reload to clear all guest states cleanly
+    }
+  }
   const bgRgb = hexToRgb(store.background_color)
   const textRgb = hexToRgb(store.secondary_color)
   const announceRgb = hexToRgb(store.announcement_color || store.primary_color)
@@ -252,13 +262,12 @@ export default function FoodStorefront({ store }: { store: any }) {
                   <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors flex items-center gap-3">
                     <User size={16} /> Global Profile & Orders
                   </button>
-                  <button onClick={() => {
-                    logout()
-                    setIsUserMenuOpen(false)
-                    window.location.reload()
-                  }} className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1">
-                    <LogOut size={16} /> Sign Out
-                  </button>
+                <button 
+                    onClick={handleSignOut} 
+                   className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1"
+>
+                  <LogOut size={16} /> Sign Out
+                    </button>
                 </div>
               )}
             </div>

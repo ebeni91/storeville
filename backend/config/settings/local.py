@@ -1,12 +1,9 @@
 from .base import *
 import os
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.storeville.app', '.localhost']
-
-# Use SQLite for quick local testing if Postgres isn't running, 
-# but ideally, stick to the Dockerized Postgres we set up in base.py
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -18,32 +15,30 @@ DATABASES = {
     }
 }
 
-
-BASE_DOMAIN = 'storeville.test'
-
-# Allow cookies to be shared across all subdomains
-SESSION_COOKIE_DOMAIN = f".{BASE_DOMAIN}"
-CSRF_COOKIE_DOMAIN = f".{BASE_DOMAIN}"
-
 ALLOWED_HOSTS = [
-    'storeville.test',
-    'api.storeville.test',
-    '.storeville.test',
+    # 'storeville.test',
+    # 'api.storeville.test',
     '127.0.0.1',
     'localhost',
 ]
 
-# Allow the HttpOnly cookie to pass through
+# 1. ALLOW THE BROWSER TO SEND COOKIES (CRITICAL)
 CORS_ALLOW_CREDENTIALS = True 
 
-SAFE_DOMAIN = BASE_DOMAIN.replace('.', r'\.')
-
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    rf"^http://([a-zA-Z0-9-]+\.)?{SAFE_DOMAIN}(:\d+)?$",
+# 2. SIMPLE, EXPLICIT TRUSTED ORIGINS
+# No more complex regexes. We just trust the exact frontend URLs.
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    # "http://storeville.test:3000",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    f"http://{BASE_DOMAIN}:3000",
-    f"http://sami-caffee.{BASE_DOMAIN}:3000",
-    f"http://api.{BASE_DOMAIN}:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    # "http://storeville.test:3000",
 ]
+
+# NOTE: We have completely removed SESSION_COOKIE_DOMAIN and CSRF_COOKIE_DOMAIN.
+# By leaving them blank, Django automatically locks the cookie to whatever domain 
+# requested it (e.g., localhost), which is exactly what we want for a path-based app.

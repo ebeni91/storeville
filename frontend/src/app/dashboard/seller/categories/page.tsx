@@ -36,7 +36,7 @@ export default function CategoriesPage() {
 
       // 2. Fetch the correct categories based on engine
       const endpoint = currentStore.store_type === 'FOOD' ? '/food/categories/' : '/retail/categories/'
-      const res = await api.get(endpoint)
+      const res = await api.get(`${endpoint}?limit=1000&_t=${Date.now()}`)
       
       const data = Array.isArray(res.data) ? res.data : res.data.results || []
       setCategories(data)

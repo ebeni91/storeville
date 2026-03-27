@@ -108,7 +108,7 @@ export default function StoreSettingsPage() {
           <div className="flex items-center gap-3 mt-4 md:mt-0">
             {store?.slug && (
               <a 
-                href={`http://${store.slug}.localhost:3000`} 
+                href={`http://localhost:3000/store/${store.slug}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="bg-gray-100 text-gray-700 px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"

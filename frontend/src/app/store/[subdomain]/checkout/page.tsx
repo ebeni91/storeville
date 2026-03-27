@@ -38,8 +38,8 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
 
         // 3. SECURE FETCH: Grab the official database cart from Django
         const cartEndpoint = storeData.store_type === 'FOOD' 
-            ? `/food_orders/cart/?store_id=${storeData.id}` 
-            : `/retail_orders/cart/?store_id=${storeData.id}`
+            ? `/orders/food/cart/?store_id=${storeData.id}` 
+            : `/orders/retail/cart/?store_id=${storeData.id}`
             
         const cartRes = await api.get(cartEndpoint)
         setCartItems(cartRes.data.items || [])
@@ -77,10 +77,10 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
             special_requests: item.special_requests || ''
           }))
         }
-        await api.post('/food_orders/', payload)
+        await api.post('/orders/food/', payload)
         
         // Wipe the official database cart after successful order
-        await api.delete(`/food_orders/cart/?store_id=${store.id}`)
+        await api.delete(`/orders/food/cart/?store_id=${store.id}`)
         
       } else {
         // 🛍️ SUBMIT TO RETAIL ENGINE
@@ -92,10 +92,10 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
             quantity: item.quantity
           }))
         }
-        await api.post('/retail_orders/', payload)
+        await api.post('/orders/retail/', payload)
         
         // Wipe the official database cart after successful order
-        await api.delete(`/retail_orders/cart/?store_id=${store.id}`)
+        await api.delete(`/orders/retail/cart/?store_id=${store.id}`)
       }
 
       setOrderComplete(true)

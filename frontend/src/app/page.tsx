@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore'
 import { Store as StoreIcon, Truck, Coffee, ShoppingBag, LayoutGrid, Map as MapIcon, MessageCircle, ArrowRight, Instagram, Twitter, Facebook, User, LogOut } from 'lucide-react'
 import StoreGrid from '@/components/StoreGrid'
 import MapExplorer from '@/components/MapExplorer' 
+import ProfileDropdown from '@/components/ProfileDropdown'
 import { api } from '@/lib/api'
 
 export default function Home() {
@@ -75,25 +76,11 @@ export default function Home() {
                     <User size={20} className="text-indigo-600" />
                   </button>
                   
-                  {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 p-2 z-[100] animate-in fade-in slide-in-from-top-2">
-                      <div className="px-3 py-2 border-b border-gray-100 mb-2">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">My Account</p>
-                      </div>
-                      <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors flex items-center gap-3">
-                        <User size={16} className="text-indigo-500" /> Global Profile
-                      </button>
-                      <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors flex items-center gap-3 mt-1">
-                        <ShoppingBag size={16} className="text-indigo-500" /> My Orders
-                      </button>
-                     <button 
-  onClick={handleSignOut} 
-  className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1"
->
-  <LogOut size={16} /> Sign Out
-</button>
-                    </div>
-                  )}
+                  <ProfileDropdown 
+                    isOpen={isUserMenuOpen} 
+                    onClose={() => setIsUserMenuOpen(false)} 
+                    onSignOut={handleSignOut} 
+                  />
                 </div>
               ) : (
                 /* 🌟 LOGGED OUT: SHOW DEFAULT BUTTONS */

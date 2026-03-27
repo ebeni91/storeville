@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { Loader2, ShoppingBag, MapPin, Search, Heart, User, SlidersHorizontal, ArrowRight, X, Check, Menu, Star, CheckCircle, Lock, Plus, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
-import { useCartStore } from '@/store/cartStore' // <-- NEW IMPORT
+import { useCartStore } from '@/store/cartStore'
+import ProfileDropdown from '@/components/ProfileDropdown'
 
 interface RetailCategory { id: string; name: string; slug: string }
 interface RetailProduct { id: string; category: string; category_name: string; name: string; description: string; price: string; image: string | null; stock_quantity: number }
@@ -39,6 +40,7 @@ export default function RetailStorefront({ store }: { store: any }) {
     email: '', password: '', username: '', first_name: '', last_name: '', phone_number: '' 
   })
   const [authLoading, setAuthLoading] = useState(false)
+  const [isCheckoutIntent, setIsCheckoutIntent] = useState(false)
 
   useEffect(() => {
     setIsMounted(true) 
@@ -88,8 +90,18 @@ export default function RetailStorefront({ store }: { store: any }) {
   const removeFromCart = (productId: string) => removeItem(store.id, productId)
 
   // 🛡️ THE CHECKOUT INTERCEPTOR
-  const handleProceedToCheckout = () => {
-    if (token) router.push(`/store/${store.slug}/checkout`)
+  const handleProceedToCheckout = async () => {
+    setIsCheckoutIntent(true)
+    if (token) {
+      try {
+        if (cartItems.length > 0) {
+          await mergeCartWithBackend(store.id, 'RETAIL')
+        }
+      } catch (err) {
+        console.error("Cart sync failed before checkout", err)
+      }
+      router.push(`/store/${store.slug}/checkout`)
+    }
     else openAuthModal() // Opens the global modal if they are a guest!
   }
 
@@ -98,7 +110,7 @@ export default function RetailStorefront({ store }: { store: any }) {
     e.preventDefault()
     setAuthLoading(true)
     try {
-      const endpoint = authMode === 'login' ? '/accounts/token/' : '/accounts/register/' 
+      const endpoint = authMode === 'login' ? '/accounts/login/' : '/accounts/register/' 
       const payload = authMode === 'login' 
         ? { email: authData.email, password: authData.password } 
         : { email: authData.email, password: authData.password, username: authData.username, first_name: authData.first_name, last_name: authData.last_name, phone_number: authData.phone_number }
@@ -114,7 +126,10 @@ export default function RetailStorefront({ store }: { store: any }) {
       await mergeCartWithBackend(store.id, 'RETAIL')
       
       closeAuthModal()
-      router.push(`/store/${store.slug}/checkout`) // Now we proceed to checkout as a registered user
+      if (isCheckoutIntent) {
+        router.push(`/store/${store.slug}/checkout`) // Now we proceed to checkout as a registered user
+        setIsCheckoutIntent(false)
+      }
       
     } catch (err: any) {
       console.error("Auth Error:", err)
@@ -249,27 +264,27 @@ export default function RetailStorefront({ store }: { store: any }) {
             {/* PROFILE / LOGIN */}
             <div className="relative">
               <button 
-                onClick={() => (isMounted && token) ? setIsUserMenuOpen(!isUserMenuOpen) : openAuthModal()} 
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+                onClick={() => {
+                  if (isMounted && token) {
+                    setIsUserMenuOpen(!isUserMenuOpen)
+                  } else {
+                    setIsCheckoutIntent(false)
+                    openAuthModal()
+                  }
+                }} 
+                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors cursor-pointer relative z-50"
               >
                 <User size={22} className={(isMounted && token) ? "text-indigo-600" : ""} />
               </button>
               
-              {isUserMenuOpen && isMounted && token && (
-                <div className="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 p-2 z-[100] animate-in fade-in slide-in-from-top-2" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
-                  <div className="px-3 py-2 border-b border-gray-100 mb-2">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">My Account</p>
-                  </div>
-                  <button onClick={() => router.push('/profile')} className="w-full text-left px-3 py-3 text-sm font-bold text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors flex items-center gap-3">
-                    <User size={16} /> Global Profile & Orders
-                  </button>
-                 <button 
-  onClick={handleSignOut} 
-  className="w-full text-left px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors flex items-center gap-3 mt-1"
->
-  <LogOut size={16} /> Sign Out
-</button>
-                </div>
+              {isMounted && token && (
+                <ProfileDropdown 
+                  isOpen={isUserMenuOpen} 
+                  onClose={() => setIsUserMenuOpen(false)} 
+                  onSignOut={handleSignOut} 
+                  bgRgb={bgRgb}
+                  textRgb={textRgb}
+                />
               )}
             </div>
 

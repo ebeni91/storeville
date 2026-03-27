@@ -75,8 +75,8 @@ export const useCartStore = create<CartState>()(
           
           // Dynamically route to the correct Django app
           const endpoint = storeType === 'RETAIL' 
-            ? '/retail_orders/cart/merge/' 
-            : '/food_orders/cart/merge/';
+            ? '/orders/retail/cart/merge/' 
+            : '/orders/food/cart/merge/';
             
           await api.post(endpoint, payload)
           clearCart(store_id)

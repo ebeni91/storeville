@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Store as StoreIcon, Mail, Lock, Loader2, ArrowRight, Phone } from 'lucide-react'
+import { Store as StoreIcon, Mail, Lock, Loader2, ArrowRight, Phone, ShieldCheck, TrendingUp } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import Link from 'next/link'
@@ -47,50 +47,105 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen relative flex items-center justify-center bg-gray-50 overflow-hidden px-4">
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-orange-400/20 rounded-full blur-3xl"></div>
-
-      <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-indigo-600 hover:scale-105 transition-transform mb-6">
-            <StoreIcon size={32} className="fill-indigo-100" />
-            <span className="text-3xl font-extrabold tracking-tight text-indigo-700">StoreVille</span>
+    <main className="flex min-h-screen w-full bg-white font-sans selection:bg-indigo-500 selection:text-white lg:h-screen lg:overflow-hidden">
+      
+      {/* LEFT PANEL - 40% Width with Soft Homepage Theme */}
+      <div className="hidden lg:flex flex-col justify-between w-[40%] bg-gradient-to-br from-[#eef2ff] via-[#f3e8ff] to-[#cffafe] border-r border-indigo-100 p-14 relative overflow-hidden flex-shrink-0 animate-[gradient_15s_ease_infinite] bg-[length:200%_200%]">
+        
+        {/* Soft Grid Overlay */}
+        <div className="absolute inset-0 opacity-[0.2] mix-blend-overlay bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]"></div>
+        
+        {/* Decorative Background Icon */}
+        <StoreIcon className="absolute -bottom-24 -left-20 w-[600px] h-[600px] text-indigo-200/40 -rotate-12" strokeWidth={1} />
+        
+        <div className="relative z-10">
+          <Link href="/" className="inline-flex items-center gap-3 mb-20 group">
+            <div className="w-11 h-11 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+              <StoreIcon size={24} />
+            </div>
+            <span className="text-2xl font-black tracking-tight text-gray-900 group-hover:text-indigo-600 transition-colors">Store<span className="text-indigo-600">Ville</span></span>
           </Link>
-          <h1 className="text-3xl font-black text-gray-900 mb-2">Welcome back</h1>
-          <p className="text-gray-500 font-medium">Securely log in to your account.</p>
+
+          <h1 className="text-[3.5rem] font-black text-gray-900 leading-[1.1] mb-6 tracking-tighter">
+            The Digital Heart of<br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 drop-shadow-sm">Local Commerce.</span>
+          </h1>
+          
+          <p className="text-gray-600 text-lg leading-relaxed max-w-md mb-14 font-semibold">
+            Connect directly with verified local stores, streamline your deliveries, and manage secure payments all from one powerful command center.
+          </p>
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 text-gray-700 hover:text-indigo-700 transition-colors">
+              <div className="w-12 h-12 rounded-[1rem] bg-indigo-100/80 flex items-center justify-center border border-indigo-200 shadow-sm">
+                <ShieldCheck size={22} className="text-indigo-600" />
+              </div>
+              <span className="font-bold text-lg">Bank-grade Security</span>
+            </div>
+            <div className="flex items-center gap-4 text-gray-700 hover:text-indigo-700 transition-colors">
+              <div className="w-12 h-12 rounded-[1rem] bg-indigo-100/80 flex items-center justify-center border border-indigo-200 shadow-sm">
+                <TrendingUp size={22} className="text-indigo-600" />
+              </div>
+              <span className="font-bold text-lg">Real-time Order Tracking</span>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white p-8">
+        <div className="relative z-10 text-gray-500 font-bold text-sm tracking-wide">
+          © 2026 StoreVille Technologies
+        </div>
+
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        `}} />
+      </div>
+
+      {/* RIGHT PANEL - 60% Width */}
+      <div className="w-full lg:w-[60%] h-full overflow-y-auto p-8 sm:p-14 bg-white">
+        <div className="w-full max-w-[480px] mx-auto min-h-full flex flex-col justify-center py-8">
           
-          {/* Method Toggle */}
-          <div className="flex p-1 bg-gray-100 rounded-xl mb-6">
+          <div className="text-center mb-10">
+            {/* Mobile Logo Fallback */}
+            <div className="lg:hidden flex justify-center mb-6">
+              <Link href="/" className="inline-flex items-center gap-2">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                  <StoreIcon size={20} />
+                </div>
+                <span className="text-xl font-black tracking-tight text-gray-900">StoreVille</span>
+              </Link>
+            </div>
+            
+            <h2 className="text-[2rem] font-black text-gray-900 mb-2 tracking-tight">Welcome Back</h2>
+            <p className="text-gray-500 font-medium text-base">Access your secure dashboard.</p>
+          </div>
+
+          <div className="flex p-1 bg-[#F4F7F9] rounded-[1rem] mb-8">
             <button
               type="button"
               onClick={() => { setLoginMethod('email'); setIdentifier(''); setError(''); }}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${loginMethod === 'email' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${loginMethod === 'email' ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-indigo-700' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              Email
+              <Mail size={18} /> Email Login
             </button>
             <button
               type="button"
               onClick={() => { setLoginMethod('phone'); setIdentifier(''); setError(''); }}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${loginMethod === 'phone' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${loginMethod === 'phone' ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-indigo-700' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              Phone Number
+              <Phone size={18} /> Phone Login
             </button>
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold mb-6 border border-red-100">
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold mb-6 border border-red-100 text-center animate-in fade-in slide-in-from-top-2">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                {loginMethod === 'email' ? 'Email Address' : 'Phone Number'}
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+                {loginMethod === 'email' ? 'Email or Username' : 'Phone Number'}
               </label>
               <div className="relative">
                 {loginMethod === 'email' ? (
@@ -103,14 +158,17 @@ export default function LoginPage() {
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-3 pl-12 pr-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
-                  placeholder={loginMethod === 'email' ? 'you@example.com' : '+251 9...'}
+                  className="w-full bg-[#F4F7F9] border-2 border-transparent rounded-[1rem] py-4 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-indigo-500/30 focus:ring-4 focus:ring-indigo-500/10 transition-all font-semibold text-base"
+                  placeholder={loginMethod === 'email' ? 'you@example.com' : '0987654321'}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
+              <div className="flex justify-between items-center mb-2 px-1">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Password</label>
+                <Link href="#" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">Forgot Password?</Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input 
@@ -118,7 +176,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-3 pl-12 pr-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
+                  className="w-full bg-[#F4F7F9] border-2 border-transparent rounded-[1rem] py-4 pl-12 pr-4 text-gray-900 focus:outline-none focus:bg-white focus:border-indigo-500/30 focus:ring-4 focus:ring-indigo-500/10 transition-all font-semibold tracking-widest text-base"
                   placeholder="••••••••"
                 />
               </div>
@@ -127,18 +185,20 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none mt-4"
+              className="w-full bg-indigo-600 text-white pt-4 pb-3.5 rounded-[1rem] font-bold tracking-wide shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed mt-2 text-lg"
             >
-              {isLoading ? <Loader2 size={24} className="animate-spin" /> : <>Sign In <ArrowRight size={20} /></>}
+              {isLoading ? <Loader2 size={22} className="animate-spin" /> : <>Access Dashboard <ArrowRight size={20} className="mt-0.5" /></>}
             </button>
           </form>
 
-          <p className="text-center mt-8 text-gray-600 font-medium">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-indigo-600 font-bold hover:underline">
-              Create one now
-            </Link>
-          </p>
+          <div className="mt-12 text-center border-t border-gray-100 pt-8">
+            <p className="text-gray-500 text-sm font-medium">
+              New to StoreVille?{' '}
+              <Link href="/register" className="text-gray-900 font-bold hover:text-indigo-600 transition-colors">
+                Apply as a Buyer
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </main>

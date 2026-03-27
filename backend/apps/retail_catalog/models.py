@@ -1,6 +1,9 @@
 from django.db import models
 from apps.stores.models import Store
+from django.contrib.auth import get_user_model
 import uuid
+
+User = get_user_model()
 
 class RetailCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -35,3 +38,15 @@ class RetailProduct(models.Model):
 
     def __str__(self):
         return self.name
+
+class RetailFavorite(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='retail_favorites')
+    product = models.ForeignKey(RetailProduct, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+
+    def __str__(self):
+        return f"{self.user.email} -> {self.product.name}"

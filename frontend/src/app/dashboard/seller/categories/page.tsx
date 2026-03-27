@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Loader2, Edit, Trash2, Tags } from 'lucide-react'
 import { api } from '@/lib/api'
+import { motion, Variants } from 'framer-motion'
 
 export default function CategoriesPage() {
   const [store, setStore] = useState<any>(null)
@@ -115,19 +116,29 @@ export default function CategoriesPage() {
 
   const isFood = store?.store_type === 'FOOD'
 
-  return (
-    <main className="p-8 relative h-full">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900">{isFood ? 'Menu Categories' : 'Categories'}</h1>
-          <p className="text-gray-500 font-medium mt-1">Organize your store's {isFood ? 'menu' : 'inventory'}.</p>
-        </div>
-        <button onClick={openCreate} className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2">
-          <Plus size={20} /> Add Category
-        </button>
-      </div>
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  }
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden max-w-4xl">
+  const rowVariants: Variants = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+  }
+
+  return (
+    <main className="p-4 md:p-8 lg:p-12 mb-32 max-w-[1600px] mx-auto relative h-full">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="flex justify-between items-end mb-12 relative z-10">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter mb-2">{isFood ? 'Menu Categories' : 'Categories'}</h1>
+          <p className="text-gray-600 font-semibold text-lg">Organize your store's {isFood ? 'menu' : 'inventory'}.</p>
+        </div>
+        <button onClick={openCreate} className="bg-gray-900 text-white px-7 py-3.5 rounded-full font-black text-sm uppercase tracking-widest shadow-[0_8px_20px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.2)] hover:bg-black transition-all flex items-center gap-2 transform hover:-translate-y-0.5">
+          <Plus size={18} /> Add Category
+        </button>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden max-w-4xl relative z-10 p-2">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-xs uppercase font-bold">
@@ -136,37 +147,37 @@ export default function CategoriesPage() {
               <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <motion.tbody variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100/50">
             {isFetching ? (
               <tr><td colSpan={3} className="p-8 text-center text-gray-500"><Loader2 className="animate-spin mx-auto mb-2" /></td></tr>
             ) : categories.length === 0 ? (
               <tr><td colSpan={3} className="p-8 text-center text-gray-500 font-medium">No categories yet.</td></tr>
             ) : (
               categories.map((cat) => (
-                <tr key={cat.id} className="hover:bg-gray-50 group">
-                  <td className="p-4 font-bold text-gray-900 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><Tags size={18} /></div>
+                <motion.tr variants={rowVariants} key={cat.id} className="hover:bg-white/60 transition-colors group">
+                  <td className="p-5 font-black text-gray-900 flex items-center gap-4 text-lg">
+                    <div className="w-12 h-12 bg-white text-indigo-600 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform"><Tags size={20} /></div>
                     {cat.name}
                   </td>
-                  <td className="p-4 text-gray-500 font-mono text-sm">
+                  <td className="p-5 text-gray-500 font-mono font-bold text-sm">
                     {isFood ? (
-                      <span className="bg-gray-100 px-2 py-1 rounded-md font-bold text-gray-600">Order: {cat.order}</span>
+                      <span className="bg-white border text-gray-600 border-gray-100 shadow-sm px-3 py-1.5 rounded-xl">Order: {cat.order}</span>
                     ) : (
-                      cat.slug
+                      <span className="bg-white border text-gray-600 border-gray-100 shadow-sm px-3 py-1.5 rounded-xl">{cat.slug}</span>
                     )}
                   </td>
-                  <td className="p-4 text-right">
+                  <td className="p-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(cat)} className="p-2 text-gray-400 hover:text-indigo-600"><Edit size={18} /></button>
-                      <button onClick={() => handleDelete(cat.id)} className="p-2 text-gray-400 hover:text-red-600"><Trash2 size={18} /></button>
+                      <button onClick={() => openEdit(cat)} className="p-2.5 bg-white border border-gray-100 shadow-sm text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gray-50 transition-colors"><Edit size={18} /></button>
+                      <button onClick={() => handleDelete(cat.id)} className="p-2.5 bg-white border border-gray-100 shadow-sm text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors"><Trash2 size={18} /></button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))
             )}
-          </tbody>
+          </motion.tbody>
         </table>
-      </div>
+      </motion.div>
 
       {isDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">

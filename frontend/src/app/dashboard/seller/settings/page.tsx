@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Loader2, Save, LayoutTemplate, Palette, Megaphone, CheckCircle2, ShoppingBag, MapPin, ChefHat, ExternalLink, Package } from 'lucide-react'
 import { api } from '@/lib/api'
+import { motion } from 'framer-motion'
 
 // ✨ 8 ULTRA-PREMIUM THEMES ✨
 const THEMES = [
@@ -89,54 +90,54 @@ export default function StoreSettingsPage() {
   const isFood = store?.store_type === 'FOOD'
 
   return (
-    <main className="p-4 md:p-8 max-w-[1600px] mx-auto h-full flex flex-col lg:flex-row gap-8 pb-32">
+    <main className="p-4 md:p-8 max-w-[1600px] mx-auto h-full flex flex-col lg:flex-row gap-8 pb-32 relative z-10">
       
       {/* LEFT COLUMN: EDITOR */}
-      <div className="flex-1 flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="flex-1 flex flex-col gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end bg-white/70 backdrop-blur-2xl p-8 lg:p-10 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-black tracking-tight text-gray-900">Storefront Studio</h1>
-              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isFood ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                {isFood ? <ChefHat size={12}/> : <Package size={12}/>}
-                {store?.store_type} Engine
+            <div className="flex items-center gap-4 mb-3">
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-gray-900">Studio</h1>
+              <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm ${isFood ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-indigo-100 text-indigo-700 border border-indigo-200'}`}>
+                {isFood ? <ChefHat size={14}/> : <Package size={14}/>}
+                {store?.store_type}
               </span>
             </div>
-            <p className="text-gray-500 mt-1 font-medium text-sm">Design your luxury shopping experience.</p>
+            <p className="text-gray-600 font-semibold text-lg ml-1">Design your luxury shopping experience.</p>
           </div>
           
-          <div className="flex items-center gap-3 mt-4 md:mt-0">
+          <div className="flex items-center gap-3 mt-6 md:mt-0">
             {store?.slug && (
               <a 
                 href={`http://localhost:3000/store/${store.slug}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-gray-100 text-gray-700 px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+                className="bg-white/50 border border-gray-200 shadow-sm text-gray-900 px-6 py-3.5 rounded-full font-black tracking-widest text-xs uppercase hover:bg-white hover:border-gray-300 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
               >
-                <ExternalLink size={16} /> View Live
+                <ExternalLink size={16} /> Live View
               </a>
             )}
-            <button onClick={handleSave} disabled={isLoading} className="bg-black text-white px-8 py-3 rounded-full font-bold hover:bg-gray-800 flex items-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-70">
-              {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Publish
+            <button onClick={handleSave} disabled={isLoading} className="bg-black text-white px-8 py-3.5 rounded-full font-black tracking-widest text-xs uppercase hover:bg-gray-900 hover:-translate-y-0.5 flex items-center gap-2 shadow-[0_8px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.2)] transition-all disabled:opacity-70 disabled:hover:translate-y-0">
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Publish
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row flex-1">
+        <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col md:flex-row flex-1 p-2">
           {/* TABS */}
-          <div className="w-full md:w-56 bg-gray-50/50 border-r border-gray-100 p-4 flex flex-col gap-2">
-            <button onClick={() => setActiveTab('theme')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-bold transition-all text-sm ${activeTab === 'theme' ? 'bg-white shadow-sm border border-gray-200 text-black' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-               <Palette size={18} /> Colors & Layout
+          <div className="w-full md:w-64 bg-white/40 border-r border-gray-100 p-6 flex flex-col gap-3 rounded-l-[2rem]">
+            <button onClick={() => setActiveTab('theme')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'theme' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
+               <Palette size={20} className={activeTab === 'theme' ? '' : 'group-hover:scale-110 transition-transform'} /> Palette
             </button>
-            <button onClick={() => setActiveTab('identity')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-bold transition-all text-sm ${activeTab === 'identity' ? 'bg-white shadow-sm border border-gray-200 text-black' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-               <LayoutTemplate size={18} /> Brand Identity
+            <button onClick={() => setActiveTab('identity')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'identity' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
+               <LayoutTemplate size={20} className={activeTab === 'identity' ? '' : 'group-hover:scale-110 transition-transform'} /> Identity
             </button>
           </div>
 
           {/* CONTENT */}
-          <div className="flex-1 p-6 md:p-10 overflow-y-auto">
+          <div className="flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
             {activeTab === 'theme' && (
-              <div className="animate-in fade-in duration-300">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="duration-300">
                 <h2 className="text-xl font-black mb-6 flex items-center gap-2"><Palette size={20} className="text-gray-400"/> Designer Palettes</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-12">
                   {THEMES.map(t => {
@@ -166,11 +167,11 @@ export default function StoreSettingsPage() {
                     <input type="text" value={formData.announcement_text} onChange={e => setFormData({...formData, announcement_text: e.target.value})} placeholder="e.g. FREE SHIPPING ON ALL ORDERS" className="w-full bg-white border border-gray-200 rounded-2xl py-3 px-5 outline-none font-bold text-sm focus:border-black focus:ring-1 focus:ring-black transition-all" />
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {activeTab === 'identity' && (
-              <div className="animate-in fade-in duration-300 space-y-8">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="duration-300 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
                     <label className="block text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Store Logo</label>
@@ -200,14 +201,14 @@ export default function StoreSettingsPage() {
                     <option value="Outfit">Outfit (Tech & Startup)</option>
                   </select>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* RIGHT COLUMN: LIVE GLASSMORPHISM PREVIEW */}
-      <div className="w-full lg:w-[420px] shrink-0">
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }} className="w-full lg:w-[420px] shrink-0">
         <div className="sticky top-8 bg-gray-200 rounded-[3.5rem] p-3.5 shadow-2xl border-[8px] border-gray-900 h-[820px] flex flex-col overflow-hidden relative">
           
           {/* Notch */}
@@ -259,7 +260,7 @@ export default function StoreSettingsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
     </main>
   )

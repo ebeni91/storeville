@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Search, Loader2, Eye, X, Package, Truck, CheckCircle, Clock, MapPin, Phone, CreditCard, ChefHat, ShoppingBag, FileText, Flame } from 'lucide-react'
 import { api } from '@/lib/api'
+import { motion, Variants } from 'framer-motion'
 
 export default function OrdersPage() {
   const [store, setStore] = useState<any>(null)
@@ -88,6 +89,16 @@ export default function OrdersPage() {
   const retailStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']
   const availableStatuses = isFood ? foodStatuses : retailStatuses
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  }
+
+  const rowVariants: Variants = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+  }
+
   return (
     <main className="p-4 md:p-8 relative h-full max-w-[1600px] mx-auto flex flex-col">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -113,52 +124,52 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex-1 flex flex-col">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex-1 flex flex-col p-2">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-400 text-[10px] uppercase tracking-widest font-black">
-                <th className="p-5">Order ID</th>
-                <th className="p-5">Date</th>
-                <th className="p-5">Customer (ID)</th>
-                <th className="p-5">Total</th>
-                <th className="p-5">Status</th>
-                <th className="p-5 text-right">Actions</th>
+              <tr className="border-b border-gray-100/50 text-gray-400 text-[10px] uppercase tracking-widest font-black">
+                <th className="p-6">Order ID</th>
+                <th className="p-6">Date</th>
+                <th className="p-6">Customer (ID)</th>
+                <th className="p-6">Total</th>
+                <th className="p-6">Status</th>
+                <th className="p-6 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <motion.tbody variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100/50">
               {isFetching ? (
                 <tr><td colSpan={6} className="p-12 text-center text-gray-500"><Loader2 className="animate-spin mx-auto mb-3" size={32} /> Loading orders...</td></tr>
               ) : filteredOrders.length === 0 ? (
-                <tr><td colSpan={6} className="p-16 text-center text-gray-400 font-medium">No orders found. Keep marketing your store!</td></tr>
+                <tr><td colSpan={6} className="p-20 text-center text-gray-400 font-medium">No orders found. Keep marketing your store!</td></tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="p-5 font-black text-gray-900 text-sm">
-                      #{order.id.toString().slice(0,8).toUpperCase()}
-                      {isFood && order.is_asap && <span className="ml-2 bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] uppercase">ASAP</span>}
+                  <motion.tr variants={rowVariants} key={order.id} className="hover:bg-white/60 transition-colors group">
+                    <td className="p-6 font-black text-gray-900 text-sm">
+                      <span className="font-mono bg-white border border-gray-100 shadow-sm px-3 py-1.5 rounded-xl">#{order.id.toString().slice(0,8).toUpperCase()}</span>
+                      {isFood && order.is_asap && <span className="ml-3 bg-red-100 text-red-700 font-bold px-2 py-1 rounded-md text-[10px] uppercase tracking-widest">ASAP</span>}
                     </td>
-                    <td className="p-5 font-medium text-gray-500 text-xs">
+                    <td className="p-6 font-medium text-gray-500 text-xs">
                       {new Date(order.created_at).toLocaleDateString()} <br/>
-                      <span className="text-[10px]">{new Date(order.created_at).toLocaleTimeString()}</span>
+                      <span className="text-[10px] opacity-70 font-bold">{new Date(order.created_at).toLocaleTimeString()}</span>
                     </td>
-                    <td className="p-5">
-                      <p className="font-bold text-gray-900 text-sm">User #{order.customer}</p>
+                    <td className="p-6">
+                      <p className="font-black text-gray-900 text-sm">User #{order.customer}</p>
                     </td>
-                    <td className="p-5 font-black text-gray-900">Br {parseFloat(order.total_amount).toFixed(2)}</td>
-                    <td className="p-5"><StatusBadge status={order.status} /></td>
-                    <td className="p-5 text-right">
-                      <button onClick={() => setSelectedOrder(order)} className="p-2.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-xl transition-all inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-                        <Eye size={16} /> View
+                    <td className="p-6 font-black text-gray-900 text-lg tracking-tight">Br {parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td className="p-6"><StatusBadge status={order.status} /></td>
+                    <td className="p-6 text-right">
+                      <button onClick={() => setSelectedOrder(order)} className="p-3 bg-white border border-gray-100 shadow-sm text-indigo-600 hover:text-white hover:bg-indigo-600 rounded-2xl transition-all inline-flex items-center justify-center group/btn hover:scale-105 active:scale-95">
+                        <Eye size={18} />
                       </button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
-            </tbody>
+            </motion.tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* 🚀 PREMIUM ORDER DETAILS DRAWER 🚀 */}
       {selectedOrder && (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
@@ -20,11 +21,14 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'map' | 'grid'>('map')
   const [isScrolled, setIsScrolled] = useState(false)
 
+  const { scrollY } = useScroll()
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 20)
+  })
+
   useEffect(() => {
     setIsMounted(true)
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
   // The clean, extracted logout function
   const handleSignOut = async () => {
@@ -48,7 +52,21 @@ export default function Home() {
 
       {/* 🧭 NAVIGATION BAR */}
       <div className="fixed top-0 inset-x-0 z-50 flex justify-center px-4 pt-4 md:pt-6 pointer-events-none">
-        <header className={`pointer-events-auto flex items-center justify-between w-full max-w-[1400px] transition-all duration-500 ${isScrolled ? 'bg-white/70 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 py-4 px-8 rounded-full' : 'bg-transparent py-5 px-4 md:px-8'}`}>
+        <motion.header 
+          initial={false}
+          animate={{
+            backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+            boxShadow: isScrolled ? '0 8px 30px rgba(0,0,0,0.04)' : 'none',
+            borderColor: isScrolled ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
+            paddingTop: isScrolled ? '1rem' : '1.25rem',
+            paddingBottom: isScrolled ? '1rem' : '1.25rem',
+            paddingLeft: isScrolled ? '2rem' : '1rem',
+            paddingRight: isScrolled ? '2rem' : '1rem',
+            borderRadius: isScrolled ? '9999px' : '0px'
+          }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className={`pointer-events-auto flex items-center justify-between w-full max-w-[1400px] border ${isScrolled ? 'backdrop-blur-2xl' : ''}`}
+        >
           
           {/* Left: Logo */}
           <Link href="/" className="flex items-center gap-3 group">
@@ -95,7 +113,7 @@ export default function Home() {
               )}
             </div>
           </nav>
-        </header>
+        </motion.header>
       </div>
 
       {/* ⚡ HERO & EXPLORER SECTION */}

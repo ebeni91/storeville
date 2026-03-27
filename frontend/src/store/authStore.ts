@@ -6,6 +6,8 @@ interface User {
   email: string
   phone_number?: string
   role: 'CUSTOMER' | 'SELLER' | 'DRIVER' | 'ADMIN'
+  first_name?: string
+  last_name?: string
 }
 
 interface AuthState {

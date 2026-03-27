@@ -1,12 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
 import { Loader2, ShoppingBag, MapPin, Search, Heart, User, SlidersHorizontal, ArrowRight, X, Check, Menu, Star, CheckCircle, Lock, Plus, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
 import ProfileDropdown from '@/components/ProfileDropdown'
+import { useFavoriteStore } from '@/store/favoriteStore'
+import FavoriteDropdown from '@/components/FavoriteDropdown'
 
 interface RetailCategory { id: string; name: string; slug: string }
 interface RetailProduct { id: string; category: string; category_name: string; name: string; description: string; price: string; image: string | null; stock_quantity: number }
@@ -17,9 +20,11 @@ export default function RetailStorefront({ store }: { store: any }) {
   // 🌟 UNIVERSAL AUTH & CART STATES
   const { token, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useAuthStore()
   const { carts, addItem, removeItem, mergeCartWithBackend } = useCartStore()
+  const { favorites, fetchFavorites, toggleFavorite } = useFavoriteStore()
   
   const [isMounted, setIsMounted] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isFavOpen, setIsFavOpen] = useState(false)
 
   // Grab the specific cart for this store safely to avoid hydration errors
   const cartItems = isMounted ? (carts[store.id] || []) : []
@@ -41,6 +46,12 @@ export default function RetailStorefront({ store }: { store: any }) {
   })
   const [authLoading, setAuthLoading] = useState(false)
   const [isCheckoutIntent, setIsCheckoutIntent] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const { scrollY } = useScroll()
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 50)
+  })
 
   useEffect(() => {
     setIsMounted(true) 
@@ -53,7 +64,8 @@ export default function RetailStorefront({ store }: { store: any }) {
       }
     }
     wakeUpAuth()
-  }, [token])
+    if (token) fetchFavorites()
+  }, [token, fetchFavorites])
 
   useEffect(() => {
     const fetchCatalog = async () => {
@@ -117,9 +129,14 @@ export default function RetailStorefront({ store }: { store: any }) {
           
       const res = await api.post(endpoint, payload)
       const accessToken = res.data.access || res.data.token || res.data.key
+      const userData = res.data.user
       
       if (accessToken) {
-        useAuthStore.getState().setToken(accessToken)
+        if (userData) {
+          useAuthStore.getState().login(userData, accessToken)
+        } else {
+          useAuthStore.getState().setToken(accessToken)
+        }
       }
       
       // MAGIC HAPPENS HERE: We tell Django about the guest cart items
@@ -227,7 +244,17 @@ export default function RetailStorefront({ store }: { store: any }) {
         </div>
       </div>
 
-      <nav className="sticky top-0 z-50 w-full backdrop-blur-2xl border-b transition-all duration-300 flex flex-col" style={{ backgroundColor: `rgba(${bgRgb}, 0.75)`, borderColor: `rgba(${textRgb}, 0.1)` }}>
+      <motion.nav 
+        initial={false}
+        animate={{
+          backgroundColor: isScrolled ? `rgba(${bgRgb}, 0.95)` : `rgba(${bgRgb}, 0.75)`,
+          paddingTop: isScrolled ? '0.25rem' : '0rem',
+          paddingBottom: isScrolled ? '0.25rem' : '0rem'
+        }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="sticky top-0 z-50 w-full backdrop-blur-2xl border-b flex flex-col shadow-sm" 
+        style={{ borderColor: `rgba(${textRgb}, 0.1)` }}
+      >
         {store.announcement_is_active && store.announcement_text && (
           <div className="relative w-full overflow-hidden flex items-center shadow-sm" style={{ backgroundColor: store.announcement_color || store.primary_color, color: store.background_color }}>
             <style dangerouslySetInnerHTML={{__html: `@keyframes premium-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .animate-premium-marquee { display: flex; width: max-content; animation: premium-marquee 25s linear infinite; }`}} />
@@ -259,7 +286,22 @@ export default function RetailStorefront({ store }: { store: any }) {
           </div>
 
           <div className="flex items-center gap-6 md:gap-8">
-            <Heart size={22} className="cursor-pointer hover:scale-110 transition-transform hidden md:block" />
+            <div className="relative">
+              <Heart 
+                size={22} 
+                className="cursor-pointer hover:scale-110 transition-transform hidden md:block"
+                onClick={() => {
+                  if (!token) return openAuthModal();
+                  setIsFavOpen(!isFavOpen);
+                }}
+              />
+              {favorites.length > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold shadow-md" style={{ backgroundColor: store.primary_color, color: store.background_color }}>
+                  {favorites.length}
+                </span>
+              )}
+              {isFavOpen && <FavoriteDropdown isOpen={isFavOpen} onClose={() => setIsFavOpen(false)} bgRgb={bgRgb} textRgb={textRgb} />}
+            </div>
             
             {/* PROFILE / LOGIN */}
             <div className="relative">
@@ -298,7 +340,7 @@ export default function RetailStorefront({ store }: { store: any }) {
             </div>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* HERO SECTION */}
       <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
@@ -387,8 +429,16 @@ export default function RetailStorefront({ store }: { store: any }) {
                           {p.category_name}
                         </div>
                       )}
-                      <button className="w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center hover:scale-110 transition-transform shadow-sm" style={{ backgroundColor: `rgba(${bgRgb}, 0.9)`, color: store.secondary_color }}>
-                        <Heart size={12} />
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!token) return openAuthModal();
+                          toggleFavorite(p, 'RETAIL');
+                        }}
+                        className="w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center hover:scale-110 transition-transform shadow-sm" 
+                        style={{ backgroundColor: `rgba(${bgRgb}, 0.9)`, color: favorites.some(f => f.productId === p.id && f.type === 'RETAIL') ? '#ef4444' : store.secondary_color }}
+                      >
+                        <Heart size={12} fill={favorites.some(f => f.productId === p.id && f.type === 'RETAIL') ? 'currentColor' : 'none'} />
                       </button>
                     </div>
 

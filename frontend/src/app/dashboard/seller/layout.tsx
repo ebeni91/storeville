@@ -20,52 +20,53 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
 
   return (
     <ProtectedRoute allowedRoles={['SELLER']}>
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen relative font-sans text-gray-900 overflow-x-hidden flex selection:bg-indigo-500 selection:text-white">
         
-        {/* Persistent Sidebar */}
-        <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed h-full z-20">
-          <div className="p-6 flex items-center gap-2 text-indigo-600 border-b border-gray-100">
-            <StoreIcon size={28} className="fill-indigo-100" />
-            <span className="text-2xl font-extrabold tracking-tight text-indigo-700">StoreVille</span>
+        {/* 🎨 UNIVERSAL BACKGROUND SYSTEM */}
+        <div className="fixed inset-0 z-0 bg-[length:200%_200%] animate-[gradient_15s_ease_infinite] bg-gradient-to-br from-[#eef2ff] via-[#f3e8ff] to-[#cffafe]">
+          <div className="absolute inset-0 opacity-[0.25] mix-blend-overlay bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]"></div>
+        </div>
+
+        {/* Persistent Glass Sidebar */}
+        <aside className="w-64 bg-white/70 backdrop-blur-3xl border-r border-white shadow-[8px_0_30px_rgb(0,0,0,0.02)] hidden md:flex flex-col fixed h-full z-[100] transition-all">
+          <div className="p-6 flex items-center gap-2 text-indigo-600 border-b border-white relative">
+            <div className="bg-indigo-600 p-2 rounded-xl shadow-[0_4px_20px_rgba(79,70,229,0.3)]"><StoreIcon size={24} className="text-white" /></div>
+            <span className="text-2xl font-black tracking-tighter text-gray-900">Store<span className="text-indigo-600">Ville</span></span>
           </div>
 
           <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
-            <div className="text-xs font-black text-gray-400 uppercase tracking-wider mb-4 px-2">Menu</div>
+            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Menu</div>
             
-            <Link href="/dashboard/seller" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <LayoutDashboard size={20} /> Overview
+            <Link href="/dashboard/seller" className={`flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all group ${isActive('/dashboard/seller') ? 'bg-white shadow-sm border border-white text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900 border border-transparent'}`}>
+              <LayoutDashboard size={18} className="group-hover:scale-110 transition-transform" /> Overview
             </Link>
-            <Link href="/dashboard/seller/categories" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller/categories') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-tags"><path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"/><path d="M9.586 5.586A2 2 0 0 0 8.172 5H3a1 1 0 0 0-1 1v5.172a2 2 0 0 0 .586 1.414l8.204 8.204a2.426 2.426 0 0 0 3.42 0l3.582-3.582a2.426 2.426 0 0 0 0-3.42z"/><circle cx="6.5" cy="9.5" r=".5" fill="currentColor"/></svg>
-              Categories
+            <Link href="/dashboard/seller/categories" className={`flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all group mt-1 ${isActive('/dashboard/seller/categories') ? 'bg-white shadow-sm border border-white text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900 border border-transparent'}`}>
+              <Tags size={18} className="group-hover:scale-110 transition-transform" /> Categories
             </Link>
-            <Link href="/dashboard/seller/products" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller/products') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <Package size={20} /> My Products
+            <Link href="/dashboard/seller/products" className={`flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all group mt-1 ${isActive('/dashboard/seller/products') ? 'bg-white shadow-sm border border-white text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900 border border-transparent'}`}>
+              <Package size={18} className="group-hover:scale-110 transition-transform" /> My Products
             </Link>
-            <Link href="/dashboard/seller/orders" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller/orders') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <ShoppingBag size={20} /> Incoming Orders
+            <Link href="/dashboard/seller/orders" className={`flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all group mt-1 ${isActive('/dashboard/seller/orders') ? 'bg-white shadow-sm border border-white text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900 border border-transparent'}`}>
+              <ShoppingBag size={18} className="group-hover:scale-110 transition-transform" /> Incoming Orders
             </Link>
-            <Link href="/dashboard/seller/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller/settings') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-palette"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-              Store Settings
+            <Link href="/dashboard/seller/settings" className={`flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all group mt-1 ${isActive('/dashboard/seller/settings') ? 'bg-white shadow-sm border border-white text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900 border border-transparent'}`}>
+              <Palette size={18} className="group-hover:scale-110 transition-transform" /> Store Settings
             </Link>
           </div>
 
-          <div className="p-4 border-t border-gray-100">
-            <Link href="/dashboard/seller/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive('/dashboard/seller/settings') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
-              <Settings size={20} /> Store Settings
-            </Link>
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-bold transition-colors mt-1">
-              <LogOut size={20} /> Log Out
+          <div className="p-4 border-t border-white/50 bg-white/20">
+            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-3 px-4 py-3.5 text-xs text-red-500 hover:bg-white hover:text-red-600 hover:shadow-sm rounded-[1.25rem] font-bold transition-all uppercase tracking-widest group">
+              <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" /> Secure Log Out
             </button>
           </div>
         </aside>
 
         {/* Dynamic Content Area */}
-        <div className="flex-1 ml-0 md:ml-64 relative">
+        <div className="flex-1 ml-0 md:ml-64 relative z-10 w-full overflow-x-hidden min-h-screen">
           {children}
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{__html: `@keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }`}} />
     </ProtectedRoute>
   )
 }

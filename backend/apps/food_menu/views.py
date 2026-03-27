@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
-from .models import MenuCategory, MenuItem
-from .serializers import MenuCategorySerializer, MenuItemSerializer
+from rest_framework.exceptions import ValidationError
+from .models import MenuCategory, MenuItem, FoodFavorite
+from .serializers import MenuCategorySerializer, MenuItemSerializer, FoodFavoriteSerializer
 from apps.stores.models import Store
 
 class IsStoreOwnerOrReadOnly(permissions.BasePermission):
@@ -36,3 +37,17 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(store=Store.objects.get(owner=self.request.user))
+
+class FoodFavoriteViewSet(viewsets.ModelViewSet):
+    serializer_class = FoodFavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return FoodFavorite.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        menu_item = serializer.validated_data['menu_item']
+        if FoodFavorite.objects.filter(user=user, menu_item=menu_item).exists():
+            raise ValidationError("Menu item is already in your wishlist.")
+        serializer.save(user=user)

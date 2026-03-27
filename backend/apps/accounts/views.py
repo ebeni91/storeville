@@ -1,5 +1,6 @@
-from rest_framework import generics, permissions,status
-from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
+from rest_framework import generics, permissions, status, viewsets
+from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer, CustomerAddressSerializer, SavedPaymentMethodSerializer
+from .models import CustomerAddress, SavedPaymentMethod
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.exceptions import InvalidToken
@@ -14,7 +15,7 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
 
-class ProfileView(generics.RetrieveUpdateAPIView):
+class ProfileView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -91,3 +92,17 @@ class LogoutView(APIView):
         response.delete_cookie('refresh_token')
         
         return response
+
+class CustomerAddressViewSet(viewsets.ModelViewSet):
+    serializer_class = CustomerAddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return CustomerAddress.objects.filter(user=self.request.user)
+
+class SavedPaymentMethodViewSet(viewsets.ModelViewSet):
+    serializer_class = SavedPaymentMethodSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return SavedPaymentMethod.objects.filter(user=self.request.user)

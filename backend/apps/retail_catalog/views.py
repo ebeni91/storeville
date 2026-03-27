@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
-from .models import RetailCategory, RetailProduct
-from .serializers import RetailCategorySerializer, RetailProductSerializer
+from rest_framework.exceptions import ValidationError
+from .models import RetailCategory, RetailProduct, RetailFavorite
+from .serializers import RetailCategorySerializer, RetailProductSerializer, RetailFavoriteSerializer
 from apps.stores.models import Store
 
 class IsStoreOwnerOrReadOnly(permissions.BasePermission):
@@ -47,5 +48,20 @@ class RetailProductViewSet(viewsets.ModelViewSet):
             
         return RetailProduct.objects.none()
 
+
     def perform_create(self, serializer):
         serializer.save(store=Store.objects.get(owner=self.request.user))
+
+class RetailFavoriteViewSet(viewsets.ModelViewSet):
+    serializer_class = RetailFavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return RetailFavorite.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        product = serializer.validated_data['product']
+        if RetailFavorite.objects.filter(user=user, product=product).exists():
+            raise ValidationError("Product is already in your wishlist.")
+        serializer.save(user=user)

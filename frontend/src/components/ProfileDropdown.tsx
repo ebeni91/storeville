@@ -3,7 +3,8 @@
 import React, { useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { LogOut, ShoppingBag, Heart, MapPin, Settings, Headset, User } from 'lucide-react'
+import { LogOut, ShoppingBag, Heart, MapPin, Settings, Headphones, User } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
 
 interface ProfileDropdownProps {
   isOpen: boolean
@@ -42,8 +43,11 @@ export default function ProfileDropdown({ isOpen, onClose, onSignOut, userEmail,
   const hoverBg = textRgb ? `rgba(${textRgb}, 0.05)` : 'rgba(0,0,0,0.04)'
   const subtleTextColor = textRgb ? `rgba(${textRgb}, 0.6)` : '#6b7280' // gray-500
 
-  const email = userEmail || 'user@storeville.com'
-  const name = userName || 'Storeville Member'
+  const { user } = useAuthStore()
+
+  const email = userEmail || user?.email || 'user@storeville.com'
+  const computedName = user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : null
+  const name = userName || computedName || 'Storeville Member'
 
   return (
     <AnimatePresence>
@@ -100,7 +104,7 @@ export default function ProfileDropdown({ isOpen, onClose, onSignOut, userEmail,
 
             <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: hoverBg }}></div>
-              <Headset size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 
+              <Headphones size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 
               <span className="relative z-10">Customer Support</span>
             </button>
           </div>

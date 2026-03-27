@@ -1,7 +1,9 @@
-
 from django.db import models
 from apps.stores.models import Store
+from django.contrib.auth import get_user_model
 import uuid
+
+User = get_user_model()
 
 class MenuCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -38,3 +40,15 @@ class MenuItem(models.Model):
 
     def __str__(self):
         return self.name
+
+class FoodFavorite(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='food_favorites')
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'menu_item')
+
+    def __str__(self):
+        return f"{self.user.email} -> {self.menu_item.name}"

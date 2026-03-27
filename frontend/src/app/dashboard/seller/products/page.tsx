@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
 import { Plus, Package, Edit, Trash2, Flame, Leaf, Clock, Loader2, UploadCloud, Image as ImageIcon, EyeOff } from 'lucide-react'
+import { motion, Variants } from 'framer-motion'
 
 export default function SmartProductsPage() {
   const [store, setStore] = useState<any>(null)
@@ -136,24 +137,34 @@ export default function SmartProductsPage() {
     }
   }
 
-  if (isLoading) return <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-indigo-600" size={40} /></div>
+  if (isLoading) return <div className="p-10 flex justify-center w-full min-h-screen items-center"><Loader2 className="animate-spin text-indigo-600" size={40} /></div>
 
   const isFood = store?.store_type === 'FOOD'
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+  }
+
+  const rowVariants: Variants = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+  }
+
   return (
-    <div className="p-8 pb-32">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 md:p-8 lg:p-12 pb-32 max-w-[1600px] mx-auto relative z-10">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="flex justify-between items-end mb-12">
         <div>
-          <h1 className="text-3xl font-black text-gray-900">{isFood ? 'Menu Manager' : 'Inventory Manager'}</h1>
-          <p className="text-gray-500 font-medium mt-1">{isFood ? 'Manage your dishes, prep times, and dietary tags.' : 'Manage your products, SKUs, and stock levels.'}</p>
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter mb-2">{isFood ? 'Menu Manager' : 'Inventory Manager'}</h1>
+          <p className="text-gray-600 font-semibold text-lg">{isFood ? 'Manage your dishes, prep times, and dietary tags.' : 'Manage your products, SKUs, and stock levels.'}</p>
         </div>
-        <button onClick={handleOpenCreate} className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-black transition-colors shadow-lg hover:scale-105 active:scale-95 duration-200">
+        <button onClick={handleOpenCreate} className="bg-gray-900 text-white px-7 py-3.5 rounded-full text-sm font-black tracking-widest uppercase hover:bg-black hover:shadow-[0_8px_25px_rgba(0,0,0,0.2)] transition-all flex items-center gap-2 transform hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(0,0,0,0.12)]">
           <Plus size={18} /> {isFood ? 'Add Dish' : 'Add Product'}
         </button>
-      </div>
+      </motion.div>
 
       {/* ITEMS TABLE */}
-      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden p-2">
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b">
             <tr>
@@ -174,40 +185,40 @@ export default function SmartProductsPage() {
               <th className="p-4"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <motion.tbody variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100/50">
             {items.map((item) => {
               const isActive = isFood ? item.is_available : item.is_active;
               
               return (
-              <tr key={item.id} className={`hover:bg-gray-50 transition-colors ${!isActive ? 'opacity-60 grayscale-[0.5]' : ''}`}>
-                <td className="p-4 font-bold text-gray-900 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden border flex items-center justify-center shrink-0">
-                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ImageIcon className="text-gray-300" size={20}/>}
+              <motion.tr variants={rowVariants} key={item.id} className={`hover:bg-white/60 transition-colors group ${!isActive ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+                <td className="p-4 font-black text-gray-900 flex items-center gap-4 text-lg">
+                  <div className="w-14 h-14 bg-white rounded-[1rem] shadow-sm border border-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+                    {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <ImageIcon className="text-gray-300" size={20}/>}
                   </div>
                   <div className="flex flex-col">
                      <span className="flex items-center gap-2">
                         {item.name} 
                         {!isActive && <EyeOff size={14} className="text-gray-400" />}
                      </span>
-                     {item.category_name && <span className="text-xs text-indigo-600 font-bold uppercase tracking-widest">{item.category_name}</span>}
+                     {item.category_name && <span className="text-[10px] text-indigo-600 font-black uppercase tracking-widest">{item.category_name}</span>}
                   </div>
                 </td>
-                <td className="p-4 font-black text-gray-600">Br {item.price}</td>
+                <td className="p-4 font-black text-gray-600 text-lg">Br {item.price}</td>
                 
                 {isFood ? (
                   <>
-                    <td className="p-4 text-sm font-medium text-gray-600"><span className="bg-orange-50 text-orange-700 px-2 py-1 rounded-md text-xs font-bold flex items-center w-max gap-1"><Clock size={12}/> {item.preparation_time_minutes} min</span></td>
+                    <td className="p-4 text-sm font-medium text-gray-600"><span className="bg-white shadow-sm border border-gray-100 text-orange-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center w-max gap-1"><Clock size={12}/> {item.preparation_time_minutes} min</span></td>
                     <td className="p-4 flex gap-1 items-center h-full pt-6">
-                      {item.is_vegan && <div className="p-1 bg-green-100 rounded text-green-600" title="Vegan"><Leaf size={14} /></div>}
-                      {item.is_spicy && <div className="p-1 bg-red-100 rounded text-red-600" title="Spicy"><Flame size={14} /></div>}
+                      {item.is_vegan && <div className="p-1 px-2 bg-green-50 rounded shadow-sm border border-green-100 text-green-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1" title="Vegan"><Leaf size={12} /> Vegan</div>}
+                      {item.is_spicy && <div className="p-1 px-2 bg-red-50 rounded shadow-sm border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1" title="Spicy"><Flame size={12} /> Spicy</div>}
                       {!item.is_vegan && !item.is_spicy && <span className="text-xs text-gray-400 font-medium">-</span>}
                     </td>
                   </>
                 ) : (
                   <>
-                    <td className="p-4 text-sm text-gray-500 font-mono font-bold bg-gray-50 px-2 rounded">{item.sku || 'N/A'}</td>
+                    <td className="p-4 text-sm text-gray-500 font-mono font-bold bg-white border border-gray-100 shadow-sm px-3 py-1.5 rounded-xl w-max">{item.sku || 'N/A'}</td>
                     <td className="p-4 text-sm font-bold text-gray-900">
-                      <span className={`px-3 py-1.5 rounded-lg border ${item.stock_quantity > 5 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                      <span className={`px-4 py-2 rounded-xl border font-black shadow-sm ${item.stock_quantity > 5 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                         {item.stock_quantity}
                       </span>
                     </td>
@@ -215,28 +226,30 @@ export default function SmartProductsPage() {
                 )}
                 
                 <td className="p-4">
-                  <button onClick={() => toggleVisibility(item)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100' : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'}`}>
+                  <button onClick={() => toggleVisibility(item)} className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border shadow-sm transition-all hover:-translate-y-0.5 ${isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
                     {isActive ? 'Active' : 'Hidden'}
                   </button>
                 </td>
                 <td className="p-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => handleOpenEdit(item)} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors"><Edit size={16} /></button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
+                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleOpenEdit(item)} className="p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-indigo-600 transition-colors"><Edit size={16} /></button>
+                    <button onClick={() => handleDelete(item.id)} className="p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
                   </div>
                 </td>
-              </tr>
+              </motion.tr>
             )})}
-          </tbody>
+          </motion.tbody>
         </table>
         {items.length === 0 && (
-          <div className="p-16 text-center border-t border-gray-100">
-            <Package size={48} className="mx-auto text-gray-200 mb-4" />
-            <h3 className="text-xl font-black tracking-tight text-gray-900 mb-2">No Items Found</h3>
-            <p className="text-gray-500 font-medium max-w-sm mx-auto">You haven't added any products or menu items yet. Click the button above to get started.</p>
+          <div className="p-20 text-center border-t border-gray-100/50 bg-white/40 rounded-b-[2rem]">
+            <div className="w-24 h-24 bg-white shadow-sm border border-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Package size={40} className="text-gray-300" />
+            </div>
+            <h3 className="text-2xl font-black tracking-tighter text-gray-900 mb-2">No Items Found</h3>
+            <p className="text-gray-500 font-semibold max-w-sm mx-auto text-sm">You haven't added any products or menu items yet. Click the button above to get started.</p>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* MODAL */}
       {isModalOpen && (

@@ -32,9 +32,13 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             if refresh_token:
                 del response.data['refresh']
                 
+                # Determine cookie name based on role
+                role = response.data.get('user', {}).get('role')
+                cookie_name = 'seller_refresh_token' if role == 'SELLER' else 'buyer_refresh_token'
+                
                 # Simplified secure cookie setting
                 response.set_cookie(
-                    key='refresh_token',
+                    key=cookie_name,
                     value=refresh_token,
                     httponly=True,
                     secure=not settings.DEBUG, 
@@ -47,11 +51,13 @@ class CookieTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer 
 
     def post(self, request, *args, **kwargs):
-        # 1. Safely grab the cookie
-        refresh_token = request.COOKIES.get('refresh_token')
+        # 1. Safely grab the cookie based on the intended zone
+        zone = request.headers.get('X-Auth-Zone', 'buyer')
+        cookie_name = 'seller_refresh_token' if zone == 'seller' else 'buyer_refresh_token'
+        refresh_token = request.COOKIES.get(cookie_name)
         
         if not refresh_token:
-            raise InvalidToken('No valid refresh token found in cookies.')
+            raise InvalidToken(f'No valid {zone} refresh token found in cookies.')
 
         # 2. Feed directly to serializer
         serializer = self.get_serializer(data={'refresh': refresh_token})
@@ -73,7 +79,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         # 4. Set the new cookie
         if new_refresh_token:
             response.set_cookie(
-                key='refresh_token',
+                key=cookie_name,
                 value=new_refresh_token,
                 httponly=True,
                 secure=not settings.DEBUG,
@@ -89,7 +95,11 @@ class LogoutView(APIView):
     def post(self, request):
         response = Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
         
-        response.delete_cookie('refresh_token')
+        # Determine which zone is logging out
+        zone = request.headers.get('X-Auth-Zone', 'buyer')
+        cookie_name = 'seller_refresh_token' if zone == 'seller' else 'buyer_refresh_token'
+        
+        response.delete_cookie(cookie_name)
         
         return response
 

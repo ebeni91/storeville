@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 
 interface User {
   id: string
@@ -22,27 +21,15 @@ interface AuthState {
   closeAuthModal: () => void // <-- NEW
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null, 
-      isAuthenticated: false,
-      isAuthModalOpen: false, 
-      
-      login: (user, token) => set({ user, token, isAuthenticated: true }),
-      setToken: (token) => set({ token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
-      openAuthModal: () => set({ isAuthModalOpen: true }),
-      closeAuthModal: () => set({ isAuthModalOpen: false }),
-    }),
-    {
-      name: 'storeville-auth',
-      // We exclude 'isAuthModalOpen' so the modal doesn't stay stuck open if they refresh
-      partialize: (state) => ({ 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated 
-      }),
-    }
-  )
-)
+export const useAuthStore = create<AuthState>()((set) => ({
+  user: null,
+  token: null, 
+  isAuthenticated: false,
+  isAuthModalOpen: false, 
+  
+  login: (user, token) => set({ user, token, isAuthenticated: true }),
+  setToken: (token) => set({ token, isAuthenticated: true }),
+  logout: () => set({ user: null, token: null, isAuthenticated: false }),
+  openAuthModal: () => set({ isAuthModalOpen: true }),
+  closeAuthModal: () => set({ isAuthModalOpen: false }),
+}))

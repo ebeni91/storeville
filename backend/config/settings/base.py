@@ -62,6 +62,11 @@ MIDDLEWARE = [
     'core.middleware.SubdomainStoreMiddleware',
 ]
 
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-auth-zone',
+]
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

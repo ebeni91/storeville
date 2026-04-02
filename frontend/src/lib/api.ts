@@ -32,9 +32,15 @@ api.interceptors.response.use(
       originalRequest._retry = true
 
       try {
+        const isDashboard = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard')
+        const zone = isDashboard ? 'seller' : 'buyer'
+
         // Silently ask Django for a new access token
         const res = await axios.post('http://localhost:8000/api/accounts/refresh/', {}, { 
-          withCredentials: true 
+          withCredentials: true,
+          headers: {
+            'X-Auth-Zone': zone
+          }
         })
 
         const newAccessToken = res.data.access

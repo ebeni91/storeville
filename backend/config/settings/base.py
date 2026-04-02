@@ -13,9 +13,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fallback-insecure-key-for-dev')
 
-# The base domain for subdomain routing (e.g., storeville.app)
-BASE_DOMAIN = os.environ.get('BASE_DOMAIN', 'storeville.app')
-
 # Application definition
 INSTALLED_APPS = [
     'unfold',
@@ -57,9 +54,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    # Our Custom Multi-Tenant Middleware
-    'core.middleware.SubdomainStoreMiddleware',
 ]
 
 from corsheaders.defaults import default_headers

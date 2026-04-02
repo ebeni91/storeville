@@ -18,7 +18,10 @@ BASE_DOMAIN = os.environ.get('BASE_DOMAIN', 'storeville.app')
 
 # Application definition
 INSTALLED_APPS = [
-    'jazzmin',
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,7 +67,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [], # Add template directories here if needed later
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -144,85 +147,104 @@ SIMPLE_JWT = {
 
 
 # ==============================================================================
-# JAZZMIN ADMIN DASHBOARD SETTINGS
+# UNFOLD ADMIN DASHBOARD SETTINGS
 # ==============================================================================
-JAZZMIN_SETTINGS = {
-    "site_title": "StoreVille Admin",
-    "site_header": "StoreVille",
-    "site_brand": "StoreVille HQ",
-    "site_logo": None, # You can add a path to your logo in static files later
-    "welcome_sign": "Welcome to StoreVille Command Center",
-    "copyright": "StoreVille Technology",
-    # "search_model": ["accounts.User", "stores.Store", "orders.Order","retail_orders.RetailOrder","food_orders.FoodOrder"],
-    "user_avatar": None,
-    
-    # Top Menu
-    "topmenu_links": [
-        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Visit Site", "url": "http://localhost:3000", "new_window": True},
-        {"model": "accounts.User"},
-    ],
 
-    # Custom Icons for Apps and Models
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "accounts.User": "fas fa-user-shield",
-        "stores.Store": "fas fa-store",
-        "products.Product": "fas fa-box-open",
-        "products.Category": "fas fa-tags",
-        "orders.Order": "fas fa-shopping-cart",
-        "orders.OrderItem": "fas fa-receipt",
-        "payments.PaymentTransaction": "fas fa-credit-card",
-        "delivery.Delivery": "fas fa-truck",
-        # The Food Engine
-        "food_menu.MenuCategory": "fas fa-list",
-        "food_menu.MenuItem": "fas fa-hamburger",
-        "food_orders.FoodOrder": "fas fa-motorcycle",
-        
-        # The Retail Engine
-        "retail_catalog.RetailCategory": "fas fa-tags",
-        "retail_catalog.RetailProduct": "fas fa-box-open",
-        "retail_orders.RetailOrder": "fas fa-shopping-cart",
-        
-        # Logistics & Finance
-        "payments.PaymentTransaction": "fas fa-credit-card",
-        "delivery.Delivery": "fas fa-truck",
+from django.templatetags.static import static
+
+UNFOLD = {
+    "SITE_TITLE": "StoreVille Premium Admin",
+    "SITE_HEADER": "StoreVille Command Center",
+    "SITE_URL": "http://localhost:3000",
+    "SITE_SYMBOL": "speed",  # Material icon 
+    "SHOW_HISTORY": True, 
+    "SHOW_VIEW_ON_SITE": True,
+    "DASHBOARD_CALLBACK": "core.dashboard.dashboard_callback",
+    
+    # COLORS
+    "COLORS": {
+        "primary": {
+            "50": "238 242 255",
+            "100": "224 231 255",
+            "200": "199 210 254",
+            "300": "165 180 252",
+            "400": "129 140 248",
+            "500": "99 102 241",  # Brand Indigo
+            "600": "79 70 229",
+            "700": "67 56 202",
+            "800": "55 48 163",
+            "900": "49 46 129",
+        },
     },
     
-    "show_ui_builder": False,
-    "changeform_format": "horizontal_tabs",
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": "navbar-indigo",
-    "accent": "accent-indigo",
-    "navbar": "navbar-indigo navbar-dark",
-    "no_navbar_border": False,
-    "navbar_fixed": True,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-indigo",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": True,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "default",
-    "dark_mode_theme": "darkly",
-    "button_classes": {
-        "primary": "btn-indigo",
-        "secondary": "btn-outline-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
+    # SIDEBAR SPECIFICS
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Platform Management",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "dashboard",
+                        "link": "/admin/", 
+                    },
+                    {
+                        "title": "Users & Drivers",
+                        "icon": "people",
+                        "link": "/admin/accounts/user/",
+                    },
+                    {
+                        "title": "Registered Stores",
+                        "icon": "storefront",
+                        "link": "/admin/stores/store/",
+                    },
+                ],
+            },
+            {
+                "title": "Commerce Engines",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Retail Products",
+                        "icon": "inventory_2",
+                        "link": "/admin/retail_catalog/retailproduct/",
+                    },
+                    {
+                        "title": "Food Menu",
+                        "icon": "restaurant_menu",
+                        "link": "/admin/food_menu/menuitem/",
+                    },
+                    {
+                        "title": "Retail Orders",
+                        "icon": "shopping_cart",
+                        "link": "/admin/retail_orders/retailorder/",
+                    },
+                    {
+                        "title": "Food Orders",
+                        "icon": "delivery_dining",
+                        "link": "/admin/food_orders/foodorder/",
+                    },
+                ]
+            },
+            {
+                "title": "Logistics & Finance",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Deliveries",
+                        "icon": "local_shipping",
+                        "link": "/admin/delivery/delivery/",
+                    },
+                    {
+                        "title": "Payments",
+                        "icon": "payments",
+                        "link": "/admin/payments/paymenttransaction/",
+                    },
+                ]
+            }
+        ],
+    },
 }

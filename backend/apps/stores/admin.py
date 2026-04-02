@@ -1,8 +1,9 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import Store
 
 @admin.register(Store)
-class StoreAdmin(admin.ModelAdmin):
+class StoreAdmin(ModelAdmin):
     list_display = ('name', 'owner', 'store_type', 'category', 'city', 'is_active', 'created_at')
     list_filter = ('store_type', 'is_active', 'category', 'city')
     search_fields = ('name', 'description', 'owner__username', 'owner__email')

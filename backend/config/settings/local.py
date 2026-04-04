@@ -16,8 +16,7 @@ DATABASES = {
 }
 
 ALLOWED_HOSTS = [
-    # 'storeville.test',
-    # 'api.storeville.test',
+    '*',
     '127.0.0.1',
     'localhost',
 ]

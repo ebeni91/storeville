@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'apps.food_menu',
     'apps.retail_orders', 
     'apps.food_orders',
-    # 'apps.orders',
     'apps.payments',
     'apps.delivery',
 ]

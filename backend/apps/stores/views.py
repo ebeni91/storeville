@@ -9,10 +9,16 @@ from .services import LocationService
 from .models import Store
 
 class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Store.objects.filter(is_active=True)
     serializer_class = StoreDiscoverySerializer
     permission_classes = [AllowAny] 
     lookup_field = 'slug' 
+
+    def get_queryset(self):
+        queryset = Store.objects.filter(is_active=True)
+        store_type = self.request.query_params.get('type')
+        if store_type:
+            queryset = queryset.filter(store_type=store_type.upper())
+        return queryset
 
     # 🌟 THE FIX: Add the by_slug endpoint Next.js is looking for
     @action(detail=False, methods=['get'])

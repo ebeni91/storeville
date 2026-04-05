@@ -1,196 +1,454 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, ActivityIndicator, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View, Text, TextInput, ScrollView, TouchableOpacity,
+  ActivityIndicator, Animated, Dimensions, StatusBar, StyleSheet
+} from 'react-native';
+import { BlurView } from 'expo-blur';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
-import { Search, SlidersHorizontal, MapPin, Coffee, ShoppingBag, Utensils } from 'lucide-react-native';
+import {
+  Search, SlidersHorizontal, Coffee, ShoppingBag,
+  Star, Navigation, X, ArrowRight, CheckCircle
+} from 'lucide-react-native';
+
+const { width, height } = Dimensions.get('window');
+// Bottom safe zone: floating tab bar (68) + its bottom margin (24) + a little gap
+const TAB_BAR_HEIGHT = 68 + 24 + 12; // ~104
+
+type Gateway = 'FOOD' | 'RETAIL';
 
 export function ExploreScreen({ navigation }: { navigation: any }) {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
-  const selectedGateway = useAuthStore(state => state.selectedGateway);
+  const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [activeChip, setActiveChip] = useState<string>('Cafes');
+  
+  // Gateway state lives locally so switching is instant without going to profile
+  const storedGateway = useAuthStore(state => state.selectedGateway);
+  const setGlobalGateway = useAuthStore(state => state.setGateway);
+  const [activeGateway, setActiveGateway] = useState<Gateway>((storedGateway as Gateway) || 'RETAIL');
 
+  const drawerAnim = useRef(new Animated.Value(0)).current;
+
+  const isFood = activeGateway === 'FOOD';
+
+  // ── Sync with global gateway on load ─────────────
+  useEffect(() => {
+    if (storedGateway) setActiveGateway(storedGateway as Gateway);
+  }, [storedGateway]);
+
+  const switchGateway = async (type: Gateway) => {
+    setActiveGateway(type);
+    setActiveChip(type === 'FOOD' ? 'Cafes' : 'Fashion');
+    await setGlobalGateway(type);
+  };
+
+  // ── Location setup ─────────────────────────────────
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setPermissionError('Permission to access location was denied');
-        return;
-      }
-      
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') { setPermissionError('Location access denied'); return; }
       try {
         const locationPromise = (async () => {
-          let loc = await Location.getLastKnownPositionAsync({});
-          if (!loc) {
-            loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-          }
-          return loc;
+          const loc = await Location.getLastKnownPositionAsync({});
+          return loc || await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         })();
-        
-        const timeoutPromise = new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('timeout')), 2000)
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 3000)
         );
-
-        const loc = await Promise.race([locationPromise, timeoutPromise]) as Location.LocationObject;
-        setLocation(loc);
-      } catch (err: any) {
+        setLocation(await Promise.race([locationPromise, timeoutPromise]) as Location.LocationObject);
+      } catch {
         setLocation({
-          coords: {
-            latitude: 9.03,
-            longitude: 38.74,
-            altitude: null,
-            accuracy: null,
-            altitudeAccuracy: null,
-            heading: null,
-            speed: null,
-          },
+          coords: { latitude: 9.03, longitude: 38.74, altitude: null, accuracy: null, altitudeAccuracy: null, heading: null, speed: null },
           timestamp: Date.now()
         } as Location.LocationObject);
       }
     })();
   }, []);
 
-  // Filter stores by the selected gateway type
-  const storeTypeFilter = selectedGateway || 'RETAIL';
-
+  // ── Store data ──────────────────────────────────
   const { data: stores } = useQuery({
-    queryKey: ['stores', storeTypeFilter],
+    queryKey: ['stores', activeGateway],
     queryFn: async () => {
-      const response = await api.get('/stores/discovery/', { params: { type: storeTypeFilter } });
-      return response.data.results || response.data;
+      const res = await api.get('/stores/discovery/', { params: { type: activeGateway } });
+      return res.data.results || res.data;
     }
   });
 
-  if (permissionError) {
-    return (
-      <View className="flex-1 items-center justify-center bg-primary-50 p-6">
-        <Text className="text-xl font-bold text-red-500 text-center">{permissionError}</Text>
-        <Text className="text-gray-600 text-center mt-2">Please enable GPS in your device settings.</Text>
-      </View>
-    );
-  }
+  // ── Drawer ──────────────────────────────────────
+  const openDrawer = (store: any) => {
+    setSelectedStore(store);
+    Animated.spring(drawerAnim, { toValue: 1, tension: 65, friction: 11, useNativeDriver: true }).start();
+  };
 
-  // Build the HTML string using concatenation to avoid nested template literal issues
+  const closeDrawer = () => {
+    Animated.timing(drawerAnim, { toValue: 0, duration: 240, useNativeDriver: true }).start(() => {
+      setSelectedStore(null);
+    });
+  };
+
+  const drawerTranslateY = drawerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [height, 0],
+  });
+
+  // ── Map HTML ────────────────────────────────────
   const lat = location?.coords.latitude || 9.03;
   const lng = location?.coords.longitude || 38.74;
   const storesJson = JSON.stringify(stores || []);
 
   const leafletHTML = [
     '<!DOCTYPE html><html><head>',
-    '<title>StoreVille Map</title>',
-    '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />',
-    '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />',
+    '<title>StoreVille</title>',
+    '<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>',
+    '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>',
     '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>',
     '<style>',
-    'body { padding: 0; margin: 0; }',
-    'html, body, #map { height: 100vh; width: 100vw; }',
-    '.leaflet-popup-content-wrapper { border-radius: 12px; font-family: sans-serif; }',
-    '.leaflet-popup-content b { color: #4f46e5; font-size: 15px; }',
-    '@keyframes pulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }',
+    'body,html,#map{margin:0;padding:0;height:100vh;width:100vw;}',
+    '.leaflet-control-attribution,.leaflet-control-zoom{display:none!important;}',
+    '@keyframes pinPop{0%{transform:scale(0.3) translateY(20px);opacity:0;}80%{transform:scale(1.08) translateY(-2px);}100%{transform:scale(1) translateY(0);opacity:1;}}',
+    '@keyframes ripple{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(2.2);opacity:0;}}',
+    '.store-pin{animation:pinPop 0.35s cubic-bezier(.175,.885,.32,1.275) forwards;}',
+    '.pin-ripple{animation:ripple 1.8s ease-out infinite;}',
     '</style></head><body><div id="map"></div><script>',
-    'var map = L.map("map", { zoomControl: false, attributionControl: false }).setView([' + lat + ', ' + lng + '], 15);',
-    'L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", { maxZoom: 20 }).addTo(map);',
-    // User location dot
-    'var userDot = \'<div style="position:relative;"><div style="position:absolute;left:-8px;top:-8px;width:36px;height:36px;background:rgba(59,130,246,0.3);border-radius:50%;animation:pulse 2s infinite;"></div><div style="position:absolute;width:20px;height:20px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 4px 6px rgba(0,0,0,0.3);"></div></div>\';',
-    'L.marker([' + lat + ', ' + lng + '], { icon: L.divIcon({ html: userDot, className: "", iconSize: [20,20], iconAnchor: [10,10] }) }).addTo(map);',
-    // Store markers
-    'var stores = ' + storesJson + ';',
-    'stores.forEach(function(store) {',
-    '  if (store.latitude && store.longitude) {',
-    '    var pinHtml = \'<div style="background:#4f46e5;width:32px;height:32px;border-radius:16px;border:3px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="color:white;font-weight:bold;font-size:14px;">S</span></div>\';',
-    '    var icon = L.divIcon({ className: "x", html: pinHtml, iconSize: [32,32], iconAnchor: [16,16] });',
-    '    L.marker([parseFloat(store.latitude), parseFloat(store.longitude)], { icon: icon })',
-    '      .addTo(map)',
-    '      .bindPopup("<div style=\'padding:4px;text-align:center;\'><b>" + store.name + "</b><br><span style=\'color:#6b7280;font-size:12px;\'>" + store.category + "</span><br><button onclick=\'window.ReactNativeWebView.postMessage(JSON.stringify({type:\\"STORE_CLICK\\", storeId:\\"" + store.id + "\\"}))\' style=\'margin-top:8px;background:#4f46e5;color:white;border:none;padding:6px 12px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;\'>Visit Store</button></div>");',
-    '  }',
+    'var map=L.map("map",{zoomControl:false,attributionControl:false}).setView([' + lat + ',' + lng + '],15);',
+    'L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{maxZoom:20}).addTo(map);',
+    // User dot
+    'var ud=\'<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(99,102,241,0.35);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#6366f1;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(99,102,241,0.5);"></div></div>\';',
+    'L.marker([' + lat + ',' + lng + '],{icon:L.divIcon({html:ud,className:"",iconSize:[22,22],iconAnchor:[11,11]})}).addTo(map);',
+    // Store pins
+    'var stores=' + storesJson + ';',
+    'stores.forEach(function(s){',
+    '  if(!s.latitude||!s.longitude) return;',
+    '  var isF=s.store_type==="FOOD";',
+    '  var col=isF?"#f97316":"#6366f1";',
+    '  var svg=isF',
+    '    ?\'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>\'',
+    '    :\'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>\';',
+    '  var h=\'<div class="store-pin" style="position:relative;width:46px;height:54px;cursor:pointer;">\'',
+    '    +\'<div style="width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid \'+col+\';display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);position:relative;z-index:1;">\'',
+    '    +\'<div style="width:32px;height:32px;border-radius:50%;background:\'+col+\';display:flex;align-items:center;justify-content:center;">\'+svg+\'</div>\'',
+    '    +\'</div>\'',
+    '    +\'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:\'+col+\';clip-path:polygon(50% 100%,0% 0%,100% 0%);"></div>\'',
+    '    +\'</div>\';',
+    '  var ic=L.divIcon({className:"",html:h,iconSize:[46,54],iconAnchor:[23,54]});',
+    '  L.marker([parseFloat(s.latitude),parseFloat(s.longitude)],{icon:ic})',
+    '    .addTo(map)',
+    '    .on("click",function(){window.ReactNativeWebView.postMessage(JSON.stringify({type:"STORE_CLICK",storeId:s.id}));});',
     '});',
     '</script></body></html>'
   ].join('\n');
 
-  const isFood = selectedGateway === 'FOOD';
+  const foodChips = ['Cafes', 'Restaurants', 'Bakeries', 'Hotels'];
+  const retailChips = ['Fashion', 'Electronics', 'Home', 'Beauty'];
+  const chips = isFood ? foodChips : retailChips;
+
+  if (permissionError) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb', padding: 24 }}>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: '#dc2626', textAlign: 'center' }}>{permissionError}</Text>
+      </View>
+    );
+  }
 
   return (
-    <View className="flex-1 bg-white">
-      {location ? (
-        <View className="flex-1 relative">
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <StatusBar barStyle="dark-content" />
+
+      {!location ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color="#6366f1" />
+          <Text style={{ color: '#6366f1', fontWeight: '600', marginTop: 14, fontSize: 15 }}>Finding you on the map…</Text>
+        </View>
+      ) : (
+        <View style={{ flex: 1 }}>
+          {/* ── Full-screen Map ───────────────────── */}
           <WebView
             source={{ html: leafletHTML }}
-            style={{ flex: 1, width: '100%' }}
+            style={{ flex: 1 }}
             scrollEnabled={false}
             bounces={false}
             onMessage={(event) => {
               try {
                 const data = JSON.parse(event.nativeEvent.data);
                 if (data.type === 'STORE_CLICK' && stores) {
-                  const selectedStore = stores.find((s: any) => s.id === data.storeId);
-                  if (selectedStore) {
-                    navigation.navigate('StoreGateway', { store: selectedStore });
-                  }
+                  const store = stores.find((s: any) => s.id === data.storeId);
+                  if (store) openDrawer(store);
                 }
-              } catch (err) {
-                console.error("WebView message error:", err);
-              }
+              } catch { /* ignore */ }
             }}
           />
-          
-          {/* Top Premium Search Overlay */}
-          <View className="absolute top-12 w-full px-6 z-10">
-            <View className="flex-row items-center bg-white rounded-2xl px-4 py-4 shadow-lg shadow-black/10 border border-gray-100">
-              <Search color="#9ca3af" size={20} />
-              <TextInput 
-                placeholder={isFood ? "Search Cafes, Restaurants..." : "Search Stores, Products..."}
+
+          {/* ── Floating Search Bar ───────────────── */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Search color="#6366f1" size={20} strokeWidth={2.5} />
+              <TextInput
+                placeholder={isFood ? 'Search cafes, restaurants…' : 'Search stores, products…'}
                 placeholderTextColor="#9ca3af"
-                className="flex-1 ml-3 text-base text-gray-900 font-medium"
+                style={styles.searchInput}
               />
-              <TouchableOpacity className="bg-primary-50 p-2 rounded-xl">
-                <SlidersHorizontal color="#4f46e5" size={18} />
+              <TouchableOpacity style={styles.filterButton}>
+                <SlidersHorizontal color="#6366f1" size={17} strokeWidth={2} />
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Bottom Floating Filter Chips */}
-          <View className="absolute bottom-6 w-full z-10">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6" contentContainerStyle={{ paddingRight: 40 }}>
-              <TouchableOpacity className="flex-row items-center bg-primary-600 px-5 py-3.5 rounded-full mr-3 shadow-lg shadow-primary-600/30">
-                <MapPin color="#ffffff" size={16} />
-                <Text className="text-white font-bold ml-2">Nearby</Text>
-              </TouchableOpacity>
-              
-              {isFood ? (
-                <>
-                  <TouchableOpacity className="flex-row items-center bg-white px-5 py-3.5 rounded-full mr-3 shadow-md shadow-black/5 border border-gray-100">
-                    <Coffee color="#374151" size={16} />
-                    <Text className="text-gray-700 font-bold ml-2">Cafes</Text>
+            {/* ── Category Chips ──────────────────── */}
+            <ScrollView
+              horizontal showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipsRow}
+            >
+              {chips.map((chip) => {
+                const active = activeChip === chip;
+                return (
+                  <TouchableOpacity
+                    key={chip}
+                    onPress={() => setActiveChip(chip)}
+                    style={[styles.chip, active && styles.chipActive]}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{chip}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity className="flex-row items-center bg-white px-5 py-3.5 rounded-full mr-3 shadow-md shadow-black/5 border border-gray-100">
-                    <Utensils color="#374151" size={16} />
-                    <Text className="text-gray-700 font-bold ml-2">Restaurants</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity className="flex-row items-center bg-white px-5 py-3.5 rounded-full mr-3 shadow-md shadow-black/5 border border-gray-100">
-                    <ShoppingBag color="#374151" size={16} />
-                    <Text className="text-gray-700 font-bold ml-2">Fashion</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity className="flex-row items-center bg-white px-5 py-3.5 rounded-full mr-3 shadow-md shadow-black/5 border border-gray-100">
-                    <ShoppingBag color="#374151" size={16} />
-                    <Text className="text-gray-700 font-bold ml-2">Electronics</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+                );
+              })}
             </ScrollView>
           </View>
 
-        </View>
-      ) : (
-        <View className="flex-1 items-center justify-center bg-primary-50">
-          <ActivityIndicator size="large" color="#4f46e5" />
-          <Text className="mt-4 text-primary-900 font-medium">Getting your location...</Text>
+          {/* ── Gateway Switcher Pills ────────────── */}
+          <View style={styles.gatewaySwitcher}>
+            <TouchableOpacity
+              onPress={() => switchGateway('RETAIL')}
+              activeOpacity={0.85}
+              style={[
+                styles.gatewayPill,
+                activeGateway === 'RETAIL' ? styles.gatewayPillRetailActive : styles.gatewayPillInactive,
+              ]}
+            >
+              <ShoppingBag size={14} color={activeGateway === 'RETAIL' ? '#ffffff' : '#6b7280'} strokeWidth={2.5} style={{ marginRight: 6 }} />
+              <Text style={[styles.gatewayPillText, { color: activeGateway === 'RETAIL' ? '#ffffff' : '#374151' }]}>Shop Retail</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => switchGateway('FOOD')}
+              activeOpacity={0.85}
+              style={[
+                styles.gatewayPill,
+                activeGateway === 'FOOD' ? styles.gatewayPillFoodActive : styles.gatewayPillInactive,
+              ]}
+            >
+              <Coffee size={14} color={activeGateway === 'FOOD' ? '#ffffff' : '#6b7280'} strokeWidth={2.5} style={{ marginRight: 6 }} />
+              <Text style={[styles.gatewayPillText, { color: activeGateway === 'FOOD' ? '#ffffff' : '#374151' }]}>Food & Coffee</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ── Store Discovery Drawer ────────────── */}
+          {selectedStore && (
+            <Animated.View style={[styles.drawer, { transform: [{ translateY: drawerTranslateY }] }]}>
+              <View style={styles.drawerInner}>
+                {/* Grab handle */}
+                <View style={styles.drawerHandle} />
+
+                {/* Close button */}
+                <TouchableOpacity onPress={closeDrawer} style={styles.drawerClose}>
+                  <X color="#6b7280" size={18} strokeWidth={2.5} />
+                </TouchableOpacity>
+
+                {/* Hero banner */}
+                <View style={[styles.heroBanner, { backgroundColor: isFood ? '#fff7ed' : '#eef2ff', borderColor: isFood ? '#fed7aa' : '#c7d2fe' }]}>
+                  <View style={[styles.heroIconCircle, {
+                    backgroundColor: isFood ? '#f97316' : '#6366f1',
+                    shadowColor: isFood ? '#f97316' : '#6366f1',
+                  }]}>
+                    {isFood
+                      ? <Coffee color="#ffffff" size={30} />
+                      : <ShoppingBag color="#ffffff" size={30} />}
+                  </View>
+                </View>
+
+                {/* Store name + badge */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 4 }}>
+                  <Text style={styles.storeName}>{selectedStore.name}</Text>
+                  <View style={styles.verifiedBadge}>
+                    <CheckCircle color="#16a34a" size={11} strokeWidth={2.5} />
+                    <Text style={styles.verifiedText}>Verified</Text>
+                  </View>
+                </View>
+                <Text style={styles.storeCategory}>{selectedStore.category || (isFood ? 'food' : 'retail')}</Text>
+
+                {/* Stats row */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    {[
+                      { icon: Navigation, label: '1.2 km', sub: 'Distance', color: '#6366f1' },
+                      { icon: Star, label: '4.8', sub: '200+ reviews', color: '#f59e0b' },
+                      { icon: CheckCircle, label: 'Open', sub: 'Until 10 PM', color: '#16a34a' },
+                    ].map((s, i) => (
+                      <View key={i} style={styles.statCard}>
+                        <s.icon color={s.color} size={17} strokeWidth={2} />
+                        <Text style={styles.statLabel}>{s.label}</Text>
+                        <Text style={styles.statSub}>{s.sub}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+
+                {/* CTA — sits above the floating tab bar */}
+                <TouchableOpacity
+                  onPress={() => { closeDrawer(); navigation.navigate('StoreGateway', { store: selectedStore }); }}
+                  activeOpacity={0.85}
+                  style={[styles.ctaButton, { backgroundColor: isFood ? '#f97316' : '#6366f1', shadowColor: isFood ? '#f97316' : '#6366f1' }]}
+                >
+                  <Text style={styles.ctaText}>{isFood ? 'Order From This Place' : 'Enter Store'}</Text>
+                  <ArrowRight color="#ffffff" size={20} strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          )}
+
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // ── Search
+  searchContainer: {
+    position: 'absolute', top: 52, left: 16, right: 16, zIndex: 10,
+  },
+  searchBar: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    paddingHorizontal: 14, paddingVertical: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10, shadowRadius: 16, elevation: 6,
+    marginBottom: 10,
+  },
+  searchInput: {
+    flex: 1, marginLeft: 10, fontSize: 15, fontWeight: '500', color: '#111827',
+  },
+  filterButton: {
+    backgroundColor: 'rgba(99,102,241,0.09)', padding: 8, borderRadius: 11,
+  },
+
+  // ── Chips
+  chipsRow: {
+    flexDirection: 'row', gap: 8, paddingRight: 8,
+  },
+  chip: {
+    paddingHorizontal: 18, paddingVertical: 9, borderRadius: 999,
+    backgroundColor: '#ffffff',
+    borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+  },
+  chipActive: {
+    backgroundColor: '#111827', borderColor: '#111827',
+  },
+  chipText: {
+    fontSize: 13, fontWeight: '700', color: '#374151',
+  },
+  chipTextActive: {
+    color: '#ffffff',
+  },
+
+  // ── Gateway Switcher
+  gatewaySwitcher: {
+    position: 'absolute',
+    bottom: TAB_BAR_HEIGHT + 16, // sits just above the tab bar
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 10,
+    zIndex: 20,
+  },
+  gatewayPill: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 18, paddingVertical: 11,
+    borderRadius: 999,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15, shadowRadius: 12, elevation: 8,
+  },
+  gatewayPillRetailActive: {
+    backgroundColor: '#6366f1',
+  },
+  gatewayPillFoodActive: {
+    backgroundColor: '#f97316',
+  },
+  gatewayPillInactive: {
+    backgroundColor: '#ffffff',
+  },
+  gatewayPillText: {
+    fontSize: 14, fontWeight: '700',
+  },
+
+  // ── Drawer
+  drawer: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 50,
+  },
+  drawerInner: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 36, borderTopRightRadius: 36,
+    paddingHorizontal: 22,
+    // Critical: pad bottom enough so CTA clears the floating tab bar
+    paddingBottom: TAB_BAR_HEIGHT + 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.10, shadowRadius: 20, elevation: 20,
+  },
+  drawerHandle: {
+    width: 38, height: 4, borderRadius: 99,
+    backgroundColor: '#e5e7eb', alignSelf: 'center',
+    marginTop: 14, marginBottom: 16,
+  },
+  drawerClose: {
+    position: 'absolute', top: 18, right: 20, zIndex: 10,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
+  },
+  heroBanner: {
+    height: 130, borderRadius: 20, marginBottom: 18,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, overflow: 'hidden',
+  },
+  heroIconCircle: {
+    width: 64, height: 64, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 6,
+  },
+  storeName: {
+    fontSize: 26, fontWeight: '900', color: '#111827', letterSpacing: -0.5,
+  },
+  verifiedBadge: {
+    backgroundColor: '#dcfce7', paddingHorizontal: 9, paddingVertical: 3,
+    borderRadius: 99, flexDirection: 'row', alignItems: 'center', gap: 4,
+  },
+  verifiedText: {
+    color: '#16a34a', fontSize: 11, fontWeight: '800',
+  },
+  storeCategory: {
+    color: '#6b7280', fontSize: 14, fontWeight: '500', marginTop: 2, marginBottom: 18,
+  },
+  statCard: {
+    backgroundColor: '#f9fafb', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12,
+    alignItems: 'center', minWidth: 88,
+    borderWidth: 1, borderColor: '#f3f4f6',
+  },
+  statLabel: {
+    fontSize: 15, fontWeight: '900', color: '#111827', marginTop: 6,
+  },
+  statSub: {
+    fontSize: 10, fontWeight: '600', color: '#9ca3af', marginTop: 2,
+  },
+  ctaButton: {
+    borderRadius: 18, paddingVertical: 17,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35,
+    shadowRadius: 16, elevation: 10,
+  },
+  ctaText: {
+    color: '#ffffff', fontSize: 16, fontWeight: '900', letterSpacing: -0.2, marginRight: 10,
+  },
+});

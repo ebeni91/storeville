@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StatusBar } from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator,
+  StatusBar, KeyboardAvoidingView, Platform, Dimensions
+} from 'react-native';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
-import { LogIn } from 'lucide-react-native';
+import { Eye, EyeOff, ArrowRight } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 interface Props {
   route?: any;
@@ -15,29 +20,28 @@ export function LoginScreen({ route, navigation }: Props) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const login = useAuthStore(state => state.login);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  // Figure out the correct Register screen name based on which navigator we're in
+  const login = useAuthStore(state => state.login);
+  const enterGuestMode = useAuthStore(state => state.enterGuestMode);
+
   const getRegisterRoute = () => {
-    const state = navigation?.getState();
-    const routeNames = state?.routeNames || [];
+    const routeNames = navigation?.getState()?.routeNames || [];
     if (routeNames.includes('OnboardingRegister')) return 'OnboardingRegister';
-    if (routeNames.includes('Register')) return 'Register';
     return 'Register';
   };
 
   const handleLogin = async () => {
     if (!email || !password) return;
-    
     setLoading(true);
     try {
       const response = await api.post('/accounts/login/', { email: email.trim(), password });
       const { access, user } = response.data;
-      
+
       let refresh = '';
       const setCookieHeaders = response.headers['set-cookie'];
-      
       if (setCookieHeaders) {
         const headers = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
         for (const h of headers) {
@@ -47,92 +51,173 @@ export function LoginScreen({ route, navigation }: Props) {
           }
         }
       }
-      
-      if (!refresh) throw new Error("Security Error: No refresh token supplied by server.");
-      
+      if (!refresh) throw new Error('Security Error: No refresh token supplied by server.');
+
       const zone = user.role === 'SELLER' ? 'seller' : 'buyer';
       await login(user, access, refresh, zone);
-      
-      // If we are in the Marketplace branch (named 'Auth'), dismiss this screen
-      // If we are in Onboarding branch, RootNavigator swaps the tree automatically
-      const currentRoute = navigation?.getState()?.routes[navigation.getState().index];
-      if (currentRoute?.name === 'Auth') {
-        navigation.goBack();
-      }
 
+      const currentRoute = navigation?.getState()?.routes[navigation.getState().index];
+      if (currentRoute?.name === 'Auth') navigation.goBack();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail 
-                        || error.response?.data?.email?.[0] 
-                        || error.response?.data?.non_field_errors?.[0]
-                        || error?.message 
-                        || 'Invalid credentials';
-      
-      Alert.alert('Login Failed', errorMessage);
+      const msg = error.response?.data?.detail
+        || error.response?.data?.email?.[0]
+        || error.response?.data?.non_field_errors?.[0]
+        || error?.message
+        || 'Invalid credentials';
+      Alert.alert('Login Failed', msg);
     } finally {
       setLoading(false);
     }
   };
 
+  const accentColor = isSeller ? '#f59e0b' : '#6366f1';
+
   return (
-    <View className="flex-1 justify-center bg-gray-900 px-6">
-      <StatusBar barStyle="light-content" />
-      
-      <View className="items-center mb-10">
-        <View className={`p-4 rounded-2xl mb-4 ${isSeller ? 'bg-amber-500/20' : 'bg-primary-500/20'}`}>
-          <LogIn color={isSeller ? '#f59e0b' : '#818cf8'} size={28} />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: '#050508' }}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#050508" />
+
+      {/* Glow orb */}
+      <View style={{
+        position: 'absolute', width: width * 1.2, height: width * 1.2,
+        borderRadius: width * 0.6, top: -width * 0.5, left: -width * 0.1,
+        backgroundColor: accentColor, opacity: 0.07,
+      }} />
+
+      <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 28 }}>
+
+        {/* Wordmark + header */}
+        <View style={{ marginBottom: 44 }}>
+          <Text style={{ fontSize: 38, lineHeight: 38, letterSpacing: -1.5, marginBottom: 20 }}>
+            <Text style={{ fontWeight: '300', color: 'rgba(255,255,255,0.5)' }}>Store</Text>
+            <Text style={{ fontWeight: '900', color: '#ffffff' }}>Ville</Text>
+          </Text>
+          <View style={{ width: 28, height: 1.5, backgroundColor: accentColor, borderRadius: 99, marginBottom: 16, opacity: 0.7 }} />
+          <Text style={{ fontSize: 13, fontWeight: '600', color: accentColor, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8, opacity: 0.8 }}>
+            {isSeller ? 'Seller Portal' : 'Marketplace'}
+          </Text>
+          <Text style={{ fontSize: 30, fontWeight: '900', color: '#ffffff', letterSpacing: -0.8, lineHeight: 34 }}>
+            {isSeller ? 'Welcome\nback, pro.' : 'Sign in to\ncontinue.'}
+          </Text>
         </View>
-        <Text className="text-3xl font-black text-white">
-          {isSeller ? 'Seller Login' : 'Welcome Back'}
-        </Text>
-        <Text className="text-gray-400 font-medium mt-2">Sign in to your account</Text>
-      </View>
 
-      <TextInput
-        className="bg-gray-800 text-white px-4 py-4 rounded-xl mb-3 text-base border border-gray-700"
-        placeholder="Email Address"
-        placeholderTextColor="#6b7280"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      
-      <TextInput
-        className="bg-gray-800 text-white px-4 py-4 rounded-xl mb-6 text-base border border-gray-700"
-        placeholder="Password"
-        placeholderTextColor="#6b7280"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      
-      <TouchableOpacity 
-        className={`py-5 rounded-2xl items-center ${loading ? 'bg-gray-700' : isSeller ? 'bg-amber-500' : 'bg-primary-600'}`}
-        onPress={handleLogin}
-        disabled={loading}
-        activeOpacity={0.8}
-      >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text className="text-white text-lg font-black">Sign In</Text>
+        {/* Fields */}
+        <View style={{ gap: 10, marginBottom: 24 }}>
+          <View style={{
+            backgroundColor: focusedField === 'email' ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
+            borderWidth: 1,
+            borderColor: focusedField === 'email' ? accentColor + '60' : 'rgba(255,255,255,0.07)',
+            borderRadius: 16, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 8,
+          }}>
+            <Text style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
+              Email
+            </Text>
+            <TextInput
+              value={email} onChangeText={setEmail}
+              onFocus={() => setFocusedField('email')}
+              onBlur={() => setFocusedField(null)}
+              autoCapitalize="none" keyboardType="email-address"
+              placeholder="you@example.com"
+              placeholderTextColor="rgba(255,255,255,0.14)"
+              style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', paddingVertical: 6 }}
+            />
+          </View>
+
+          <View style={{
+            backgroundColor: focusedField === 'password' ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
+            borderWidth: 1,
+            borderColor: focusedField === 'password' ? accentColor + '60' : 'rgba(255,255,255,0.07)',
+            borderRadius: 16, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 8,
+            flexDirection: 'row', alignItems: 'center',
+          }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
+                Password
+              </Text>
+              <TextInput
+                value={password} onChangeText={setPassword}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField(null)}
+                secureTextEntry={!showPassword}
+                placeholder="••••••••"
+                placeholderTextColor="rgba(255,255,255,0.14)"
+                style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', paddingVertical: 6 }}
+              />
+            </View>
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ paddingLeft: 12, paddingBottom: 2 }}>
+              {showPassword
+                ? <EyeOff color="rgba(255,255,255,0.25)" size={18} />
+                : <Eye color="rgba(255,255,255,0.25)" size={18} />}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Sign In CTA */}
+        <TouchableOpacity
+          onPress={handleLogin} disabled={loading} activeOpacity={0.85}
+          style={{
+            backgroundColor: loading ? 'rgba(255,255,255,0.05)' : accentColor,
+            borderRadius: 16, paddingVertical: 17,
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+            shadowColor: accentColor, shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.35, shadowRadius: 16, elevation: 8, marginBottom: 14,
+          }}
+        >
+          {loading
+            ? <ActivityIndicator color="white" />
+            : <>
+                <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '800', letterSpacing: -0.2, marginRight: 8 }}>Sign In</Text>
+                <ArrowRight color="#ffffff" size={18} strokeWidth={2.5} />
+              </>}
+        </TouchableOpacity>
+
+        {/* Register link */}
+        <TouchableOpacity
+          onPress={() => navigation?.navigate(getRegisterRoute(), { intendedRole })}
+          style={{
+            borderRadius: 16, paddingVertical: 14,
+            backgroundColor: 'rgba(255,255,255,0.04)',
+            borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+            alignItems: 'center', marginBottom: 28,
+          }}
+        >
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '600' }}>
+            New here?{'  '}
+            <Text style={{ color: accentColor, fontWeight: '800' }}>Create Account</Text>
+          </Text>
+        </TouchableOpacity>
+
+        {/* Guest mode — only for buyers */}
+        {!isSeller && (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.06)' }} />
+              <Text style={{ color: 'rgba(255,255,255,0.18)', fontWeight: '700', fontSize: 10, marginHorizontal: 14, letterSpacing: 2.5, textTransform: 'uppercase' }}>or</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.06)' }} />
+            </View>
+            <TouchableOpacity
+              onPress={enterGuestMode}
+              activeOpacity={0.7}
+              style={{ alignItems: 'center', paddingVertical: 12 }}
+            >
+              <Text style={{ color: 'rgba(255,255,255,0.28)', fontWeight: '600', fontSize: 14 }}>
+                Continue as Guest
+              </Text>
+            </TouchableOpacity>
+          </>
         )}
-      </TouchableOpacity>
 
-      {/* Switch to Register */}
-      <TouchableOpacity 
-        onPress={() => navigation?.navigate(getRegisterRoute(), { intendedRole })} 
-        className="mt-6 items-center"
-      >
-        <Text className="text-gray-400 font-medium">
-          Don't have an account? <Text className="text-primary-400 font-black">Register</Text>
-        </Text>
-      </TouchableOpacity>
+        {/* Back */}
+        <TouchableOpacity
+          onPress={() => navigation?.goBack()}
+          style={{ alignItems: 'center', paddingVertical: 20, marginTop: 4 }}
+        >
+          <Text style={{ color: 'rgba(255,255,255,0.14)', fontSize: 13, fontWeight: '600' }}>← Back</Text>
+        </TouchableOpacity>
 
-      {/* Back */}
-      <TouchableOpacity onPress={() => navigation?.goBack()} className="mt-8 items-center">
-        <Text className="text-gray-600 font-bold text-sm">← Go back</Text>
-      </TouchableOpacity>
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }

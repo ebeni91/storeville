@@ -6,7 +6,6 @@ import { useAuthStore } from '../store/authStore';
 
 // Screens
 import { RoleSelectionScreen } from '../screens/onboarding/RoleSelectionScreen';
-import { BuyerEntryScreen } from '../screens/onboarding/BuyerEntryScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { GatewayChoiceScreen } from '../screens/buyer/GatewayChoiceScreen';
@@ -66,7 +65,6 @@ export function RootNavigator() {
           // ===== ONBOARDING (not authenticated, not guest) =====
           <>
             <Stack.Screen name="OnboardingRole" component={RoleSelectionScreen} />
-            <Stack.Screen name="OnboardingBuyerEntry" component={BuyerEntryScreen} />
             <Stack.Screen name="OnboardingLogin" component={LoginScreen} />
             <Stack.Screen name="OnboardingRegister" component={RegisterScreen} />
           </>

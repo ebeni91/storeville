@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-const DEV_ANDROID_URL = 'http://10.226.239.123:8000/api';
-const DEV_IOS_URL = 'http://10.226.239.123:8000/api';
+const DEV_ANDROID_URL = 'http://10.17.127.123:8000/api';
+const DEV_IOS_URL = 'http://10.17.127.123:8000/api';
 const PROD_URL = 'https://api.storeville.app/api';
 
 const getBaseUrl = () => {

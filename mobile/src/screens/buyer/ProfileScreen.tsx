@@ -1,313 +1,205 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Dimensions, LogBox } from 'react-native';
+import React from 'react';
+import {
+  View, Text, ScrollView, TouchableOpacity,
+  StyleSheet, StatusBar, Alert
+} from 'react-native';
 import { useAuthStore } from '../../store/authStore';
-import { User, LogOut, ShoppingBag, Heart, MapPin, Settings, ChevronRight, LogIn, Coffee, Package, Truck, Clock, CheckCircle, AlertCircle, Lock, CreditCard, X } from 'lucide-react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import {
+  User, CreditCard, Clock, Info, FileText, Shield,
+  RefreshCw, ChevronRight, LogIn, LogOut, Heart, ShoppingBag
+} from 'lucide-react-native';
 
-import { AddressModal } from '../../components/profile/AddressModal';
-import { ProfileModal } from '../../components/profile/ProfileModal';
-import { PaymentModal } from '../../components/profile/PaymentModal';
-import { OrderDetailsModal } from '../../components/profile/OrderDetailsModal';
+const fetchRetailFavorites = async () => { const res = await api.get('/retail/favorites/'); return res.data.results || res.data; };
+const fetchFoodFavorites = async () => { const res = await api.get('/food/favorites/'); return res.data.results || res.data; };
+const fetchRetailOrders = async () => { const res = await api.get('/orders/retail/'); return res.data.results || res.data; };
+const fetchFoodOrders = async () => { const res = await api.get('/orders/food/'); return res.data.results || res.data; };
 
-const { width } = Dimensions.get('window');
-
-// Fetchers
-const fetchAddresses = async () => { const res = await api.get('/accounts/addresses/'); return res.data.results || res.data; }
-const fetchPaymentMethods = async () => { const res = await api.get('/accounts/payment-methods/'); return res.data.results || res.data; }
-const fetchRetailFavorites = async () => { const res = await api.get('/retail/favorites/'); return res.data.results || res.data; }
-const fetchFoodFavorites = async () => { const res = await api.get('/food/favorites/'); return res.data.results || res.data; }
-const fetchRetailOrders = async () => { const res = await api.get('/orders/retail/'); return res.data.results || res.data; }
-const fetchFoodOrders = async () => { const res = await api.get('/orders/food/'); return res.data.results || res.data; }
-
-interface Props {
-  navigation: any;
-}
+interface Props { navigation: any; }
 
 export function ProfileScreen({ navigation }: Props) {
-  const { user, isAuthenticated, isGuest, logout, selectedGateway, setGateway, accessToken } = useAuthStore();
-  const queryClient = useQueryClient();
+  const { user, isAuthenticated, isGuest, logout, accessToken } = useAuthStore();
 
-  // Modals state
-  const [isAddressModalOpen, setAddressModalOpen] = useState(false);
-  const [addressToEdit, setAddressToEdit] = useState<any>(null);
-  
-  const [isProfileModalOpen, setProfileModalOpen] = useState(false);
-  
-  const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [paymentToEdit, setPaymentToEdit] = useState<any>(null);
+  const { data: retailFavorites = [] } = useQuery({ queryKey: ['retailFavorites'], queryFn: fetchRetailFavorites, enabled: !!accessToken && !isGuest });
+  const { data: foodFavorites = [] } = useQuery({ queryKey: ['foodFavorites'], queryFn: fetchFoodFavorites, enabled: !!accessToken && !isGuest });
+  const { data: retailOrders = [] } = useQuery({ queryKey: ['retailOrders'], queryFn: fetchRetailOrders, enabled: !!accessToken && !isGuest });
+  const { data: foodOrders = [] } = useQuery({ queryKey: ['foodOrders'], queryFn: fetchFoodOrders, enabled: !!accessToken && !isGuest });
 
-  const [isOrderModalOpen, setOrderModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const wishlistCount = retailFavorites.length + foodFavorites.length;
+  const ordersCount = retailOrders.length + foodOrders.length;
 
-  // Queries
-  const { data: addresses = [], isLoading: isLoadingA } = useQuery({ queryKey: ['addresses'], queryFn: fetchAddresses, enabled: !!accessToken && !isGuest });
-  const { data: paymentMethods = [] } = useQuery({ queryKey: ['paymentMethods'], queryFn: fetchPaymentMethods, enabled: !!accessToken && !isGuest });
-  const { data: retailFavorites = [], isLoading: isLoadingRF } = useQuery({ queryKey: ['retailFavorites'], queryFn: fetchRetailFavorites, enabled: !!accessToken && !isGuest });
-  const { data: foodFavorites = [], isLoading: isLoadingFF } = useQuery({ queryKey: ['foodFavorites'], queryFn: fetchFoodFavorites, enabled: !!accessToken && !isGuest });
-  const { data: retailOrders = [], isLoading: isLoadingRO } = useQuery({ queryKey: ['retailOrders'], queryFn: fetchRetailOrders, enabled: !!accessToken && !isGuest });
-  const { data: foodOrders = [], isLoading: isLoadingFO } = useQuery({ queryKey: ['foodOrders'], queryFn: fetchFoodOrders, enabled: !!accessToken && !isGuest });
+  const computedName = user?.first_name ? `${user.first_name} ${user?.last_name || ''}`.trim() : null;
+  const displayName = computedName || 'Member';
+  const initial = displayName.charAt(0).toUpperCase();
 
-  // Mutations
-  const removeRetailFav = useMutation({
-    mutationFn: (id: string) => api.delete(`/retail/favorites/${id}/`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['retailFavorites'] }); }
-  });
-  
-  const removeFoodFav = useMutation({
-    mutationFn: (id: string) => api.delete(`/food/favorites/${id}/`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['foodFavorites'] }); }
-  });
-
-  const handleLogout = async () => {
-    await logout();
-  };
-
-  const handleSwitchGateway = async () => {
-    const newGateway = selectedGateway === 'FOOD' ? 'RETAIL' : 'FOOD';
-    await setGateway(newGateway);
-  };
-
+  // Guest state
   if (!isAuthenticated || isGuest) {
     return (
-      <View className="flex-1 bg-gray-50 text-gray-900 justify-center items-center px-6">
-        <View className="bg-gray-200 p-5 rounded-2xl mb-5">
-          <User color="#9ca3af" size={32} />
+      <View style={styles.guestContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+        <View style={styles.guestHeader}>
+          <View style={styles.guestAvatar}>
+            <User color="rgba(255,255,255,0.6)" size={36} />
+          </View>
+          <Text style={styles.guestTitle}>Guest Mode</Text>
+          <Text style={styles.guestSub}>Sign in to access your profile, orders &amp; wishlist.</Text>
         </View>
-        <Text className="text-xl font-black text-gray-900 text-center">Guest Mode</Text>
-        <Text className="text-gray-500 font-medium mt-2 text-center mb-8">Login to access your profile, order history, and favorites.</Text>
-        <TouchableOpacity onPress={() => navigation.getParent()?.navigate('Auth', { intendedRole: 'CUSTOMER' })} className="bg-indigo-600 px-8 py-4 rounded-2xl flex-row items-center shadow-md shadow-indigo-600/30">
-          <LogIn color="#ffffff" size={20} />
-          <Text className="text-white font-black text-lg ml-3">Login / Register</Text>
-        </TouchableOpacity>
+        <View style={styles.guestBody}>
+          <TouchableOpacity
+            onPress={() => navigation.getParent()?.navigate('Auth', { intendedRole: 'CUSTOMER' })}
+            style={styles.guestCta}
+          >
+            <LogIn color="#ffffff" size={20} />
+            <Text style={styles.guestCtaText}>Login / Register</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
-  const isLoading = isLoadingA || isLoadingRF || isLoadingFF || isLoadingRO || isLoadingFO;
-  
-  if (isLoading) {
-    return <View className="flex-1 bg-gray-50 text-gray-900 justify-center items-center"><ActivityIndicator size="large" color="#4f46e5" /></View>;
-  }
+  const handleLogout = () =>
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: logout },
+    ]);
 
-  const computedName = user?.first_name ? `${user.first_name} ${user?.last_name || ''}`.trim() : null;
-  const displayName = computedName || 'Member';
-
-  // Data mapping
-  const allWishlist = [
-    ...retailFavorites.map((f: any) => ({ 
-      id: f.id, rawId: f.id, name: f.product_details.name, price: `ETB ${f.product_details.price}`, type: 'retail', baseIcon: ShoppingBag, storeName: f.product_details?.store_name
-    })),
-    ...foodFavorites.map((f: any) => ({ 
-      id: f.id, rawId: f.id, name: f.menu_item_details.name, price: `ETB ${f.menu_item_details.price}`, type: 'food', baseIcon: Heart, storeName: f.menu_item_details?.store_name
-    }))
+  const menuSections = [
+    {
+      title: 'Account',
+      items: [
+        { icon: User, color: '#6366f1', bg: '#eef2ff', label: 'Profile Information', route: 'ProfileInfo' },
+        { icon: CreditCard, color: '#0ea5e9', bg: '#f0f9ff', label: 'Payment Methods', route: 'PaymentMethods' },
+        { icon: Clock, color: '#f59e0b', bg: '#fffbeb', label: 'Transaction History', route: 'TransactionHistory' },
+      ],
+    },
+    {
+      title: 'Support & Legal',
+      items: [
+        { icon: Info, color: '#8b5cf6', bg: '#f5f3ff', label: 'About Us', route: 'AboutUs' },
+        { icon: FileText, color: '#10b981', bg: '#ecfdf5', label: 'Terms & Conditions', route: 'TermsAndConditions' },
+        { icon: Shield, color: '#3b82f6', bg: '#eff6ff', label: 'Privacy Policy', route: 'PrivacyPolicy' },
+        { icon: RefreshCw, color: '#f97316', bg: '#fff7ed', label: 'Refund Policy', route: 'RefundPolicy' },
+      ],
+    },
   ];
 
-  const allOrders = [
-    ...retailOrders.map((o: any) => ({ id: o.id.substring(0, 8).toUpperCase(), rawId: o.id, rawDate: new Date(o.created_at), date: new Date(o.created_at).toLocaleDateString(), total: `ETB ${o.total_price_with_delivery || o.total_price}`, status: o.status.toLowerCase(), type: 'retail' })),
-    ...foodOrders.map((o: any) => ({ id: o.id.substring(0, 8).toUpperCase(), rawId: o.id, rawDate: new Date(o.created_at), date: new Date(o.created_at).toLocaleDateString(), total: `ETB ${o.total_price_with_delivery || o.total_price}`, status: o.status.toLowerCase(), type: 'food' }))
-  ].sort((a,b) => b.rawDate.getTime() - a.rawDate.getTime()).slice(0, 5);
-
-  const primaryAddress = addresses.find((a: any) => a.is_primary) || addresses[0];
-
   return (
-    <View className="flex-1 bg-gray-50">
-      
-      <AddressModal visible={isAddressModalOpen} onClose={() => setAddressModalOpen(false)} addressToEdit={addressToEdit} />
-      <ProfileModal visible={isProfileModalOpen} onClose={() => setProfileModalOpen(false)} />
-      <PaymentModal visible={isPaymentModalOpen} onClose={() => setPaymentModalOpen(false)} paymentToEdit={paymentToEdit} />
-      <OrderDetailsModal visible={isOrderModalOpen} onClose={() => setOrderModalOpen(false)} order={selectedOrder} />
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        
-        {/* Header Component */}
-        <View className="bg-indigo-600 px-6 pt-16 pb-20">
-           <View className="flex-row items-center">
-             <View className="w-16 h-16 rounded-full bg-white/20 items-center justify-center border border-white/40 mr-4">
-               <Text className="text-3xl font-black text-white">{displayName.charAt(0).toUpperCase()}</Text>
-             </View>
-             <View className="flex-1">
-               <Text className="text-white text-3xl font-black tracking-tighter">Welcome,</Text>
-               <Text className="text-indigo-100 text-xl font-bold">{displayName}</Text>
-             </View>
-           </View>
+        {/* ── Indigo Header ────────────────────────────── */}
+        <View style={styles.header}>
+          <View style={styles.avatarRow}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarLetter}>{initial}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.welcomeText}>Welcome,</Text>
+              <Text style={styles.nameText}>{displayName}</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Stats Section Overlayed on header */}
-        <View className="px-5 -mt-10 mb-6">
-           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-             {[
-               { label: 'Orders', value: retailOrders.length + foodOrders.length, icon: ShoppingBag, color: '#4f46e5' },
-               { label: 'Wishlist', value: allWishlist.length, icon: Heart, color: '#db2777' },
-               { label: 'Addresses', value: addresses.length, icon: MapPin, color: '#059669' },
-             ].map((s, i) => (
-               <View key={i} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mr-4" style={{ width: width * 0.4 }}>
-                 <View className="w-10 h-10 rounded-xl mb-3 items-center justify-center" style={{ backgroundColor: `${s.color}15` }}>
-                   <s.icon size={18} color={s.color} />
-                 </View>
-                 <Text className="text-3xl font-black text-gray-900">{s.value}</Text>
-                 <Text className="text-xs font-bold text-gray-500 uppercase tracking-widest">{s.label}</Text>
-               </View>
-             ))}
-           </ScrollView>
+        {/* ── Stat Cards overlapping header ────────────── */}
+        <View style={styles.statsRow}>
+          {[
+            { icon: ShoppingBag, color: '#6366f1', bg: '#eef2ff', value: ordersCount, label: 'ORDERS' },
+            { icon: Heart, color: '#db2777', bg: '#fdf2f8', value: wishlistCount, label: 'WISHLIST' },
+          ].map((s, i) => (
+            <View key={i} style={styles.statCard}>
+              <View style={[styles.statIconBox, { backgroundColor: s.bg }]}>
+                <s.icon color={s.color} size={20} />
+              </View>
+              <Text style={styles.statValue}>{s.value}</Text>
+              <Text style={styles.statLabel}>{s.label}</Text>
+            </View>
+          ))}
         </View>
 
-        {/* Main Content Sections */}
-        <View className="px-6 space-y-6 pb-24 text-gray-900">
-           
-           {/* Active Gateway Switcher Component */}
-           <View className="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 mb-2 mt-2">
-             <Text className="text-xs font-black text-gray-400 tracking-widest uppercase mb-4">Preferences</Text>
-             <TouchableOpacity 
-               onPress={handleSwitchGateway}
-               className="bg-gray-50 rounded-2xl p-4 flex-row items-center border border-gray-200"
-             >
-               {selectedGateway === 'FOOD' ? <Coffee color="#ea580c" size={22} /> : <ShoppingBag color="#6366f1" size={22} />}
-               <View className="flex-1 ml-4 justify-center">
-                 <Text className="text-gray-900 font-bold mb-0.5">Active Gateway</Text>
-                 <Text className="text-gray-500 text-xs font-medium">{selectedGateway === 'FOOD' ? 'Food & Coffee' : 'Shop Retail'}</Text>
-               </View>
-               <View className="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-                 <Text className="text-indigo-600 font-black text-xs uppercase">Switch</Text>
-               </View>
-             </TouchableOpacity>
-           </View>
-
-           {/* Recent Orders Component */}
-           <View className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 mb-2">
-             <View className="flex-row items-center justify-between mb-6">
-                <View className="flex-row items-center">
-                  <Package size={20} color="#4f46e5" />
-                  <Text className="text-xl font-bold text-gray-900 ml-3">Recent Orders</Text>
-                </View>
-                <Text className="text-xs font-black text-indigo-600 uppercase tracking-widest">View All</Text>
-             </View>
-             
-             {allOrders.length === 0 ? (
-                <Text className="text-center text-gray-400 font-bold py-4">No recent orders found.</Text>
-             ) : (
-                allOrders.map((order, i) => (
-                  <TouchableOpacity 
-                    key={i} onPress={() => { setSelectedOrder(order); setOrderModalOpen(true); }}
-                    className="mb-4 bg-gray-50 p-4 rounded-3xl flex-row items-center border border-gray-100"
+        {/* ── Menu Sections ─────────────────────────────── */}
+        <View style={styles.body}>
+          {menuSections.map((section) => (
+            <View key={section.title} style={styles.section}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <View style={styles.sectionCard}>
+                {section.items.map((item, idx) => (
+                  <TouchableOpacity
+                    key={item.route}
+                    onPress={() => navigation.navigate(item.route)}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.menuRow,
+                      idx < section.items.length - 1 && styles.menuRowDivider,
+                    ]}
                   >
-                     <View style={{ backgroundColor: order.type === 'food' ? '#fff7ed' : '#eef2ff' }} className="w-12 h-12 rounded-xl items-center justify-center mr-4 border border-black/5">
-                        <Text style={{ color: order.type === 'food' ? '#ea580c' : '#4f46e5' }} className="font-black text-lg text-gray-900">{order.type === 'food' ? 'F' : 'R'}</Text>
-                     </View>
-                     <View className="flex-1">
-                       <Text className="font-bold text-gray-900 text-base mb-0.5 text-gray-900">ORD-{order.id}</Text>
-                       <Text className="font-semibold text-gray-500 text-xs">{order.date}</Text>
-                     </View>
-                     <View className="items-end mr-3">
-                       <Text className="font-black text-gray-900 text-base mb-0.5">{order.total}</Text>
-                       <Text className="text-[10px] font-black uppercase" style={{ color: order.status === 'delivered' ? '#059669' : order.status === 'cancelled' ? '#dc2626' : '#ea580c' }}>
-                         {order.status}
-                       </Text>
-                     </View>
-                     <ChevronRight color="#d1d5db" size={20} />
+                    <View style={[styles.menuIconBox, { backgroundColor: item.bg }]}>
+                      <item.icon color={item.color} size={18} strokeWidth={2} />
+                    </View>
+                    <Text style={styles.menuLabel}>{item.label}</Text>
+                    <ChevronRight color="#d1d5db" size={18} strokeWidth={2} />
                   </TouchableOpacity>
-                ))
-             )}
-           </View>
+                ))}
+              </View>
+            </View>
+          ))}
 
-           {/* Saved Addresses */}
-           <View className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 mb-2">
-             <View className="flex-row items-center justify-between mb-6">
-                <View className="flex-row items-center">
-                  <MapPin size={20} color="#059669" />
-                  <Text className="text-xl font-bold text-gray-900 ml-3">Saved Addresses</Text>
-                </View>
-             </View>
-
-             {primaryAddress ? (
-               <View className="bg-gray-50 p-5 rounded-3xl border border-gray-200 mb-4 items-start">
-                 <View className="bg-emerald-100 px-3 py-1 rounded-full mb-3">
-                   <Text className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Primary</Text>
-                 </View>
-                 <Text className="text-lg font-black text-gray-900 mb-1">{primaryAddress.label}</Text>
-                 <Text className="text-sm font-semibold text-gray-500 mb-4">{primaryAddress.street_address}{'\n'}{primaryAddress.city_subcity}</Text>
-                 
-                 <TouchableOpacity onPress={() => { setAddressToEdit(primaryAddress); setAddressModalOpen(true); }} className="flex-row items-center">
-                   <MapPin size={12} color="#059669" />
-                   <Text className="text-xs font-bold text-emerald-600 uppercase tracking-widest ml-1">Edit Address</Text>
-                 </TouchableOpacity>
-               </View>
-             ) : (
-                <Text className="text-center text-gray-400 font-bold py-4">No addresses saved.</Text>
-             )}
-
-             <TouchableOpacity onPress={() => { setAddressToEdit(null); setAddressModalOpen(true); }} className="p-4 rounded-2xl border-2 border-dashed border-gray-200 items-center justify-center">
-               <Text className="text-sm font-black text-gray-500 uppercase tracking-widest">+ Add New Address</Text>
-             </TouchableOpacity>
-           </View>
-
-           {/* Wishlist */}
-           <View className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 mb-2">
-             <View className="flex-row items-center justify-between mb-6">
-                <View className="flex-row items-center flex-1 pr-4">
-                  <Heart size={20} color="#db2777" />
-                  <Text className="text-xl font-bold text-gray-900 ml-3" numberOfLines={1}>Saved Wishlist</Text>
-                </View>
-             </View>
-
-             {allWishlist.length === 0 ? (
-                <Text className="text-center text-gray-400 font-bold py-4">No items saved yet.</Text>
-             ) : (
-                allWishlist.map((item, i) => (
-                  <View key={i} className="mb-4 bg-gray-50 p-3 rounded-[1.5rem] flex-row items-center border border-gray-100">
-                     <View className="w-12 h-12 rounded-xl bg-white items-center justify-center mr-4 border border-black/5 shadow-sm">
-                        <item.baseIcon size={18} color="#db2777" />
-                     </View>
-                     <View className="flex-1">
-                       <Text className="font-bold text-gray-900 text-sm mb-1" numberOfLines={1}>{item.name}</Text>
-                       {item.storeName && (
-                          <Text className="text-[10px] font-semibold text-indigo-600">From: {item.storeName}</Text>
-                       )}
-                       <Text className="font-black text-gray-500 text-xs mt-1">{item.price}</Text>
-                     </View>
-                     <TouchableOpacity 
-                       onPress={() => item.type === 'retail' ? removeRetailFav.mutate(item.rawId) : removeFoodFav.mutate(item.rawId)}
-                       disabled={removeRetailFav.isPending || removeFoodFav.isPending}
-                       className="p-3 bg-red-50 rounded-full ml-2"
-                     >
-                        <X size={16} color="#ef4444" />
-                     </TouchableOpacity>
-                  </View>
-                ))
-             )}
-           </View>
-
-           {/* Settings Box */}
-           <View className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 mb-6">
-             <Text className="text-xs font-black text-gray-400 tracking-widest uppercase mb-4">Account Config</Text>
-             
-             <TouchableOpacity onPress={() => setProfileModalOpen(true)} className="bg-gray-50 p-5 rounded-2xl flex-row items-center border border-gray-100 mb-3">
-               <User size={20} color="#6366f1" />
-               <Text className="flex-1 ml-4 font-bold text-gray-900 text-base">Profile Information</Text>
-               <ChevronRight size={18} color="#d1d5db" />
-             </TouchableOpacity>
-
-             <TouchableOpacity onPress={() => setPaymentModalOpen(true)} className="bg-gray-50 p-5 rounded-2xl flex-row items-center border border-gray-100 mb-3">
-               <CreditCard size={20} color="#6366f1" />
-               <Text className="flex-1 ml-4 font-bold text-gray-900 text-base">Payment Methods</Text>
-               <ChevronRight size={18} color="#d1d5db" />
-             </TouchableOpacity>
-
-             <TouchableOpacity className="bg-gray-50 p-5 rounded-2xl flex-row items-center border border-gray-100 border-gray-900">
-               <Lock size={20} color="#6366f1" />
-               <Text className="flex-1 ml-4 font-bold text-gray-900 text-base">Security Settings</Text>
-               <ChevronRight size={18} color="#d1d5db" />
-             </TouchableOpacity>
-           </View>
-
-           {/* Logout Button */}
-           <TouchableOpacity onPress={handleLogout} className="bg-red-50 rounded-[2rem] p-5 flex-row justify-center items-center mb-8 border border-red-100 shadow-sm">
-             <LogOut color="#ef4444" size={20} />
-             <Text className="text-red-500 font-black text-lg ml-3 text-gray-900 tracking-wide">Sign Out Securely</Text>
-           </TouchableOpacity>
-
+          {/* Sign Out */}
+          <TouchableOpacity onPress={handleLogout} style={styles.signOutBtn} activeOpacity={0.8}>
+            <LogOut color="#ef4444" size={18} strokeWidth={2} />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Extra spacer so button is never behind tab pill */}
+        <View style={{ height: 20 }} />
+
       </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#f8fafc' },
+
+  // Guest
+  guestContainer: { flex: 1, backgroundColor: '#f8fafc' },
+  guestHeader: { backgroundColor: '#6366f1', paddingTop: 80, paddingBottom: 48, paddingHorizontal: 28, alignItems: 'center' },
+  guestAvatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  guestTitle: { fontSize: 24, fontWeight: '900', color: '#ffffff', marginBottom: 8 },
+  guestSub: { fontSize: 14, color: 'rgba(255,255,255,0.65)', textAlign: 'center', fontWeight: '500' },
+  guestBody: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  guestCta: { backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 16, paddingHorizontal: 32, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  guestCtaText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+
+  // Header
+  header: { backgroundColor: '#6366f1', paddingTop: 56, paddingBottom: 52, paddingHorizontal: 24 },
+  avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  avatarCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)' },
+  avatarLetter: { fontSize: 28, fontWeight: '900', color: '#ffffff' },
+  welcomeText: { fontSize: 26, fontWeight: '900', color: '#ffffff', letterSpacing: -0.5 },
+  nameText: { fontSize: 17, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+  // Stats
+  statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginTop: -28, marginBottom: 20 },
+  statCard: { flex: 1, backgroundColor: '#ffffff', borderRadius: 20, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  statIconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  statValue: { fontSize: 28, fontWeight: '900', color: '#111827', marginBottom: 2 },
+  statLabel: { fontSize: 11, fontWeight: '700', color: '#9ca3af', letterSpacing: 1.5 },
+
+  // Body
+  body: { paddingHorizontal: 20 },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: '#9ca3af', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10, marginLeft: 4 },
+  sectionCard: { backgroundColor: '#ffffff', borderRadius: 20, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+
+  menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 18, gap: 14 },
+  menuRowDivider: { borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  menuIconBox: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  menuLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: '#111827' },
+
+  // Sign out
+  signOutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#fff1f2', borderRadius: 16, paddingVertical: 16, marginTop: 4, borderWidth: 1, borderColor: '#fecdd3' },
+  signOutText: { fontSize: 15, fontWeight: '700', color: '#ef4444' },
+});

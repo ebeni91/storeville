@@ -11,8 +11,18 @@ import { ProfileScreen } from '../screens/buyer/ProfileScreen';
 import { StoreGatewayScreen } from '../screens/buyer/StoreGatewayScreen';
 import { CheckoutScreen } from '../screens/buyer/CheckoutScreen';
 
+// Profile sub-screens
+import { ProfileInfoScreen } from '../screens/buyer/profile/ProfileInfoScreen';
+import { PaymentMethodsScreen } from '../screens/buyer/profile/PaymentMethodsScreen';
+import { TransactionHistoryScreen } from '../screens/buyer/profile/TransactionHistoryScreen';
+import { AboutUsScreen } from '../screens/buyer/profile/AboutUsScreen';
+import { TermsAndConditionsScreen } from '../screens/buyer/profile/TermsAndConditionsScreen';
+import { PrivacyPolicyScreen } from '../screens/buyer/profile/PrivacyPolicyScreen';
+import { RefundPolicyScreen } from '../screens/buyer/profile/RefundPolicyScreen';
+
 const Tab = createBottomTabNavigator();
 const ExploreStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
 const { width } = Dimensions.get('window');
 
 const PILL_H = 66;
@@ -64,6 +74,21 @@ function ExploreStackNavigator() {
   );
 }
 
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+      <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} />
+      <ProfileStack.Screen name="ProfileInfo" component={ProfileInfoScreen} />
+      <ProfileStack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+      <ProfileStack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
+      <ProfileStack.Screen name="AboutUs" component={AboutUsScreen} />
+      <ProfileStack.Screen name="TermsAndConditions" component={TermsAndConditionsScreen} />
+      <ProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <ProfileStack.Screen name="RefundPolicy" component={RefundPolicyScreen} />
+    </ProfileStack.Navigator>
+  );
+}
+
 export function BuyerTabNavigator() {
   return (
     <Tab.Navigator
@@ -72,7 +97,7 @@ export function BuyerTabNavigator() {
     >
       <Tab.Screen name="Explore" component={ExploreStackNavigator} />
       <Tab.Screen name="Orders" component={OrdersScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileStackNavigator} />
     </Tab.Navigator>
   );
 }

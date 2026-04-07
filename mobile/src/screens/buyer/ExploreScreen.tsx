@@ -8,6 +8,8 @@ import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { API_URL } from '../../lib/api';
+import axios from 'axios';
 import { useAuthStore } from '../../store/authStore';
 import {
   Search, SlidersHorizontal, Coffee, ShoppingBag,
@@ -69,13 +71,21 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     })();
   }, []);
 
-  // ── Store data ──────────────────────────────────
+  // ── Store data (public — works for guests AND authenticated users) ─
   const { data: stores } = useQuery({
     queryKey: ['stores', activeGateway],
     queryFn: async () => {
-      const res = await api.get('/stores/discovery/', { params: { type: activeGateway } });
+      // Use a bare axios instance (no Authorization header) so the backend
+      // serves AllowAny discovery results even for unauthenticated guests.
+      const res = await axios.get(`${API_URL}/stores/discovery/`, {
+        params: { type: activeGateway },
+        headers: { 'Content-Type': 'application/json' },
+      });
       return res.data.results || res.data;
-    }
+    },
+    // Always enabled — don't gate on auth state
+    enabled: true,
+    retry: 2,
   });
 
   // ── Drawer ──────────────────────────────────────

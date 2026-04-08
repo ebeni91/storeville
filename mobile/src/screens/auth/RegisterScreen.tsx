@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { MapPin, Coffee, ShoppingBag, ArrowRight } from 'lucide-react-native';
 import * as Location from 'expo-location';
 
@@ -18,7 +19,9 @@ interface Props {
 export function RegisterScreen({ route, navigation }: Props) {
   const intendedRole = route.params?.intendedRole || 'CUSTOMER';
   const login = useAuthStore(state => state.login);
+  const { colors, mode } = useThemeStore();
   const isSeller = intendedRole === 'SELLER';
+  const isDark = mode === 'dark';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -81,32 +84,48 @@ export function RegisterScreen({ route, navigation }: Props) {
     } finally { setLoading(false); }
   };
 
+  // Theme-aware field style
   const fieldStyle = (field: string) => ({
-    backgroundColor: focusedField === field ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)',
+    backgroundColor: focusedField === field
+      ? (isDark ? 'rgba(255,255,255,0.08)' : colors.surface)
+      : (isDark ? 'rgba(255,255,255,0.05)' : colors.surfaceAlt),
     borderWidth: 1,
-    borderColor: focusedField === field ? accentColor + '80' : 'rgba(255,255,255,0.08)',
+    borderColor: focusedField === field
+      ? accentColor + '80'
+      : (isDark ? 'rgba(255,255,255,0.08)' : colors.border),
     borderRadius: 16, paddingHorizontal: 18, paddingVertical: 4, marginBottom: 10,
   });
 
-  const inputStyle = { color: '#ffffff' as const, fontSize: 16, fontWeight: '600' as const, paddingVertical: 10 };
-  const labelStyle = { color: 'rgba(255,255,255,0.3)' as const, fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.2, textTransform: 'uppercase' as const, marginTop: 12, marginBottom: 2 };
+  const inputStyle = { color: colors.text as any, fontSize: 16, fontWeight: '600' as const, paddingVertical: 10 };
+  const labelStyle = {
+    color: (isDark ? 'rgba(255,255,255,0.3)' : colors.textMuted) as any,
+    fontSize: 11, fontWeight: '700' as const, letterSpacing: 1.2,
+    textTransform: 'uppercase' as const, marginTop: 12, marginBottom: 2,
+  };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: '#000000' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: colors.bg }}
+    >
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
 
       {/* Glow orb */}
       <View style={{
         position: 'absolute', width: width * 1.2, height: width * 1.2,
         borderRadius: width * 0.6, top: -width * 0.5, right: -width * 0.2,
-        backgroundColor: accentColor, opacity: 0.08, pointerEvents: 'none',
-      }} />
+        backgroundColor: accentColor, opacity: isDark ? 0.08 : 0.05,
+        pointerEvents: 'none',
+      } as any} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 24, paddingTop: 60 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 24, paddingTop: 60 }}
+        showsVerticalScrollIndicator={false}
+      >
 
         {/* Header */}
         <View style={{ marginBottom: 40 }}>
-          <View style={{
+          {/* <View style={{
             alignSelf: 'flex-start',
             backgroundColor: accentColor + '20', borderWidth: 1, borderColor: accentColor + '40',
             paddingHorizontal: 14, paddingVertical: 6, borderRadius: 99, marginBottom: 20,
@@ -114,11 +133,11 @@ export function RegisterScreen({ route, navigation }: Props) {
             <Text style={{ color: accentColor, fontSize: 11, fontWeight: '800', letterSpacing: 2, textTransform: 'uppercase' }}>
               {isSeller ? 'Seller Pro — New Store' : 'Join the Marketplace'}
             </Text>
-          </View>
-          <Text style={{ fontSize: 40, fontWeight: '900', color: '#ffffff', letterSpacing: -1.2, lineHeight: 46 }}>
-            {isSeller ? 'Open Your\nStore.' : 'Create\nAccount.'}
+          </View> */}
+          <Text style={{ fontSize: 40, fontWeight: '900', color: colors.text, letterSpacing: -1.2, lineHeight: 46 }}>
+            {isSeller ? 'Open Your Store.' : 'Create Account.'}
           </Text>
-          <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, fontWeight: '500', marginTop: 10 }}>
+          <Text style={{ color: colors.textMuted, fontSize: 14, fontWeight: '500', marginTop: 10 }}>
             {isSeller ? 'Set up your seller profile and go live.' : 'Join thousands of buyers in Ethiopia.'}
           </Text>
         </View>
@@ -128,43 +147,43 @@ export function RegisterScreen({ route, navigation }: Props) {
 
         <View style={fieldStyle('name')}>
           <Text style={labelStyle}>Full Name</Text>
-          <TextInput value={name} onChangeText={setName} onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)} placeholder="Alex Johnson" placeholderTextColor="rgba(255,255,255,0.2)" style={inputStyle} />
+          <TextInput value={name} onChangeText={setName} onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)} placeholder="Alex Johnson" placeholderTextColor={colors.textMuted} style={inputStyle} />
         </View>
 
         <View style={fieldStyle('email')}>
           <Text style={labelStyle}>Email Address</Text>
-          <TextInput value={email} onChangeText={setEmail} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} keyboardType="email-address" autoCapitalize="none" placeholder="you@example.com" placeholderTextColor="rgba(255,255,255,0.2)" style={inputStyle} />
+          <TextInput value={email} onChangeText={setEmail} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} keyboardType="email-address" autoCapitalize="none" placeholder="you@example.com" placeholderTextColor={colors.textMuted} style={inputStyle} />
         </View>
 
         <View style={fieldStyle('phone')}>
-          <Text style={labelStyle}>Phone (optional)</Text>
-          <TextInput value={phone} onChangeText={setPhone} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField(null)} keyboardType="phone-pad" placeholder="+251 9xx xxx xxx" placeholderTextColor="rgba(255,255,255,0.2)" style={inputStyle} />
+          <Text style={labelStyle}>Phone</Text>
+          <TextInput value={phone} onChangeText={setPhone} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField(null)} keyboardType="phone-pad" placeholder="+251 9xx xxx xxx" placeholderTextColor={colors.textMuted} style={inputStyle} />
         </View>
 
         <View style={{ ...fieldStyle('password'), marginBottom: 28 }}>
           <Text style={labelStyle}>Password</Text>
-          <TextInput value={password} onChangeText={setPassword} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)} secureTextEntry placeholder="Min 8 characters" placeholderTextColor="rgba(255,255,255,0.2)" style={inputStyle} />
+          <TextInput value={password} onChangeText={setPassword} onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)} secureTextEntry placeholder="Min 8 characters" placeholderTextColor={colors.textMuted} style={inputStyle} />
         </View>
 
         {/* Seller-only section */}
         {isSeller && (
           <>
-            <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 28 }} />
-            <Text style={{ fontSize: 20, fontWeight: '900', color: '#ffffff', marginBottom: 20, letterSpacing: -0.4 }}>Store Details</Text>
+            <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 28 }} />
+            <Text style={{ fontSize: 20, fontWeight: '900', color: colors.text, marginBottom: 20, letterSpacing: -0.4 }}>Store Details</Text>
 
             <View style={fieldStyle('storeName')}>
               <Text style={labelStyle}>Store Name</Text>
-              <TextInput value={storeName} onChangeText={setStoreName} onFocus={() => setFocusedField('storeName')} onBlur={() => setFocusedField(null)} placeholder="e.g. Addis Brew" placeholderTextColor="rgba(255,255,255,0.2)" style={inputStyle} />
+              <TextInput value={storeName} onChangeText={setStoreName} onFocus={() => setFocusedField('storeName')} onBlur={() => setFocusedField(null)} placeholder="e.g. Addis Brew" placeholderTextColor={colors.textMuted} style={inputStyle} />
             </View>
 
             <View style={fieldStyle('category')}>
               <Text style={labelStyle}>Category</Text>
-              <TextInput value={storeCategory} onChangeText={setStoreCategory} onFocus={() => setFocusedField('category')} onBlur={() => setFocusedField(null)} placeholder="e.g. Cafe, Fashion, Electronics" placeholderTextColor="rgba(255,255,255,0.2)" style={inputStyle} />
+              <TextInput value={storeCategory} onChangeText={setStoreCategory} onFocus={() => setFocusedField('category')} onBlur={() => setFocusedField(null)} placeholder="e.g. Cafe, Fashion, Electronics" placeholderTextColor={colors.textMuted} style={inputStyle} />
             </View>
 
             <View style={{ ...fieldStyle('desc'), marginBottom: 20 }}>
               <Text style={labelStyle}>Description (optional)</Text>
-              <TextInput value={storeDescription} onChangeText={setStoreDescription} onFocus={() => setFocusedField('desc')} onBlur={() => setFocusedField(null)} multiline numberOfLines={3} placeholder="A short description of your store..." placeholderTextColor="rgba(255,255,255,0.2)" style={{ ...inputStyle, minHeight: 60 }} />
+              <TextInput value={storeDescription} onChangeText={setStoreDescription} onFocus={() => setFocusedField('desc')} onBlur={() => setFocusedField(null)} multiline numberOfLines={3} placeholder="A short description of your store..." placeholderTextColor={colors.textMuted} style={{ ...inputStyle, minHeight: 60 }} />
             </View>
 
             {/* Store Type Toggle */}
@@ -175,12 +194,17 @@ export function RegisterScreen({ route, navigation }: Props) {
                   key={type} onPress={() => setStoreType(type)} activeOpacity={0.8}
                   style={{
                     flex: 1, paddingVertical: 16, borderRadius: 16, alignItems: 'center',
-                    backgroundColor: storeType === type ? color + '20' : 'rgba(255,255,255,0.05)',
-                    borderWidth: 1, borderColor: storeType === type ? color + '60' : 'rgba(255,255,255,0.08)',
+                    backgroundColor: storeType === type
+                      ? color + '20'
+                      : (isDark ? 'rgba(255,255,255,0.05)' : colors.surfaceAlt),
+                    borderWidth: 1,
+                    borderColor: storeType === type
+                      ? color + '60'
+                      : (isDark ? 'rgba(255,255,255,0.08)' : colors.border),
                   }}
                 >
-                  <Icon color={storeType === type ? color : 'rgba(255,255,255,0.3)'} size={20} />
-                  <Text style={{ color: storeType === type ? color : 'rgba(255,255,255,0.35)', fontWeight: '800', marginTop: 6, fontSize: 13 }}>{label}</Text>
+                  <Icon color={storeType === type ? color : colors.textMuted} size={20} />
+                  <Text style={{ color: storeType === type ? color : colors.textMuted, fontWeight: '800', marginTop: 6, fontSize: 13 }}>{label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -188,12 +212,12 @@ export function RegisterScreen({ route, navigation }: Props) {
             {/* GPS Pin */}
             <Text style={{ ...labelStyle, marginBottom: 12 }}>Store GPS Location</Text>
             <TouchableOpacity onPress={grabLocation} activeOpacity={0.8} style={{
-              backgroundColor: latitude ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.05)',
-              borderWidth: 1, borderColor: latitude ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)',
+              backgroundColor: latitude ? 'rgba(74,222,128,0.08)' : (isDark ? 'rgba(255,255,255,0.05)' : colors.surfaceAlt),
+              borderWidth: 1, borderColor: latitude ? 'rgba(74,222,128,0.3)' : colors.border,
               borderRadius: 16, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 32,
             }}>
-              <MapPin color={latitude ? '#4ade80' : 'rgba(255,255,255,0.3)'} size={22} />
-              <Text style={{ marginLeft: 12, fontWeight: '700', fontSize: 14, color: latitude ? '#4ade80' : 'rgba(255,255,255,0.3)' }}>
+              <MapPin color={latitude ? '#4ade80' : colors.textMuted} size={22} />
+              <Text style={{ marginLeft: 12, fontWeight: '700', fontSize: 14, color: latitude ? '#4ade80' : colors.textMuted }}>
                 {locationText || 'Tap to pin your store on the map'}
               </Text>
             </TouchableOpacity>
@@ -204,7 +228,7 @@ export function RegisterScreen({ route, navigation }: Props) {
         <TouchableOpacity
           onPress={handleRegister} disabled={loading} activeOpacity={0.85}
           style={{
-            backgroundColor: loading ? 'rgba(255,255,255,0.06)' : accentColor,
+            backgroundColor: loading ? colors.surfaceAlt : accentColor,
             borderRadius: 18, paddingVertical: 18,
             flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
             shadowColor: accentColor, shadowOffset: { width: 0, height: 8 },
@@ -230,7 +254,7 @@ export function RegisterScreen({ route, navigation }: Props) {
           }}
           style={{ alignItems: 'center', paddingVertical: 8 }}
         >
-          <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, fontWeight: '500' }}>
+          <Text style={{ color: colors.textSub, fontSize: 14, fontWeight: '500' }}>
             Already have an account?{' '}
             <Text style={{ color: accentColor, fontWeight: '800' }}>Login</Text>
           </Text>

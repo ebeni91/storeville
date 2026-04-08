@@ -11,6 +11,7 @@ import { api } from '../../lib/api';
 import { API_URL } from '../../lib/api';
 import axios from 'axios';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import {
   Search, SlidersHorizontal, Coffee, ShoppingBag,
   Star, Navigation, X, ArrowRight, CheckCircle
@@ -27,6 +28,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [selectedStore, setSelectedStore] = useState<any>(null);
   const [activeChip, setActiveChip] = useState<string>('Cafes');
+  const { colors, mode } = useThemeStore();
   
   // Gateway state lives locally so switching is instant without going to profile
   const storedGateway = useAuthStore(state => state.selectedGateway);
@@ -165,8 +167,8 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      <StatusBar barStyle="dark-content" />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
 
       {!location ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -194,15 +196,15 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
 
           {/* ── Floating Search Bar ───────────────── */}
           <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <Search color="#6366f1" size={20} strokeWidth={2.5} />
+            <View style={[styles.searchBar, { backgroundColor: colors.surface }]}>
+              <Search color={colors.accent} size={20} strokeWidth={2.5} />
               <TextInput
                 placeholder={isFood ? 'Search cafes, restaurants…' : 'Search stores, products…'}
-                placeholderTextColor="#9ca3af"
-                style={styles.searchInput}
+                placeholderTextColor={colors.textMuted}
+                style={[styles.searchInput, { color: colors.text }]}
               />
-              <TouchableOpacity style={styles.filterButton}>
-                <SlidersHorizontal color="#6366f1" size={17} strokeWidth={2} />
+              <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.accentFaint }]}>
+                <SlidersHorizontal color={colors.accent} size={17} strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
@@ -217,10 +219,13 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
                   <TouchableOpacity
                     key={chip}
                     onPress={() => setActiveChip(chip)}
-                    style={[styles.chip, active && styles.chipActive]}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: active ? colors.text : colors.surface, borderColor: active ? colors.text : colors.border },
+                    ]}
                     activeOpacity={0.75}
                   >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{chip}</Text>
+                    <Text style={[styles.chipText, { color: active ? '#ffffff' : colors.textSub }]}>{chip}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -234,11 +239,13 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.85}
               style={[
                 styles.gatewayPill,
-                activeGateway === 'RETAIL' ? styles.gatewayPillRetailActive : styles.gatewayPillInactive,
+                activeGateway === 'RETAIL'
+                  ? styles.gatewayPillRetailActive
+                  : [styles.gatewayPillInactive, { backgroundColor: colors.surface }],
               ]}
             >
-              <ShoppingBag size={14} color={activeGateway === 'RETAIL' ? '#ffffff' : '#6b7280'} strokeWidth={2.5} style={{ marginRight: 6 }} />
-              <Text style={[styles.gatewayPillText, { color: activeGateway === 'RETAIL' ? '#ffffff' : '#374151' }]}>Shop Retail</Text>
+              <ShoppingBag size={14} color={activeGateway === 'RETAIL' ? '#ffffff' : colors.textSub} strokeWidth={2.5} style={{ marginRight: 6 }} />
+              <Text style={[styles.gatewayPillText, { color: activeGateway === 'RETAIL' ? '#ffffff' : colors.text }]}>Shop Retail</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -246,20 +253,19 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.85}
               style={[
                 styles.gatewayPill,
-                activeGateway === 'FOOD' ? styles.gatewayPillFoodActive : styles.gatewayPillInactive,
+                activeGateway === 'FOOD' ? styles.gatewayPillFoodActive : [styles.gatewayPillInactive, { backgroundColor: colors.surface }],
               ]}
             >
-              <Coffee size={14} color={activeGateway === 'FOOD' ? '#ffffff' : '#6b7280'} strokeWidth={2.5} style={{ marginRight: 6 }} />
-              <Text style={[styles.gatewayPillText, { color: activeGateway === 'FOOD' ? '#ffffff' : '#374151' }]}>Food & Coffee</Text>
+              <Coffee size={14} color={activeGateway === 'FOOD' ? '#ffffff' : colors.textSub} strokeWidth={2.5} style={{ marginRight: 6 }} />
+              <Text style={[styles.gatewayPillText, { color: activeGateway === 'FOOD' ? '#ffffff' : colors.text }]}>Food & Coffee</Text>
             </TouchableOpacity>
           </View>
 
           {/* ── Store Discovery Drawer ────────────── */}
           {selectedStore && (
             <Animated.View style={[styles.drawer, { transform: [{ translateY: drawerTranslateY }] }]}>
-              <View style={styles.drawerInner}>
-                {/* Grab handle */}
-                <View style={styles.drawerHandle} />
+              <View style={[styles.drawerInner, { backgroundColor: colors.surface }]}>
+                <View style={[styles.drawerHandle, { backgroundColor: colors.border }]} />
 
                 {/* Close button */}
                 <TouchableOpacity onPress={closeDrawer} style={styles.drawerClose}>

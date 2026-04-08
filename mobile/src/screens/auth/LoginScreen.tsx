@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -26,6 +27,10 @@ export function LoginScreen({ route, navigation }: Props) {
 
   const login = useAuthStore(state => state.login);
   const enterGuestMode = useAuthStore(state => state.enterGuestMode);
+  const { colors, mode } = useThemeStore();
+
+  const isDark = mode === 'dark';
+  const accentColor = isSeller ? '#f59e0b' : '#6366f1';
 
   const getRegisterRoute = () => {
     const routeNames = navigation?.getState()?.routeNames || [];
@@ -70,20 +75,27 @@ export function LoginScreen({ route, navigation }: Props) {
     }
   };
 
-  const accentColor = isSeller ? '#f59e0b' : '#6366f1';
+  // Dynamic field styles based on theme
+  const fieldBg = (focused: boolean) => isDark
+    ? (focused ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)')
+    : (focused ? colors.surface : colors.surfaceAlt);
+
+  const fieldBorder = (focused: boolean) => isDark
+    ? (focused ? accentColor + '60' : 'rgba(255,255,255,0.07)')
+    : (focused ? accentColor + '80' : colors.border);
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1, backgroundColor: '#050508' }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#050508" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
 
       {/* Glow orb */}
       <View style={{
         position: 'absolute', width: width * 1.2, height: width * 1.2,
         borderRadius: width * 0.6, top: -width * 0.5, left: -width * 0.1,
-        backgroundColor: accentColor, opacity: 0.07,
+        backgroundColor: accentColor, opacity: isDark ? 0.07 : 0.05,
       }} />
 
       <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 28 }}>
@@ -91,27 +103,30 @@ export function LoginScreen({ route, navigation }: Props) {
         {/* Wordmark + header */}
         <View style={{ marginBottom: 44 }}>
           <Text style={{ fontSize: 38, lineHeight: 38, letterSpacing: -1.5, marginBottom: 20 }}>
-            <Text style={{ fontWeight: '300', color: 'rgba(255,255,255,0.5)' }}>Store</Text>
-            <Text style={{ fontWeight: '900', color: '#ffffff' }}>Ville</Text>
+            <Text style={{ fontWeight: '300', color: isDark ? 'rgba(255,255,255,0.5)' : colors.textSub }}>Store</Text>
+            <Text style={{ fontWeight: '900', color: colors.text }}>Ville</Text>
           </Text>
-          <View style={{ width: 28, height: 1.5, backgroundColor: accentColor, borderRadius: 99, marginBottom: 16, opacity: 0.7 }} />
-          <Text style={{ fontSize: 13, fontWeight: '600', color: accentColor, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8, opacity: 0.8 }}>
+          {/* <View style={{ width: 80, height: 1.5, backgroundColor: accentColor, borderRadius: 99, marginBottom: 16, opacity: 0.7 }} /> */}
+
+          {/* <Text style={{ fontSize: 13, fontWeight: '600', color: accentColor, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8, opacity: 0.8 }}>
             {isSeller ? 'Seller Portal' : 'Marketplace'}
+          </Text> */}
+          <Text style={{ fontSize: 30, fontWeight: '900', color: colors.text, letterSpacing: -0.8, lineHeight: 34 }}>
+            {isSeller ? 'Welcome back' : 'Sign in to continue.'}
           </Text>
-          <Text style={{ fontSize: 30, fontWeight: '900', color: '#ffffff', letterSpacing: -0.8, lineHeight: 34 }}>
-            {isSeller ? 'Welcome\nback, pro.' : 'Sign in to\ncontinue.'}
-          </Text>
+
         </View>
 
         {/* Fields */}
         <View style={{ gap: 10, marginBottom: 24 }}>
+          {/* Email */}
           <View style={{
-            backgroundColor: focusedField === 'email' ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
+            backgroundColor: fieldBg(focusedField === 'email'),
             borderWidth: 1,
-            borderColor: focusedField === 'email' ? accentColor + '60' : 'rgba(255,255,255,0.07)',
+            borderColor: fieldBorder(focusedField === 'email'),
             borderRadius: 16, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 8,
           }}>
-            <Text style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
+            <Text style={{ color: isDark ? 'rgba(255,255,255,0.28)' : colors.textMuted, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
               Email
             </Text>
             <TextInput
@@ -120,20 +135,21 @@ export function LoginScreen({ route, navigation }: Props) {
               onBlur={() => setFocusedField(null)}
               autoCapitalize="none" keyboardType="email-address"
               placeholder="you@example.com"
-              placeholderTextColor="rgba(255,255,255,0.14)"
-              style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', paddingVertical: 6 }}
+              placeholderTextColor={colors.textMuted}
+              style={{ color: colors.text, fontSize: 16, fontWeight: '600', paddingVertical: 6 }}
             />
           </View>
 
+          {/* Password */}
           <View style={{
-            backgroundColor: focusedField === 'password' ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
+            backgroundColor: fieldBg(focusedField === 'password'),
             borderWidth: 1,
-            borderColor: focusedField === 'password' ? accentColor + '60' : 'rgba(255,255,255,0.07)',
+            borderColor: fieldBorder(focusedField === 'password'),
             borderRadius: 16, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 8,
             flexDirection: 'row', alignItems: 'center',
           }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
+              <Text style={{ color: isDark ? 'rgba(255,255,255,0.28)' : colors.textMuted, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
                 Password
               </Text>
               <TextInput
@@ -142,14 +158,14 @@ export function LoginScreen({ route, navigation }: Props) {
                 onBlur={() => setFocusedField(null)}
                 secureTextEntry={!showPassword}
                 placeholder="••••••••"
-                placeholderTextColor="rgba(255,255,255,0.14)"
-                style={{ color: '#ffffff', fontSize: 16, fontWeight: '600', paddingVertical: 6 }}
+                placeholderTextColor={colors.textMuted}
+                style={{ color: colors.text, fontSize: 16, fontWeight: '600', paddingVertical: 6 }}
               />
             </View>
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ paddingLeft: 12, paddingBottom: 2 }}>
               {showPassword
-                ? <EyeOff color="rgba(255,255,255,0.25)" size={18} />
-                : <Eye color="rgba(255,255,255,0.25)" size={18} />}
+                ? <EyeOff color={colors.textMuted} size={18} />
+                : <Eye color={colors.textMuted} size={18} />}
             </TouchableOpacity>
           </View>
         </View>
@@ -158,7 +174,7 @@ export function LoginScreen({ route, navigation }: Props) {
         <TouchableOpacity
           onPress={handleLogin} disabled={loading} activeOpacity={0.85}
           style={{
-            backgroundColor: loading ? 'rgba(255,255,255,0.05)' : accentColor,
+            backgroundColor: loading ? colors.surfaceAlt : accentColor,
             borderRadius: 16, paddingVertical: 17,
             flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
             shadowColor: accentColor, shadowOffset: { width: 0, height: 8 },
@@ -176,14 +192,9 @@ export function LoginScreen({ route, navigation }: Props) {
         {/* Register link */}
         <TouchableOpacity
           onPress={() => navigation?.navigate(getRegisterRoute(), { intendedRole })}
-          style={{
-            // borderRadius: 16, paddingVertical: 14,
-            // backgroundColor: 'rgba(255,255,255,0.04)',
-            // borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-            alignItems: 'center', marginBottom: 28,
-          }}
+          style={{ alignItems: 'center', marginBottom: 28 }}
         >
-          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '600' }}>
+          <Text style={{ color: colors.textSub, fontSize: 14, fontWeight: '600' }}>
             New here?{'  '}
             <Text style={{ color: accentColor, fontWeight: '800' }}>Create Account</Text>
           </Text>
@@ -193,16 +204,16 @@ export function LoginScreen({ route, navigation }: Props) {
         {!isSeller && (
           <>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.06)' }} />
-              <Text style={{ color: 'rgba(255,255,255,0.18)', fontWeight: '700', fontSize: 10, marginHorizontal: 14, letterSpacing: 2.5, textTransform: 'uppercase' }}>or</Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.06)' }} />
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              <Text style={{ color: colors.textMuted, fontWeight: '700', fontSize: 10, marginHorizontal: 14, letterSpacing: 2.5, textTransform: 'uppercase' }}>or</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
             </View>
             <TouchableOpacity
               onPress={enterGuestMode}
               activeOpacity={0.7}
               style={{ alignItems: 'center', paddingVertical: 12 }}
             >
-              <Text style={{ color: 'rgba(255,255,255,0.28)', fontWeight: '600', fontSize: 14 }}>
+              <Text style={{ color: colors.textMuted, fontWeight: '600', fontSize: 14 }}>
                 Continue as Guest
               </Text>
             </TouchableOpacity>
@@ -210,12 +221,12 @@ export function LoginScreen({ route, navigation }: Props) {
         )}
 
         {/* Back */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => navigation?.goBack()}
           style={{ alignItems: 'center', paddingVertical: 20, marginTop: 4 }}
         >
-          <Text style={{ color: 'rgba(255,255,255,0.14)', fontSize: 13, fontWeight: '600' }}>← Back</Text>
-        </TouchableOpacity>
+          <Text style={{ color: colors.textMuted, fontSize: 13, fontWeight: '600' }}>← Back</Text>
+        </TouchableOpacity> */}
 
       </View>
     </KeyboardAvoidingView>

@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, StatusBar } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { Package, Clock, CheckCircle, XCircle, Truck, LogIn } from 'lucide-react-native';
 
 export function OrdersScreen() {
   const { isAuthenticated, isGuest } = useAuthStore();
   const selectedGateway = useAuthStore(state => state.selectedGateway);
+  const { colors, mode } = useThemeStore();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['buyer-orders', selectedGateway],
@@ -21,81 +23,81 @@ export function OrdersScreen() {
 
   if (!isAuthenticated || isGuest) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center px-6">
-        <View className="bg-gray-200 p-5 rounded-2xl mb-5">
-          <LogIn color="#9ca3af" size={32} />
+      <View style={[styles.root, { backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+        <View style={[styles.emptyIcon, { backgroundColor: colors.surfaceAlt }]}>
+          <LogIn color={colors.textMuted} size={32} />
         </View>
-        <Text className="text-xl font-black text-gray-900 text-center">Login to View Orders</Text>
-        <Text className="text-gray-500 font-medium mt-2 text-center">Sign in to see your order history and track deliveries.</Text>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>Login to View Orders</Text>
+        <Text style={[styles.emptySub, { color: colors.textMuted }]}>Sign in to see your order history and track deliveries.</Text>
       </View>
     );
   }
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'PENDING': return { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock, label: 'Pending' };
-      case 'ACCEPTED': return { bg: 'bg-blue-100', text: 'text-blue-700', icon: CheckCircle, label: 'Accepted' };
-      case 'COOKING': return { bg: 'bg-orange-100', text: 'text-orange-700', icon: Clock, label: 'In Kitchen' };
-      case 'PROCESSING': return { bg: 'bg-blue-100', text: 'text-blue-700', icon: Package, label: 'Processing' };
-      case 'SHIPPED': return { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: Truck, label: 'Shipped' };
-      case 'READY': return { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle, label: 'Ready' };
-      case 'OUT_FOR_DELIVERY': return { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: Truck, label: 'On the Way' };
-      case 'DELIVERED': return { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle, label: 'Delivered' };
-      case 'CANCELLED': return { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle, label: 'Cancelled' };
-      default: return { bg: 'bg-gray-100', text: 'text-gray-700', icon: Clock, label: status };
-    }
+  const STATUS_MAP: Record<string, { color: string; bg: string; icon: any; label: string }> = {
+    PENDING:          { color: '#f59e0b', bg: mode === 'dark' ? 'rgba(245,158,11,0.15)' : '#fffbeb', icon: Clock,         label: 'Pending' },
+    ACCEPTED:         { color: '#6366f1', bg: mode === 'dark' ? 'rgba(99,102,241,0.15)' : '#eef2ff', icon: CheckCircle,   label: 'Accepted' },
+    COOKING:          { color: '#f97316', bg: mode === 'dark' ? 'rgba(249,115,22,0.15)' : '#fff7ed',  icon: Clock,        label: 'In Kitchen' },
+    PROCESSING:       { color: '#0ea5e9', bg: mode === 'dark' ? 'rgba(14,165,233,0.15)' : '#f0f9ff', icon: Package,       label: 'Processing' },
+    SHIPPED:          { color: '#8b5cf6', bg: mode === 'dark' ? 'rgba(139,92,246,0.15)' : '#f5f3ff', icon: Truck,         label: 'Shipped' },
+    READY:            { color: '#10b981', bg: mode === 'dark' ? 'rgba(16,185,129,0.15)' : '#ecfdf5', icon: CheckCircle,   label: 'Ready' },
+    OUT_FOR_DELIVERY: { color: '#8b5cf6', bg: mode === 'dark' ? 'rgba(139,92,246,0.15)' : '#f5f3ff', icon: Truck,        label: 'On the Way' },
+    DELIVERED:        { color: '#10b981', bg: mode === 'dark' ? 'rgba(16,185,129,0.15)' : '#ecfdf5', icon: CheckCircle,   label: 'Delivered' },
+    CANCELLED:        { color: '#ef4444', bg: mode === 'dark' ? 'rgba(239,68,68,0.15)'  : '#fff1f2', icon: XCircle,       label: 'Cancelled' },
   };
 
   const renderOrder = ({ item }: { item: any }) => {
-    const statusInfo = getStatusStyle(item.status);
-    const StatusIcon = statusInfo.icon;
+    const s = STATUS_MAP[item.status] || { color: colors.textMuted, bg: colors.surfaceAlt, icon: Clock, label: item.status };
+    const StatusIcon = s.icon;
     return (
-      <View className="bg-white rounded-2xl p-5 mb-4 border border-gray-100 shadow-sm">
-        <View className="flex-row justify-between items-start mb-3">
-          <View className="flex-1">
-            <Text className="text-gray-900 text-lg font-black">{item.store_name || 'Store Order'}</Text>
-            <Text className="text-gray-400 text-xs font-medium mt-1">
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.cardTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.storeName, { color: colors.text }]}>{item.store_name || 'Store Order'}</Text>
+            <Text style={[styles.orderDate, { color: colors.textMuted }]}>
               {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </Text>
           </View>
-          <View className={`flex-row items-center px-3 py-1.5 rounded-full ${statusInfo.bg}`}>
-            <StatusIcon color="currentColor" size={14} />
-            <Text className={`font-bold text-xs ml-1 ${statusInfo.text}`}>{statusInfo.label}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: s.bg }]}>
+            <StatusIcon color={s.color} size={13} strokeWidth={2} />
+            <Text style={[styles.statusText, { color: s.color }]}>{s.label}</Text>
           </View>
         </View>
-        <View className="h-px bg-gray-100 my-2" />
-        <View className="flex-row justify-between items-center mt-2">
-          <Text className="text-gray-500 font-medium">{item.items?.length || 0} items</Text>
-          <Text className="text-primary-600 text-lg font-black">{parseFloat(item.total_amount).toFixed(2)} Birr</Text>
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
+        <View style={styles.cardBottom}>
+          <Text style={[styles.itemCount, { color: colors.textSub }]}>{item.items?.length || 0} items</Text>
+          <Text style={[styles.total, { color: colors.accent }]}>{parseFloat(item.total_amount || 0).toFixed(2)} Birr</Text>
         </View>
       </View>
     );
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="pt-16 pb-4 px-6 bg-white border-b border-gray-100">
-        <Text className="text-2xl font-black text-gray-900">My Orders</Text>
-        <Text className="text-gray-400 font-medium mt-1">
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Orders</Text>
+        <Text style={[styles.headerSub, { color: colors.textMuted }]}>
           {selectedGateway === 'FOOD' ? 'Food & Coffee Orders' : 'Retail Orders'}
         </Text>
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : (
         <FlatList
           data={orders || []}
           renderItem={renderOrder}
           keyExtractor={item => item.id}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
           ListEmptyComponent={
-            <View className="items-center justify-center py-20">
-              <Package color="#d1d5db" size={48} />
-              <Text className="text-gray-400 text-lg font-bold mt-4">No orders yet</Text>
-              <Text className="text-gray-400 mt-1">Your orders will appear here.</Text>
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
+              <View style={[styles.emptyIcon, { backgroundColor: colors.surfaceAlt }]}>
+                <Package color={colors.textMuted} size={36} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No orders yet</Text>
+              <Text style={[styles.emptySub, { color: colors.textMuted }]}>Your orders will appear here.</Text>
             </View>
           }
         />
@@ -103,3 +105,23 @@ export function OrdersScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  header: { paddingTop: 56, paddingBottom: 16, paddingHorizontal: 20, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 24, fontWeight: '900' },
+  headerSub: { fontSize: 13, fontWeight: '500', marginTop: 2 },
+  card: { borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1 },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  storeName: { fontSize: 16, fontWeight: '800', marginBottom: 4 },
+  orderDate: { fontSize: 12, fontWeight: '500' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 99 },
+  statusText: { fontSize: 11, fontWeight: '800' },
+  divider: { height: 1, marginBottom: 12 },
+  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  itemCount: { fontSize: 14, fontWeight: '500' },
+  total: { fontSize: 17, fontWeight: '900' },
+  emptyIcon: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', marginBottom: 6 },
+  emptySub: { fontSize: 14, fontWeight: '500', textAlign: 'center' },
+});

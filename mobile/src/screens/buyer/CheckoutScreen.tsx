@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
-  Alert, ActivityIndicator, KeyboardAvoidingView,
+  ActivityIndicator, KeyboardAvoidingView,
   Platform, StatusBar, ScrollView,
 } from 'react-native';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
+import { authClient } from '../../lib/auth-client';
 import { api } from '../../lib/api';
 import {
   ArrowLeft, Minus, Plus, Trash2,
   MapPin, CreditCard, CheckCircle, ShoppingBag,
 } from 'lucide-react-native';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { useAlert } from '../../lib/useAlert';
 
 interface Props {
   route: any;
@@ -23,37 +26,40 @@ export function CheckoutScreen({ route, navigation }: Props) {
   const accentColor = isFood ? '#f97316' : '#4f46e5';
 
   const { items, updateQuantity, removeItem, clearCart, getTotal, getItemCount } = useCartStore();
-  const { isAuthenticated, isGuest } = useAuthStore();
+  const { isGuest } = useAuthStore();
+  const { data: session } = authClient.useSession();
+  const isAuthenticated = !!session?.user;
 
   const [address, setAddress] = useState('');
   const [instructions, setInstructions] = useState('');
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   const isLoggedIn = isAuthenticated && !isGuest;
 
   // ── Auth gate: redirect to login before checkout ────────────────────────
   const requireAuth = () => {
-    Alert.alert(
-      'Login Required',
-      'Please login or create an account to complete your purchase.',
-      [
+    showAlert({
+      title: 'Login Required',
+      message: 'Please login to complete your purchase.',
+      variant: 'warning',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Login', onPress: () => navigation.getParent()?.getParent()?.navigate('Auth', { intendedRole: 'CUSTOMER' }) },
-        { text: 'Register', onPress: () => navigation.getParent()?.getParent()?.navigate('Register', { intendedRole: 'CUSTOMER' }) },
       ],
-    );
+    });
   };
 
   const handleCheckout = async () => {
     if (!isLoggedIn) return requireAuth();
     if (!address.trim()) {
-      Alert.alert('Missing Address', isFood ? 'Please enter your delivery address.' : 'Please enter your shipping address.');
+      showAlert({ title: 'Missing Address', message: isFood ? 'Please enter your delivery address.' : 'Please enter your shipping address.', variant: 'warning', buttons: [{ text: 'OK' }] });
       return;
     }
     if (items.length === 0) {
-      Alert.alert('Empty Cart', 'Add some items before checking out.');
+      showAlert({ title: 'Empty Cart', message: 'Add some items before checking out.', variant: 'info', buttons: [{ text: 'OK' }] });
       return;
     }
 
@@ -95,7 +101,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
         JSON.stringify(error.response?.data) ||
         error?.message ||
         'Could not place order. Please try again.';
-      Alert.alert('Order Failed', msg);
+      showAlert({ title: 'Order Failed', message: msg, variant: 'error', buttons: [{ text: 'OK' }] });
     } finally {
       setLoading(false);
     }
@@ -140,6 +146,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
 
   // ── Main Checkout Screen ─────────────────────────────────────────────────
   return (
+    <>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1, backgroundColor: '#f9fafb' }}
@@ -322,5 +329,14 @@ export function CheckoutScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+    <CustomAlert
+      visible={alertState.visible}
+      title={alertState.title}
+      message={alertState.message}
+      variant={alertState.variant}
+      buttons={alertState.buttons}
+      onDismiss={hideAlert}
+    />
+    </>
   );
 }

@@ -3,12 +3,15 @@ import { View, Text, FlatList, ActivityIndicator, StyleSheet, StatusBar } from '
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
+import { authClient } from '../../lib/auth-client';
 import { useThemeStore } from '../../store/themeStore';
 import { Package, Clock, CheckCircle, XCircle, Truck, LogIn } from 'lucide-react-native';
 
 export function OrdersScreen() {
-  const { isAuthenticated, isGuest } = useAuthStore();
-  const selectedGateway = useAuthStore(state => state.selectedGateway);
+  const { isGuest } = useAuthStore();
+  const { data: session } = authClient.useSession();
+  const isAuthenticated = !!session?.user;
+  const selectedGateway = 'FOOD';
   const { colors, mode } = useThemeStore();
 
   const { data: orders, isLoading } = useQuery({

@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import { authClient } from './auth-client';
 
 const DEV_ANDROID_URL = 'http://10.17.127.123:8000/api';
-const DEV_IOS_URL = 'http://10.17.127.123:8000/api';
-const PROD_URL = 'https://api.storeville.app/api';
+const DEV_IOS_URL     = 'http://10.17.127.123:8000/api';
+const PROD_URL        = 'https://api.storeville.app/api';
 
 const getBaseUrl = () => {
   if (__DEV__) {
@@ -16,27 +17,27 @@ export const API_URL = getBaseUrl();
 
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
+  // Do NOT use withCredentials — we attach cookies manually from SecureStore
+  withCredentials: false,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
 });
 
-// ── Auth interceptor ──────────────────────────────────────────────────────────
-// Lazily import authStore to avoid circular dependency issues at module init.
-// Injects the Bearer token into every outgoing request if the user is logged in.
-api.interceptors.request.use(config => {
+// ── Auth interceptor ─────────────────────────────────────────────────────────
+// better-auth stores session cookies in expo-secure-store.
+// authClient.getCookie() retrieves them and we attach them to every Django request.
+// Django's BetterAuthMiddleware reads the cookie and resolves the session.
+api.interceptors.request.use(async (config) => {
   try {
-    // useAuthStore.getState() works outside of React components
-    const { useAuthStore } = require('../store/authStore');
-    const token = useAuthStore.getState().accessToken;
-    if (token) {
+    const cookies = authClient.getCookie();
+    if (cookies) {
       config.headers = config.headers ?? {};
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers['Cookie'] = cookies;
     }
   } catch {
-    // Silently skip if store isn't initialised yet (e.g., during app boot)
+    // Silently skip if auth client isn't ready yet
   }
   return config;
 });

@@ -4,37 +4,56 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, User, AlertTriangle } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuthStore } from '@/store/authStore'
+import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 
 export default function ProfileModal({ isOpen, onClose }: any) {
-  const { user, logout } = useAuthStore()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
   const router = useRouter()
-  const [formData, setFormData] = useState({ first_name: '', last_name: '' })
+  const [formData, setFormData] = useState({ name: '' })
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
   useEffect(() => {
-    if (user) setFormData({ first_name: user.first_name || '', last_name: user.last_name || '' })
+    if (user) setFormData({ name: user.name || '' })
   }, [user, isOpen])
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await api.put(`/accounts/profile/`, data)
-      return res.data
+      // First, update Django for consistency if needed, but better-auth is the source of truth
+      await api.put(`/accounts/profile/`, { 
+        first_name: data.name.split(' ')[0], 
+        last_name: data.name.split(' ').slice(1).join(' ') 
+      })
+      
+      // Update the main identity provider
+      const { data: updatedUser, error } = await authClient.updateUser({
+        name: data.name,
+      })
+      if (error) throw error
+      return updatedUser
     },
-    onSuccess: (data) => {
-      useAuthStore.setState({ user: { ...(user as any), first_name: data.first_name, last_name: data.last_name } })
+    onSuccess: () => {
       onClose()
     }
   })
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      // Cleanup Django record
       await api.delete(`/accounts/profile/`) 
+      // Delete from Better-Auth
+      const { error } = await authClient.deleteUser()
+      if (error) throw error
     },
-    onSuccess: () => {
-      logout()
-      router.push('/')
+    onSuccess: async () => {
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push('/')
+          }
+        }
+      })
     }
   })
 
@@ -76,13 +95,8 @@ export default function ProfileModal({ isOpen, onClose }: any) {
             ) : (
               <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(formData) }} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
-                  <input required type="text" value={formData.first_name} onChange={e => setFormData({...formData, first_name: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold" placeholder="John" />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
-                  <input required type="text" value={formData.last_name} onChange={e => setFormData({...formData, last_name: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold" placeholder="Doe" />
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold" placeholder="John Doe" />
                 </div>
 
                 <div className="pt-2">

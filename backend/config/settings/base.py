@@ -28,8 +28,6 @@ INSTALLED_APPS = [
     
     # Third-Party Apps
     'rest_framework',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist', # Allows us to securely log users out
     'corsheaders',
     
     # Local Domain Apps
@@ -51,6 +49,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # better-auth: resolves session from Next.js auth server cookie
+    'apps.accounts.middleware.BetterAuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -61,6 +61,10 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+# 🌟 THE FIX: Disable automatic slash appending. 
+# This prevents Django from trying to redirect POST requests (which breaks the payload).
+APPEND_SLASH = False
 
 TEMPLATES = [
     {
@@ -123,25 +127,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 🌟 THE BRIDGE: Trust the user resolved by BetterAuthMiddleware and skip CSRF checks
+        'core.authentication.BetterAuthAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated', # Secure by default
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # Custom Enterprise Error Handler
-    'EXCEPTION_HANDLER': 'core.exceptions.enterprise_exception_handler', 
+    'EXCEPTION_HANDLER': 'core.exceptions.enterprise_exception_handler',
 }
 
-# JWT Configuration
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
+# better-auth server URL (the Next.js frontend)
+BETTER_AUTH_URL = os.environ.get('BETTER_AUTH_URL', 'http://frontend:3000')
 
 
 # ==============================================================================

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator, Alert
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator
 } from 'react-native';
 import { ChevronLeft, MapPin, Navigation } from 'lucide-react-native';
 import { useThemeStore } from '../../../store/themeStore';
 import { api } from '../../../lib/api';
 import * as Location from 'expo-location';
+import { CustomAlert } from '../../../components/ui/CustomAlert';
+import { useAlert } from '../../../lib/useAlert';
 
 interface Props { navigation: any; }
 
@@ -17,9 +19,10 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
   const [store, setStore] = useState<any>(null);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   useEffect(() => {
-    api.get('/stores/manage/').then(r => {
+    api.get('/stores/manage').then(r => {
       const s = r.data?.results?.[0] || r.data?.[0];
       if (s) {
         setStore(s);
@@ -32,21 +35,21 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
 
   const grabLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') { Alert.alert('Permission Denied', 'GPS access is required.'); return; }
+    if (status !== 'granted') { showAlert({ title: 'Permission Denied', message: 'GPS access is required to set your store location.', variant: 'warning', buttons: [{ text: 'OK' }] }); return; }
     try {
       const loc = await Location.getLastKnownPositionAsync({});
       const coords = loc?.coords || (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })).coords;
       setLat(coords.latitude); setLng(coords.longitude);
-    } catch { Alert.alert('Error', 'Could not get GPS location.'); }
+    } catch { showAlert({ title: 'Location Error', message: 'Could not get GPS location.', variant: 'error', buttons: [{ text: 'OK' }] }); }
   };
 
   const save = async () => {
     if (!store?.id || !lat || !lng) return;
     setSaving(true);
     try {
-      await api.patch(`/stores/manage/${store.id}/`, { latitude: lat, longitude: lng });
-      Alert.alert('Saved', 'Store location updated!');
-    } catch { Alert.alert('Error', 'Could not update location.'); }
+      await api.patch(`/stores/manage/${store.id}`, { latitude: lat, longitude: lng });
+      showAlert({ title: 'Location Saved!', message: 'Your store location has been updated.', variant: 'success', buttons: [{ text: 'Great' }] });
+    } catch { showAlert({ title: 'Save Failed', message: 'Could not update location.', variant: 'error', buttons: [{ text: 'OK' }] }); }
     finally { setSaving(false); }
   };
 
@@ -107,6 +110,14 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
           </>
         )}
       </ScrollView>
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttons={alertState.buttons}
+        onDismiss={hideAlert}
+      />
     </View>
   );
 }

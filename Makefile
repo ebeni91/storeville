@@ -9,6 +9,7 @@ build-backend:
 up:
 # 	docker compose up -d
 	docker-compose up --build 
+# 	docker-compose up
 up-frontend:
 	docker compose up -d frontend
 up-backend:

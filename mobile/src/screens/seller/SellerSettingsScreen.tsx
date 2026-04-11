@@ -1,33 +1,44 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar, Alert
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar
 } from 'react-native';
 import {
   User, MapPin, CreditCard, Star, ChevronRight, LogOut, Sun, Moon
 } from 'lucide-react-native';
 import { useAuthStore } from '../../store/authStore';
+import { authClient } from '../../lib/auth-client';
 import { useThemeStore } from '../../store/themeStore';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { useAlert } from '../../lib/useAlert';
 
 interface Props { navigation: any; }
 
-const fetchStore = async () => { const r = await api.get('/stores/manage/'); return r.data?.results?.[0] || r.data?.[0]; };
+const fetchStore = async () => { const r = await api.get('/stores/manage'); return r.data?.results?.[0] || r.data?.[0]; };
 
 export function SellerSettingsScreen({ navigation }: Props) {
-  const { logout, user } = useAuthStore();
+  const { logout } = useAuthStore();
+  const { data: session } = authClient.useSession();
+  const user = session?.user as any;
   const { colors, mode, toggleTheme } = useThemeStore();
   const isDark = mode === 'dark';
   const { data: store } = useQuery({ queryKey: ['seller-store'], queryFn: fetchStore });
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   const storeName = store?.name || user?.email || 'My Store';
   const isFood = store?.store_type === 'FOOD';
   const initial = storeName.charAt(0).toUpperCase();
 
-  const handleLogout = () => Alert.alert('Sign Out', 'Are you sure?', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Sign Out', style: 'destructive', onPress: logout },
-  ]);
+  const handleLogout = () => showAlert({
+    title: 'Sign Out',
+    message: 'You will be signed out of your seller account.',
+    variant: 'danger',
+    buttons: [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: logout },
+    ],
+  });
 
   const menuSections = [
     {
@@ -119,6 +130,15 @@ export function SellerSettingsScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttons={alertState.buttons}
+        onDismiss={hideAlert}
+      />
     </View>
   );
 }

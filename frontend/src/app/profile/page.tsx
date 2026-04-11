@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion, Variants } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/authStore'
+import { authClient } from '@/lib/auth-client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { 
@@ -26,7 +26,8 @@ const fetchFoodOrders = async () => { const res = await api.get('/orders/food/')
 
 export default function BuyerDashboard() {
   const router = useRouter()
-  const { user, token } = useAuthStore()
+  const { data: session, isPending } = authClient.useSession()
+  const user = session?.user
   const [isMounted, setIsMounted] = useState(false)
   const queryClient = useQueryClient()
 
@@ -44,18 +45,18 @@ export default function BuyerDashboard() {
 
   useEffect(() => {
     setIsMounted(true)
-    if (isMounted && !token) {
+    if (isMounted && !isPending && !session) {
       router.push('/login')
     }
-  }, [token, router, isMounted])
+  }, [session, isPending, router, isMounted])
 
   // Queries
-  const { data: addresses = [] } = useQuery({ queryKey: ['addresses'], queryFn: fetchAddresses, enabled: !!token })
-  const { data: paymentMethods = [] } = useQuery({ queryKey: ['paymentMethods'], queryFn: fetchPaymentMethods, enabled: !!token })
-  const { data: retailFavorites = [] } = useQuery({ queryKey: ['retailFavorites'], queryFn: fetchRetailFavorites, enabled: !!token })
-  const { data: foodFavorites = [] } = useQuery({ queryKey: ['foodFavorites'], queryFn: fetchFoodFavorites, enabled: !!token })
-  const { data: retailOrders = [] } = useQuery({ queryKey: ['retailOrders'], queryFn: fetchRetailOrders, enabled: !!token })
-  const { data: foodOrders = [] } = useQuery({ queryKey: ['foodOrders'], queryFn: fetchFoodOrders, enabled: !!token })
+  const { data: addresses = [] } = useQuery({ queryKey: ['addresses'], queryFn: fetchAddresses, enabled: !!session })
+  const { data: paymentMethods = [] } = useQuery({ queryKey: ['paymentMethods'], queryFn: fetchPaymentMethods, enabled: !!session })
+  const { data: retailFavorites = [] } = useQuery({ queryKey: ['retailFavorites'], queryFn: fetchRetailFavorites, enabled: !!session })
+  const { data: foodFavorites = [] } = useQuery({ queryKey: ['foodFavorites'], queryFn: fetchFoodFavorites, enabled: !!session })
+  const { data: retailOrders = [] } = useQuery({ queryKey: ['retailOrders'], queryFn: fetchRetailOrders, enabled: !!session })
+  const { data: foodOrders = [] } = useQuery({ queryKey: ['foodOrders'], queryFn: fetchFoodOrders, enabled: !!session })
 
   // Mutations
   const removeRetailFav = useMutation({
@@ -67,10 +68,9 @@ export default function BuyerDashboard() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['foodFavorites'] })
   })
 
-  if (!isMounted || !token) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div></div>
+  if (!isMounted || !session) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div></div>
 
-  const computedName = user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : null
-  const displayName = computedName || 'Member'
+  const displayName = user?.name || 'Member'
 
   // Data Processing
   const allWishlist: any[] = [

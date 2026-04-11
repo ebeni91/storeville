@@ -30,24 +30,16 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   const [activeChip, setActiveChip] = useState<string>('Cafes');
   const { colors, mode } = useThemeStore();
   
-  // Gateway state lives locally so switching is instant without going to profile
-  const storedGateway = useAuthStore(state => state.selectedGateway);
-  const setGlobalGateway = useAuthStore(state => state.setGateway);
-  const [activeGateway, setActiveGateway] = useState<Gateway>((storedGateway as Gateway) || 'RETAIL');
+  // Gateway state is local — no longer uses global store (gateway concept removed)
+  const [activeGateway, setActiveGateway] = useState<Gateway>('RETAIL');
 
   const drawerAnim = useRef(new Animated.Value(0)).current;
 
   const isFood = activeGateway === 'FOOD';
 
-  // ── Sync with global gateway on load ─────────────
-  useEffect(() => {
-    if (storedGateway) setActiveGateway(storedGateway as Gateway);
-  }, [storedGateway]);
-
-  const switchGateway = async (type: Gateway) => {
+  const switchGateway = (type: Gateway) => {
     setActiveGateway(type);
     setActiveChip(type === 'FOOD' ? 'Cafes' : 'Fashion');
-    await setGlobalGateway(type);
   };
 
   // ── Location setup ─────────────────────────────────
@@ -79,7 +71,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     queryFn: async () => {
       // Use a bare axios instance (no Authorization header) so the backend
       // serves AllowAny discovery results even for unauthenticated guests.
-      const res = await axios.get(`${API_URL}/stores/discovery/`, {
+      const res = await axios.get(`${API_URL}/stores/discovery`, {
         params: { type: activeGateway },
         headers: { 'Content-Type': 'application/json' },
       });

@@ -1,18 +1,24 @@
 'use client'
 import { Tags } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { useAuthStore } from '@/store/authStore'
+import { authClient } from '@/lib/auth-client'
 import { Store as StoreIcon, Package, ShoppingBag, LayoutDashboard, Settings, LogOut } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Palette } from 'lucide-react'
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
-  const { logout } = useAuthStore()
+  const router = useRouter()
   const pathname = usePathname()
 
-  const handleLogout = () => {
-    logout()
-    window.location.href = '/login'
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          // 🌟 FORCE HARD RELOAD: Total cache wipe to prevent Firefox sticky sessions.
+          window.location.href = '/login'
+        }
+      }
+    })
   }
 
   // Helper to highlight the active menu item

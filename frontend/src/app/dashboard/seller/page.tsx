@@ -1,15 +1,16 @@
 'use client'
 
-import { useAuthStore } from '@/store/authStore'
+import { authClient } from '@/lib/auth-client'
 import { Package, ShoppingBag, TrendingUp, Clock, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { motion, Variants } from 'framer-motion'
 
 export default function SellerDashboard() {
-  const { user } = useAuthStore()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
 
   // Display either the email or the phone number
-  const identifier = user?.email || user?.phone_number
+  const identifier = user?.email || (user as any)?.phone_number || 'Seller'
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },

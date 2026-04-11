@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react'
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/authStore'
 import { Store as StoreIcon, Truck, Coffee, ShoppingBag, LayoutGrid, Map as MapIcon, MessageCircle, ArrowRight, Instagram, Twitter, Facebook, User, LogOut } from 'lucide-react'
 import StoreGrid from '@/components/StoreGrid'
 import MapExplorer from '@/components/MapExplorer' 
 import ProfileDropdown from '@/components/ProfileDropdown'
-import { api } from '@/lib/api'
+import { authClient } from '@/lib/auth-client'
 
 export default function Home() {
   const router = useRouter()
-  const { token, logout } = useAuthStore()
+  // 🌟 Use better-auth's native React hook
+  const { data: session, isPending } = authClient.useSession()
   const [isMounted, setIsMounted] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   
@@ -30,16 +30,21 @@ export default function Home() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
-  // The clean, extracted logout function
+
   const handleSignOut = async () => {
     try {
-      await api.post('/accounts/logout/')
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            setIsUserMenuOpen(false)
+            // 🌟 FORCE HARD RELOAD: This clears all client-side state and 
+            // ensures the middleware re-verifies the anonymous state.
+            window.location.href = '/'
+          }
+        }
+      })
     } catch (err) {
       console.error("Logout error:", err)
-    } finally {
-      logout()
-      setIsUserMenuOpen(false) // Close the dropdown menu
-      window.location.reload() // Hard reload to clear all guest states cleanly
     }
   }
   return (
@@ -84,7 +89,7 @@ export default function Home() {
             <div className="hidden md:block w-px h-5 bg-gray-300"></div>
             
             <div className="flex items-center gap-4">
-              {isMounted && token ? (
+              {isMounted && session ? (
                 /* 🌟 LOGGED IN: SHOW UNIVERSAL PROFILE DROPDOWN */
                 <div className="relative">
                   <button 
@@ -101,15 +106,13 @@ export default function Home() {
                   />
                 </div>
               ) : (
-                /* 🌟 LOGGED OUT: SHOW DEFAULT BUTTONS */
-                <>
-                  <Link href="/login" className="hover:text-indigo-600 transition-colors hidden sm:block">
-                     Log In
-                  </Link>
-                  <Link href="/register" className="bg-gray-900 text-white px-7 py-3.5 rounded-full shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:bg-black hover:shadow-[0_8px_25px_rgb(0,0,0,0.2)] transition-all duration-300 transform hover:-translate-y-0.5 tracking-wide">
-                    Open Your Store
-                  </Link>
-                </>
+                /* 🌟 LOGGED OUT: SHOW UNIFIED AUTH BUTTON */
+                <Link 
+                  href="/login" 
+                  className="bg-gray-900 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-black hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                >
+                  Sign in / Sign up
+                </Link>
               )}
             </div>
           </nav>

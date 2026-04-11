@@ -1,23 +1,44 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Create a response object to potentially modify
-  const response = NextResponse.next()
-
-  // Provide basic protection
-  if (pathname.startsWith('/dashboard')) {
-    const sellerCookie = request.cookies.get('seller_refresh_token')
-    if (!sellerCookie) {
-      // If there's no seller token, they definitely aren't logged in as a seller
-      // We could redirect here if there was a dedicated seller login page, 
-      // but for now, we just pass through and let AuthProvider handle it.
-    }
+  // 1. Resolve Session from Better Auth
+  // We perform an internal fetch to check role-based access at the edge
+  let session = null
+  try {
+    const sessionRes = await fetch(`${request.nextUrl.origin}/api/auth/get-session`, {
+      headers: {
+        cookie: request.headers.get('cookie') || ''
+      }
+    })
+    session = await sessionRes.json()
+  } catch (err) {
+    console.error("Middleware session check failed:", err)
   }
 
-  return response
+  const user = session?.user
+  const role = user?.role
+
+  // 2. SELLER GUARD: Redirect sellers away from customer storefronts
+  // If they are a seller, they should only be in /dashboard/seller or /api routes
+  const isSeller = role === 'SELLER'
+  const isAccessingPlatform = !pathname.startsWith('/dashboard') && 
+                              !pathname.startsWith('/api') && 
+                              !pathname.startsWith('/login') &&
+                              pathname !== '/logout'
+
+  if (isSeller && isAccessingPlatform) {
+     return NextResponse.redirect(new URL('/dashboard/seller', request.url))
+  }
+
+  // 3. DASHBOARD PROTECTION: Ensure only sellers access dashboard
+  if (pathname.startsWith('/dashboard/seller') && !isSeller) {
+     return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {

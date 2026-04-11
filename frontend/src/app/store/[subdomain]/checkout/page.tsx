@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-import { useAuthStore } from '@/store/authStore'
+import { authClient } from '@/lib/auth-client'
 import { Loader2, MapPin, CreditCard, ChevronLeft, CheckCircle, Clock, FileText, ShoppingBag } from 'lucide-react'
 
 export default function CheckoutPage({ params }: { params: { subdomain: string } }) {
   const router = useRouter()
-  const { token, isAuthModalOpen, openAuthModal } = useAuthStore()
+  const { data: session, isPending } = authClient.useSession()
   
   // Core States
   const [store, setStore] = useState<any>(null)
@@ -23,10 +23,12 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
   const [isAsap, setIsAsap] = useState(true) 
 
   useEffect(() => {
+    if (isPending) return
+
     const fetchCheckoutData = async () => {
       try {
-        // 1. Validate Session. If they bypassed the system and got here without a token, kick them back.
-        if (!token) {
+        // 1. Validate Session.
+        if (!session) {
           router.push(`/store/${params.subdomain}`)
           return
         }
@@ -46,14 +48,13 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
 
       } catch (err) {
         console.error("Checkout Initialization Error", err)
-        // If the 401 interceptor fires here, they will automatically be safely redirected.
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchCheckoutData()
-  }, [params.subdomain, router, token])
+  }, [params.subdomain, router, session, isPending])
 
   const subtotal = cartItems.reduce((acc, curr) => acc + (parseFloat(curr.price) * curr.quantity), 0)
   const deliveryFee = store?.store_type === 'FOOD' ? 50.00 : 150.00 
@@ -265,15 +266,15 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
               </div>
             </div>
 
-            <button 
-              form="checkout-form"
-              type="submit" 
-              disabled={isSubmitting}
-              className="w-full py-4 mt-8 rounded-xl text-sm font-black tracking-widest uppercase shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-70 disabled:hover:scale-100" 
-              style={{ backgroundColor: store.primary_color, color: '#fff' }}
-            >
-              {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : `Pay Br ${total.toFixed(2)}`}
-            </button>
+              <button 
+                form="checkout-form"
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full py-4 mt-8 rounded-xl text-sm font-black tracking-widest uppercase shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-70 disabled:hover:scale-100" 
+                style={{ backgroundColor: store.primary_color, color: '#fff' }}
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : `Pay Br ${total.toFixed(2)}`}
+              </button>
             <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-4">
               Securely processed by Chapa
             </p>

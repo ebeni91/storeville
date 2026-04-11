@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, StatusBar, Alert, ActivityIndicator
+  StyleSheet, StatusBar, ActivityIndicator
 } from 'react-native';
 import { useAuthStore } from '../../../store/authStore';
+import { authClient } from '../../../lib/auth-client';
 import { useThemeStore } from '../../../store/themeStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api';
@@ -11,6 +12,8 @@ import {
   ArrowLeft, User, Mail, Phone, MapPin, Plus,
   ChevronRight, Trash2, Edit3, Check, AlertTriangle
 } from 'lucide-react-native';
+import { CustomAlert } from '../../../components/ui/CustomAlert';
+import { useAlert } from '../../../lib/useAlert';
 
 interface Props { navigation: any; }
 
@@ -18,7 +21,9 @@ const fetchAddresses = async () => { const res = await api.get('/accounts/addres
 const fetchProfile = async () => { const res = await api.get('/accounts/profile/'); return res.data; };
 
 export function ProfileInfoScreen({ navigation }: Props) {
-  const { user, logout } = useAuthStore();
+  const { logout } = useAuthStore();
+  const { data: session } = authClient.useSession();
+  const user = session?.user as any;
   const { colors, mode } = useThemeStore();
   const queryClient = useQueryClient();
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -26,14 +31,15 @@ export function ProfileInfoScreen({ navigation }: Props) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [addingAddress, setAddingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState({ label: '', street_address: '', city_subcity: '', phone_number: '' });
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   const { data: addresses = [], isLoading: loadingAddresses } = useQuery({ queryKey: ['addresses'], queryFn: fetchAddresses });
   const { data: profile } = useQuery({ queryKey: ['profile'], queryFn: fetchProfile });
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => api.patch('/accounts/profile/', data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['profile'] }); setEditingField(null); Alert.alert('Updated', 'Profile updated successfully.'); },
-    onError: () => Alert.alert('Error', 'Could not update profile.'),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['profile'] }); setEditingField(null); showAlert({ title: 'Updated', message: 'Profile updated successfully.', variant: 'success', buttons: [{ text: 'Great' }] }); },
+    onError: () => showAlert({ title: 'Error', message: 'Could not update profile.', variant: 'error', buttons: [{ text: 'OK' }] }),
   });
 
   const deleteAddressMutation = useMutation({
@@ -44,13 +50,13 @@ export function ProfileInfoScreen({ navigation }: Props) {
   const addAddressMutation = useMutation({
     mutationFn: (data: any) => api.post('/accounts/addresses/', data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['addresses'] }); setAddingAddress(false); setNewAddress({ label: '', street_address: '', city_subcity: '', phone_number: '' }); },
-    onError: () => Alert.alert('Error', 'Could not save address.'),
+    onError: () => showAlert({ title: 'Error', message: 'Could not save address.', variant: 'error', buttons: [{ text: 'OK' }] }),
   });
 
   const deleteAccountMutation = useMutation({
     mutationFn: () => api.delete('/accounts/profile/'),
-    onSuccess: () => { Alert.alert('Account Deleted', 'Your account has been permanently deleted.'); logout(); },
-    onError: () => Alert.alert('Error', 'Could not delete account. Please contact support.'),
+    onSuccess: () => { showAlert({ title: 'Account Deleted', message: 'Your account has been permanently deleted.', variant: 'warning', buttons: [{ text: 'OK', onPress: logout }] }); },
+    onError: () => showAlert({ title: 'Error', message: 'Could not delete account. Please contact support.', variant: 'error', buttons: [{ text: 'OK' }] }),
   });
 
   const displayName = user?.first_name ? `${user.first_name} ${user?.last_name || ''}`.trim() : 'Member';
@@ -186,6 +192,14 @@ export function ProfileInfoScreen({ navigation }: Props) {
           </View>
         </View>
       </ScrollView>
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttons={alertState.buttons}
+        onDismiss={hideAlert}
+      />
     </View>
   );
 }

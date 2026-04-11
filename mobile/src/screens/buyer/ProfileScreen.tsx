@@ -1,23 +1,26 @@
 import React, { useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, StatusBar, Alert, Animated, Dimensions
+  StyleSheet, StatusBar, Animated, Dimensions
 } from 'react-native';
 import { useAuthStore } from '../../store/authStore';
+import { authClient } from '../../lib/auth-client';
 import { useThemeStore } from '../../store/themeStore';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import {
   User, CreditCard, Clock, Info, FileText, Shield,
   RefreshCw, ChevronRight, LogIn, LogOut, Heart,
-  ShoppingBag, Sun, Moon
+  ShoppingBag, Sun, Moon, Store
 } from 'lucide-react-native';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { useAlert } from '../../lib/useAlert';
 
 const { width } = Dimensions.get('window');
 const TOGGLE_W = 170;
 const HALF = TOGGLE_W / 2;
 
-const fetchRetailFavorites = async () => { const res = await api.get('/retail/favorites/'); return res.data.results || res.data; };
+  const fetchRetailFavorites = async () => { const res = await api.get('/retail/favorites/'); return res.data.results || res.data; };
 const fetchFoodFavorites = async () => { const res = await api.get('/food/favorites/'); return res.data.results || res.data; };
 const fetchRetailOrders = async () => { const res = await api.get('/orders/retail/'); return res.data.results || res.data; };
 const fetchFoodOrders = async () => { const res = await api.get('/orders/food/'); return res.data.results || res.data; };
@@ -73,20 +76,25 @@ function ThemeToggle() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ProfileScreen({ navigation }: Props) {
-  const { user, isAuthenticated, isGuest, logout, accessToken } = useAuthStore();
+  const { isGuest, logout, exitGuestMode } = useAuthStore();
+  const { data: session } = authClient.useSession();
+  const user = session?.user as any;
+  const isAuthenticated = !!user;
   const { colors, mode } = useThemeStore();
 
-  const { data: retailFavorites = [] } = useQuery({ queryKey: ['retailFavorites'], queryFn: fetchRetailFavorites, enabled: !!accessToken && !isGuest });
-  const { data: foodFavorites = [] } = useQuery({ queryKey: ['foodFavorites'], queryFn: fetchFoodFavorites, enabled: !!accessToken && !isGuest });
-  const { data: retailOrders = [] } = useQuery({ queryKey: ['retailOrders'], queryFn: fetchRetailOrders, enabled: !!accessToken && !isGuest });
-  const { data: foodOrders = [] } = useQuery({ queryKey: ['foodOrders'], queryFn: fetchFoodOrders, enabled: !!accessToken && !isGuest });
+  const { data: retailFavorites = [] } = useQuery({ queryKey: ['retailFavorites'], queryFn: fetchRetailFavorites, enabled: isAuthenticated && !isGuest });
+  const { alertState, showAlert, hideAlert } = useAlert();
+  const { data: foodFavorites = [] } = useQuery({ queryKey: ['foodFavorites'], queryFn: fetchFoodFavorites, enabled: isAuthenticated && !isGuest });
+  const { data: retailOrders = [] } = useQuery({ queryKey: ['retailOrders'], queryFn: fetchRetailOrders, enabled: isAuthenticated && !isGuest });
+  const { data: foodOrders = [] } = useQuery({ queryKey: ['foodOrders'], queryFn: fetchFoodOrders, enabled: isAuthenticated && !isGuest });
 
   const wishlistCount = retailFavorites.length + foodFavorites.length;
   const ordersCount = retailOrders.length + foodOrders.length;
 
-  const computedName = user?.first_name ? `${user.first_name} ${user?.last_name || ''}`.trim() : null;
+  const computedName = user?.name || user?.email?.split('@')[0] || null;
   const displayName = computedName || 'Member';
   const initial = displayName.charAt(0).toUpperCase();
+  const isSeller = user?.role === 'SELLER';
 
   // Guest state
   if (!isAuthenticated || isGuest) {
@@ -122,7 +130,7 @@ export function ProfileScreen({ navigation }: Props) {
 
         <View style={styles.guestBody}>
           <TouchableOpacity
-            onPress={() => navigation.getParent()?.navigate('Auth', { intendedRole: 'CUSTOMER' })}
+            onPress={exitGuestMode}
             style={styles.guestCta}
           >
             <LogIn color="#ffffff" size={20} />
@@ -133,11 +141,15 @@ export function ProfileScreen({ navigation }: Props) {
     );
   }
 
-  const handleLogout = () =>
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+  const handleLogout = () => showAlert({
+    title: 'Sign Out',
+    message: 'You will be signed out of your account.',
+    variant: 'danger',
+    buttons: [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: logout },
-    ]);
+    ],
+  });
 
   const menuSections = [
     {
@@ -237,6 +249,30 @@ export function ProfileScreen({ navigation }: Props) {
             </View>
           ))}
 
+          {/* ── Launch Your Store CTA ──────────────────────── */}
+          {!isSeller && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('StoreLaunch')}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                backgroundColor: 'rgba(99,102,241,0.1)',
+                borderWidth: 1.5, borderColor: 'rgba(99,102,241,0.25)',
+                borderRadius: 20, paddingVertical: 18, paddingHorizontal: 20,
+                marginBottom: 28,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: '#6366f1', textTransform: 'uppercase', marginBottom: 4 }}>Become a Seller</Text>
+                <Text style={{ fontSize: 17, fontWeight: '900', color: colors.text, letterSpacing: -0.3 }}>Launch Your Store →</Text>
+                <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', marginTop: 2 }}>Open your digital mall in minutes</Text>
+              </View>
+              <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: '#6366f1', alignItems: 'center', justifyContent: 'center', marginLeft: 16 }}>
+                <Store color="#fff" size={20} strokeWidth={2} />
+              </View>
+            </TouchableOpacity>
+          )}
+
           {/* Sign Out */}
           <TouchableOpacity
             onPress={handleLogout}
@@ -250,6 +286,14 @@ export function ProfileScreen({ navigation }: Props) {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttons={alertState.buttons}
+        onDismiss={hideAlert}
+      />
     </View>
   );
 }

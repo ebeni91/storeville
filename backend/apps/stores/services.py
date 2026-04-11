@@ -23,8 +23,8 @@ class LocationService:
             distance=distance_expr
         ).filter(distance__lte=radius_km).order_by('distance')
 
-        # 🌟 FILTER BY STORE TYPE
+        # 🌟 FILTER BY STORE TYPE (Case-Insensitive)
         if store_type:
-            queryset = queryset.filter(store_type=store_type)
+            queryset = queryset.filter(store_type=store_type.upper())
 
         return queryset

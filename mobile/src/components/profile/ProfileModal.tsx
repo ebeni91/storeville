@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { X, User, Save } from 'lucide-react-native';
 import { useAuthStore } from '../../store/authStore';
+import { authClient } from '../../lib/auth-client';
 
 interface ProfileModalProps {
   visible: boolean;
@@ -9,7 +10,8 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ visible, onClose }: ProfileModalProps) {
-  const { user } = useAuthStore();
+  const { data: session } = authClient.useSession();
+  const user = session?.user as any;
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',

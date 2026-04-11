@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, FlatList, TouchableOpacity, Switch, Alert, 
+  View, Text, FlatList, TouchableOpacity, Switch,
   ActivityIndicator, Image, Modal, TextInput, KeyboardAvoidingView, Platform, ScrollView 
 } from 'react-native';
 import { Package, Plus, Edit2, Trash2, X, EyeOff } from 'lucide-react-native';
 import { api } from '../../lib/api';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { useAlert } from '../../lib/useAlert';
 
 export function SellerProductsScreen() {
   const [store, setStore] = useState<any>(null);
@@ -17,6 +19,7 @@ export function SellerProductsScreen() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   useEffect(() => {
     fetchData();
@@ -24,7 +27,7 @@ export function SellerProductsScreen() {
 
   const fetchData = async () => {
     try {
-      const storeRes = await api.get('/stores/manage/');
+      const storeRes = await api.get('/stores/manage');
       const currentStore = storeRes.data?.results?.[0] || storeRes.data?.[0];
       if (!currentStore) return;
       
@@ -32,8 +35,8 @@ export function SellerProductsScreen() {
       const isFood = currentStore.store_type === 'FOOD';
       
       const [itemsRes, catRes] = await Promise.all([
-        api.get(isFood ? `/food/items/?store_id=${currentStore.id}` : `/retail/products/?store_id=${currentStore.id}`),
-        api.get(isFood ? `/food/categories/?store_id=${currentStore.id}` : `/retail/categories/?store_id=${currentStore.id}`)
+        api.get(isFood ? `/food/items?store_id=${currentStore.id}` : `/retail/products?store_id=${currentStore.id}`),
+        api.get(isFood ? `/food/categories?store_id=${currentStore.id}` : `/retail/categories?store_id=${currentStore.id}`)
       ]);
       
       setItems(itemsRes.data?.results || itemsRes.data || []);
@@ -50,30 +53,35 @@ export function SellerProductsScreen() {
   // Toggle Visibility Status
   const toggleVisibility = async (item: any) => {
     try {
-      const endpoint = isFood ? `/food/items/${item.id}/` : `/retail/products/${item.id}/`;
+      const endpoint = isFood ? `/food/items/${item.id}` : `/retail/products/${item.id}`;
       const field = isFood ? 'is_available' : 'is_active';
       const newValue = !item[field];
       
       await api.patch(endpoint, { [field]: newValue });
       setItems(items.map(i => i.id === item.id ? { ...i, [field]: newValue } : i));
     } catch (err) {
-      Alert.alert('Error', 'Failed to update visibility');
+      showAlert({ title: 'Update Failed', message: 'Failed to update visibility.', variant: 'error', buttons: [{ text: 'OK' }] });
     }
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert('Confirm Delete', 'Are you sure you want to delete this item?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        try {
-          const endpoint = isFood ? `/food/items/${id}/` : `/retail/products/${id}/`;
-          await api.delete(endpoint);
-          setItems(items.filter(i => i.id !== id));
-        } catch (err) {
-          Alert.alert('Error', 'Failed to delete item');
-        }
-      }}
-    ]);
+    showAlert({
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to permanently delete this item?',
+      variant: 'error',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: async () => {
+          try {
+            const endpoint = isFood ? `/food/items/${id}` : `/retail/products/${id}`;
+            await api.delete(endpoint);
+            setItems(items.filter(i => i.id !== id));
+          } catch (err) {
+            showAlert({ title: 'Delete Failed', message: 'Failed to delete item.', variant: 'error', buttons: [{ text: 'OK' }] });
+          }
+        }},
+      ],
+    });
   };
 
   const openCreateModal = () => {
@@ -95,14 +103,14 @@ export function SellerProductsScreen() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.price || !formData.category) {
-      Alert.alert('Required Fields', 'Please fill in Name, Price, and Category.');
+      showAlert({ title: 'Required Fields', message: 'Please fill in Name, Price, and Category.', variant: 'warning', buttons: [{ text: 'OK' }] });
       return;
     }
     
     setIsSubmitting(true);
     try {
-      const endpoint = isFood ? '/food/items/' : '/retail/products/';
-      const targetUrl = editingItem ? `${endpoint}${editingItem.id}/` : endpoint;
+      const endpoint = isFood ? '/food/items' : '/retail/products';
+      const targetUrl = editingItem ? `${endpoint}/${editingItem.id}` : endpoint;
       
       // Filter out readonly fields
       const { id, category_name, created_at, updated_at, image, store_id, store_name, store_slug, ...submitData } = formData;
@@ -117,7 +125,7 @@ export function SellerProductsScreen() {
       fetchData(); // Refresh list
     } catch (err: any) {
       console.error(err.response?.data);
-      Alert.alert('Error', 'Failed to save item. Check the input formats.');
+      showAlert({ title: 'Save Failed', message: 'Failed to save item. Check the input formats.', variant: 'error', buttons: [{ text: 'OK' }] });
     } finally {
       setIsSubmitting(false);
     }
@@ -192,6 +200,7 @@ export function SellerProductsScreen() {
   }
 
   return (
+    <>
     <View className="flex-1 bg-gray-50">
       <View className="pt-16 pb-4 px-6 flex-row justify-between items-center bg-white border-b border-gray-100 rounded-b-3xl">
         <View>
@@ -332,5 +341,14 @@ export function SellerProductsScreen() {
       </Modal>
 
     </View>
+    <CustomAlert
+      visible={alertState.visible}
+      title={alertState.title}
+      message={alertState.message}
+      variant={alertState.variant}
+      buttons={alertState.buttons}
+      onDismiss={hideAlert}
+    />
+    </>
   );
 }

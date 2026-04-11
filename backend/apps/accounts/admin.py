@@ -16,7 +16,7 @@ class CustomUserAdmin(ModelAdmin):
     )
 
     @display(description="Role", label={
-        "BUYER": "info",
+        "CUSTOMER": "info",
         "SELLER": "warning",
         "DRIVER": "success",
         "ADMIN": "danger"

@@ -11,6 +11,8 @@ import { OrdersScreen } from '../screens/buyer/OrdersScreen';
 import { ProfileScreen } from '../screens/buyer/ProfileScreen';
 import { StoreGatewayScreen } from '../screens/buyer/StoreGatewayScreen';
 import { CheckoutScreen } from '../screens/buyer/CheckoutScreen';
+// ✅ NEW: Store launch from profile
+import { StoreLaunchScreen } from '../screens/seller/StoreLaunchScreen';
 
 // Profile sub-screens
 import { ProfileInfoScreen } from '../screens/buyer/profile/ProfileInfoScreen';
@@ -67,7 +69,7 @@ function WhiteTabBar({ state, navigation }: BottomTabBarProps) {
 
 function ExploreStackNavigator() {
   return (
-    <ExploreStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <ExploreStack.Navigator screenOptions={{ headerShown: false }}>
       <ExploreStack.Screen name="ExploreMap" component={ExploreScreen} />
       <ExploreStack.Screen name="StoreGateway" component={StoreGatewayScreen} />
       <ExploreStack.Screen name="Checkout" component={CheckoutScreen} />
@@ -77,8 +79,10 @@ function ExploreStackNavigator() {
 
 function ProfileStackNavigator() {
   return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} />
+      {/* ✅ NEW: Store launch from within profile stack */}
+      <ProfileStack.Screen name="StoreLaunch" component={StoreLaunchScreen} />
       <ProfileStack.Screen name="ProfileInfo" component={ProfileInfoScreen} />
       <ProfileStack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
       <ProfileStack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />

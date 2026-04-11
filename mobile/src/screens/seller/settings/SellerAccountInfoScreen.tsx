@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
-  StyleSheet, StatusBar, ActivityIndicator, Alert
+  StyleSheet, StatusBar, ActivityIndicator
 } from 'react-native';
 import { ChevronLeft, User, Mail, Phone, Trash2, Save } from 'lucide-react-native';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../store/authStore';
 import { api } from '../../../lib/api';
+import { CustomAlert } from '../../../components/ui/CustomAlert';
+import { useAlert } from '../../../lib/useAlert';
 
 interface Props { navigation: any; }
 
@@ -14,6 +16,7 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
   const { colors, mode } = useThemeStore();
   const { logout } = useAuthStore();
   const isDark = mode === 'dark';
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -24,7 +27,7 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone_number: '' });
 
   useEffect(() => {
-    api.get('/accounts/me/').then(r => {
+    api.get('/accounts/profile/').then(r => {
       const u = r.data;
       setForm({ first_name: u.first_name || '', last_name: u.last_name || '', email: u.email || '', phone_number: u.phone_number || '' });
     }).catch(() => {}).finally(() => setLoading(false));
@@ -33,18 +36,23 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
   const save = async () => {
     setSaving(true);
     try {
-      await api.patch('/accounts/me/', { first_name: form.first_name, last_name: form.last_name, phone_number: form.phone_number });
-      Alert.alert('Saved', 'Account details updated successfully.');
-    } catch { Alert.alert('Error', 'Could not save changes.'); }
+      await api.patch('/accounts/profile/', { first_name: form.first_name, last_name: form.last_name, phone_number: form.phone_number });
+      showAlert({ title: 'Saved!', message: 'Account details updated successfully.', variant: 'success', buttons: [{ text: 'Great' }] });
+    } catch {
+      showAlert({ title: 'Save Failed', message: 'Could not save your changes.', variant: 'error', buttons: [{ text: 'OK' }] });
+    }
     finally { setSaving(false); }
   };
 
   const deleteAccount = async () => {
     setDeleting(true);
     try {
-      await api.delete('/accounts/me/');
+      await api.delete('/accounts/profile/');
       logout();
-    } catch { Alert.alert('Error', 'Could not delete account.'); setDeleting(false); }
+    } catch {
+      showAlert({ title: 'Error', message: 'Could not delete account.', variant: 'error', buttons: [{ text: 'OK' }] });
+      setDeleting(false);
+    }
   };
 
   const fieldBg = (f: string) => isDark
@@ -139,6 +147,15 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
         </View>
 
       </ScrollView>
+
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttons={alertState.buttons}
+        onDismiss={hideAlert}
+      />
     </View>
   );
 }

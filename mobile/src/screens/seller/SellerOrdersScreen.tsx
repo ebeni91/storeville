@@ -8,6 +8,8 @@ import {
   Truck, X, Eye, MapPin, ChefHat 
 } from 'lucide-react-native';
 import { api } from '../../lib/api';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { useAlert } from '../../lib/useAlert';
 
 export function SellerOrdersScreen() {
   const [store, setStore] = useState<any>(null);
@@ -16,10 +18,11 @@ export function SellerOrdersScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   const fetchData = async () => {
     try {
-      const storeRes = await api.get('/stores/manage/');
+      const storeRes = await api.get('/stores/manage');
       const currentStore = storeRes.data?.results?.[0] || storeRes.data?.[0];
       if (!currentStore) return;
       
@@ -54,14 +57,14 @@ export function SellerOrdersScreen() {
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     setIsUpdating(true);
     try {
-      const endpoint = isFood ? `/orders/food/${orderId}/` : `/orders/retail/${orderId}/`;
+      const endpoint = isFood ? `/orders/food/${orderId}` : `/orders/retail/${orderId}`;
       await api.patch(endpoint, { status: newStatus });
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
     } catch (err) {
-      Alert.alert('Error', 'Failed to update order status');
+      showAlert({ title: 'Update Failed', message: 'Failed to update order status.', variant: 'error', buttons: [{ text: 'OK' }] });
     } finally {
       setIsUpdating(false);
     }
@@ -116,6 +119,7 @@ export function SellerOrdersScreen() {
   );
 
   return (
+    <>
     <View className="flex-1 bg-gray-50">
       <View className="pt-16 pb-4 px-6 bg-white border-b border-gray-100 rounded-b-3xl">
         <View className="flex-row items-center justify-between">
@@ -252,5 +256,14 @@ export function SellerOrdersScreen() {
       </Modal>
 
     </View>
+    <CustomAlert
+      visible={alertState.visible}
+      title={alertState.title}
+      message={alertState.message}
+      variant={alertState.variant}
+      buttons={alertState.buttons}
+      onDismiss={hideAlert}
+    />
+    </>
   );
 }

@@ -64,7 +64,7 @@ function SellerTabBar({ state, navigation }: BottomTabBarProps) {
 
 function SettingsStackNavigator() {
   return (
-    <SettingsStack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name="SettingsHome"     component={SellerSettingsScreen} />
       <SettingsStack.Screen name="AccountInfo"      component={SellerAccountInfoScreen} />
       <SettingsStack.Screen name="StoreLocation"    component={SellerStoreLocationScreen} />

@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import MenuCategoryViewSet, MenuItemViewSet, FoodFavoriteViewSet
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 router.register(r'categories', MenuCategoryViewSet, basename='menu-category')
 router.register(r'items', MenuItemViewSet, basename='menu-item')
 router.register(r'favorites', FoodFavoriteViewSet, basename='food-favorite')

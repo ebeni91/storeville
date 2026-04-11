@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { TrendingUp, Package, ClipboardList, Clock, Store, ChevronRight } from 'lucide-react-native';
 import { useAuthStore } from '../../store/authStore';
+import { authClient } from '../../lib/auth-client';
 import { api } from '../../lib/api';
 
 export function SellerHomeScreen({ navigation }: { navigation: any }) {
-  const { user } = useAuthStore();
+  const { data: session } = authClient.useSession();
+  const user = session?.user as any;
   const identifier = user?.email || user?.phone_number || 'Seller';
   const [store, setStore] = useState<any>(null);
   const [stats, setStats] = useState({ sales: 0, pendingOrders: 0, activeItems: 0 });
@@ -15,7 +17,7 @@ export function SellerHomeScreen({ navigation }: { navigation: any }) {
   const fetchData = async () => {
     try {
       // 1. Get Store Profile
-      const storeRes = await api.get('/stores/manage/');
+      const storeRes = await api.get('/stores/manage');
       const currentStore = storeRes.data?.results?.[0] || storeRes.data?.[0];
       
       if (currentStore) {
@@ -24,7 +26,7 @@ export function SellerHomeScreen({ navigation }: { navigation: any }) {
         
         // 2. Parallel fetch orders and products to calculate KPIs
         const ordersPromise = api.get(isFood ? '/orders/food/' : '/orders/retail/');
-        const itemsPromise = api.get(isFood ? `/food/items/?store_id=${currentStore.id}` : `/retail/products/?store_id=${currentStore.id}`);
+        const itemsPromise = api.get(isFood ? `/food/items?store_id=${currentStore.id}` : `/retail/products?store_id=${currentStore.id}`);
 
         const [ordersRes, itemsRes] = await Promise.all([ordersPromise, itemsPromise]);
         

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
-  Switch, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, StatusBar
+  Switch, ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, StatusBar
 } from 'react-native';
 import { Palette, LayoutTemplate, Save, CheckCircle2 } from 'lucide-react-native';
 import { api } from '../../lib/api';
 import { useThemeStore } from '../../store/themeStore';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { useAlert } from '../../lib/useAlert';
 
 const THEMES = [
   { id: 'apple-dark',   name: 'Cupertino Dark',  bg: '#000000', text: '#F5F5F7', primary: '#2997FF' },
@@ -21,6 +23,7 @@ const THEMES = [
 export function SellerStudioScreen() {
   const { colors, mode } = useThemeStore();
   const isDark = mode === 'dark';
+  const { alertState, showAlert, hideAlert } = useAlert();
 
   const [store, setStore] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +46,7 @@ export function SellerStudioScreen() {
 
   const fetchStore = async () => {
     try {
-      const res = await api.get('/stores/manage/');
+      const res = await api.get('/stores/manage');
       const s = res.data?.results?.[0] || res.data?.[0];
       if (s) {
         setStore(s);
@@ -67,10 +70,11 @@ export function SellerStudioScreen() {
     if (!store?.id) return;
     setIsSaving(true);
     try {
-      await api.patch(`/stores/manage/${store.id}/`, formData);
-      Alert.alert('Saved', 'Store design updated successfully!');
-    } catch { Alert.alert('Error', 'Failed to save changes.'); }
-    finally { setIsSaving(false); }
+      await api.patch(`/stores/manage/${store.id}`, formData);
+      showAlert({ title: 'Changes Saved!', message: 'Your store design is live instantly.', variant: 'success', buttons: [{ text: 'Great' }] });
+    } catch {
+      showAlert({ title: 'Save Failed', message: 'Could not save changes. Please try again.', variant: 'error', buttons: [{ text: 'OK' }] });
+    } finally { setIsSaving(false); }
   };
 
   if (isLoading) return (
@@ -219,6 +223,15 @@ export function SellerStudioScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttons={alertState.buttons}
+        onDismiss={hideAlert}
+      />
     </KeyboardAvoidingView>
   );
 }

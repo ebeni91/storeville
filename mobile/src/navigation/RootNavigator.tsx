@@ -1,15 +1,14 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { authClient } from '../lib/auth-client';
 import { useAuthStore } from '../store/authStore';
 
 // Screens
-import { RoleSelectionScreen } from '../screens/onboarding/RoleSelectionScreen';
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { RegisterScreen } from '../screens/auth/RegisterScreen';
-import { GatewayChoiceScreen } from '../screens/buyer/GatewayChoiceScreen';
+import { AuthScreen } from '../screens/auth/AuthScreen';
 import { SplashScreen } from '../screens/SplashScreen';
+import { GlobalLoadingOverlay } from '../components/ui/GlobalLoadingOverlay';
 
 // Navigators
 import { BuyerTabNavigator } from './BuyerTabNavigator';
@@ -18,73 +17,62 @@ import { SellerTabNavigator } from './SellerTabNavigator';
 const Stack = createNativeStackNavigator();
 
 export function RootNavigator() {
-  const { user, isAuthenticated, isGuest, selectedGateway, restoreSession } = useAuthStore();
+  const { isGuest } = useAuthStore();
 
-  // Two independent flags — both must be true to remove splash
-  const [showSplash, setShowSplash] = useState(true);
-  const splashAnimDone  = useRef(false);
-  const sessionReadyRef = useRef(false);
+  // better-auth session — handles restore automatically via SecureStore cache
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
 
-  // Called when either animation or session resolves — dismiss only when BOTH are done
-  const maybeHide = useCallback(() => {
-    if (splashAnimDone.current && sessionReadyRef.current) {
-      setShowSplash(false);
-    }
-  }, []);
+  const [splashDone, setSplashDone] = useState(false);
 
-  useEffect(() => {
-    restoreSession().finally(() => {
+  // ── Splash overlay ──────────────────────────────────────────────────────────
+  const splashAnimDone = React.useRef(false);
+  const sessionReadyRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!sessionLoading) {
       sessionReadyRef.current = true;
-      maybeHide();
-    });
-  }, []);
+      if (splashAnimDone.current) setSplashDone(true);
+    }
+  }, [sessionLoading]);
 
-  const handleSplashFinish = useCallback(() => {
+  const handleSplashFinish = () => {
     splashAnimDone.current = true;
-    maybeHide();
-  }, [maybeHide]);
+    if (sessionReadyRef.current) setSplashDone(true);
+  };
 
+  // ── Derive auth state from session ──────────────────────────────────────────
+  const user = session?.user as any;
+  const isAuthenticated = !!user;
   const isSeller = isAuthenticated && user?.role === 'SELLER';
-  const canAccessMarketplace = (isAuthenticated && user?.role !== 'SELLER') || isGuest;
+  const canBrowse = isAuthenticated || isGuest;
 
   return (
-    // Outer View so NavigationContainer + splash overlay can coexist
     <View style={{ flex: 1 }}>
-
-      {/* NavigationContainer is ALWAYS mounted — no white flash on splash exit */}
+      {/* NavigationContainer always mounted — no white flash */}
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
 
           {isSeller ? (
+            // 🏪 Seller: route to their dashboard
             <Stack.Screen name="SellerRoot" component={SellerTabNavigator} />
 
-          ) : canAccessMarketplace ? (
-            <>
-              {selectedGateway ? (
-                <Stack.Screen name="MarketplaceTabs" component={BuyerTabNavigator} />
-              ) : (
-                <Stack.Screen name="GatewaySelect" component={GatewayChoiceScreen} />
-              )}
-              <Stack.Screen name="Auth" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-              {!selectedGateway && <Stack.Screen name="MarketplaceTabs" component={BuyerTabNavigator} />}
-              {selectedGateway  && <Stack.Screen name="GatewaySelect"   component={GatewayChoiceScreen} />}
-            </>
+          ) : canBrowse ? (
+            // 🛍️ Authenticated customer or guest: marketplace access
+            <Stack.Screen name="MarketplaceTabs" component={BuyerTabNavigator} />
 
           ) : (
-            <>
-              <Stack.Screen name="OnboardingRole"     component={RoleSelectionScreen} />
-              <Stack.Screen name="OnboardingLogin"    component={LoginScreen} />
-              <Stack.Screen name="OnboardingRegister" component={RegisterScreen} />
-            </>
+            // 🔐 Unauthenticated: single unified auth screen
+            <Stack.Screen name="Auth" component={AuthScreen} />
           )}
 
         </Stack.Navigator>
       </NavigationContainer>
 
-      {/* Splash as absolute overlay — removed once animation + session are both done */}
-      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
-
+      {/* Splash overlay — removed when both animation + session are ready */}
+      {!splashDone && <SplashScreen onFinish={handleSplashFinish} />}
+      
+      {/* Auth transition overlay (shows on OAuth return or initial deep link loading) */}
+      {splashDone && sessionLoading && <GlobalLoadingOverlay />}
     </View>
   );
 }

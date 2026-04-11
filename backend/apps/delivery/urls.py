@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import DriverActionViewSet, DriverLocationUpdateView, PublicTrackingView
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 # /api/delivery/driver/ -> Driver's assigned deliveries
 router.register(r'driver', DriverActionViewSet, basename='driver-deliveries')
 

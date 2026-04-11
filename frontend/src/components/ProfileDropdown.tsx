@@ -3,8 +3,8 @@
 import React, { useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { LogOut, ShoppingBag, Heart, MapPin, Settings, Headphones, User } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { LogOut, ShoppingBag, Heart, MapPin, Settings, Headphones, User, Rocket } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
 
 interface ProfileDropdownProps {
   isOpen: boolean
@@ -43,10 +43,10 @@ export default function ProfileDropdown({ isOpen, onClose, onSignOut, userEmail,
   const hoverBg = textRgb ? `rgba(${textRgb}, 0.05)` : 'rgba(0,0,0,0.04)'
   const subtleTextColor = textRgb ? `rgba(${textRgb}, 0.6)` : '#6b7280' // gray-500
 
-  const { user } = useAuthStore()
+  const { data: session } = authClient.useSession()
 
-  const email = userEmail || user?.email || 'user@storeville.com'
-  const computedName = user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : null
+  const email = userEmail || session?.user?.email || 'user@storeville.com'
+  const computedName = session?.user?.name || null
   const name = userName || computedName || 'Storeville Member'
 
   return (
@@ -78,6 +78,22 @@ export default function ProfileDropdown({ isOpen, onClose, onSignOut, userEmail,
 
           {/* Menu Items */}
           <div className="p-2 space-y-1">
+            {/* 🌟 MERCHANT ONBOARDING CTA (Only for Customers) */}
+            {(session?.user as any)?.role === 'CUSTOMER' && (
+              <button 
+                onClick={() => { router.push('/stores/launch'); onClose(); }} 
+                className="w-full text-left px-3 py-3 text-sm font-bold text-indigo-600 bg-indigo-50/50 hover:bg-indigo-100 rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500/30 mb-1 border border-indigo-200/50"
+              >
+                <div className="bg-white p-1.5 rounded-lg shadow-sm group-hover:scale-110 transition-transform border border-indigo-100">
+                  <Rocket size={18} className="text-indigo-600 fill-indigo-50/50" />
+                </div>
+                <span className="relative z-10 flex flex-col">
+                  Launch Your Store
+                  <span className="text-[10px] font-medium text-indigo-400 opacity-90 -mt-0.5">Start Selling on StoreVille</span>
+                </span>
+              </button>
+            )}
+
             <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: hoverBg }}></div>
               <ShoppingBag size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 

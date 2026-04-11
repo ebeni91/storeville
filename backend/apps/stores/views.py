@@ -61,7 +61,7 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
                 store_type=store_type 
             )
             
-            serializer = self.get_serializer(queryset, many=True)
+            serializer = self.get_serializer(stores, many=True)
             return Response(serializer.data)
             
         except ValueError:
@@ -69,10 +69,37 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
         
 class StoreManagementViewSet(viewsets.ModelViewSet):
     serializer_class = StoreManagementSerializer
-    permission_classes = [IsAuthenticated, IsSeller, IsStoreOwner]
+    
+    def get_permissions(self):
+        """
+        - Allow any authenticated user to CREATE (POST) a store.
+        - Require IsSeller and IsStoreOwner for other methods (LIST, RETRIEVE, UPDATE, DELETE).
+        """
+        if self.action == 'create':
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsSeller(), IsStoreOwner()]
 
     def get_queryset(self):
         return Store.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        user = self.request.user
+        # 🌟 JIT ROLE UPGRADE: Promote to SELLER if they are currently a CUSTOMER
+        if user.role == 'CUSTOMER':
+            user.role = 'SELLER'
+            user.save(update_fields=['role'])
+
+            # 🌟 BETTER AUTH SYNC: Ensure the Next.js session sees the upgrade immediately
+            from django.db import connection
+            try:
+                with connection.cursor() as cursor:
+                    if user.email:
+                        cursor.execute('UPDATE "user" SET role = %s WHERE email = %s', ['SELLER', user.email])
+                    elif user.phone_number:
+                        cursor.execute('UPDATE "user" SET role = %s WHERE phone_number = %s', ['SELLER', user.phone_number])
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Better Auth role sync failed: {e}")
+            
+        serializer.save(owner=user)

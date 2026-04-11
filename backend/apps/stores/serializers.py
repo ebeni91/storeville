@@ -20,4 +20,4 @@ class StoreManagementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
         fields = '__all__'
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'slug', 'created_at', 'updated_at']

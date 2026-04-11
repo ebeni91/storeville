@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   View, Text, ScrollView, TextInput, TouchableOpacity, 
-  Switch, ActivityIndicator, Alert, KeyboardAvoidingView, Platform 
+  Switch, ActivityIndicator, KeyboardAvoidingView, Platform 
 } from 'react-native';
 import { Store, Megaphone, Palette, Save, LogOut, LayoutTemplate, CheckCircle2 } from 'lucide-react-native';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { useAlert } from '../../lib/useAlert';
 
 const THEMES = [
   { id: 'apple-dark', name: 'Cupertino Dark', bg: '#000000', text: '#F5F5F7', primary: '#2997FF' },
@@ -20,6 +22,7 @@ const THEMES = [
 
 export function SellerProfileScreen({ navigation }: { navigation: any }) {
   const { logout } = useAuthStore();
+  const { alertState, showAlert, hideAlert } = useAlert();
   const [store, setStore] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -43,7 +46,7 @@ export function SellerProfileScreen({ navigation }: { navigation: any }) {
 
   const fetchStore = async () => {
     try {
-      const res = await api.get('/stores/manage/');
+      const res = await api.get('/stores/manage');
       const currentStore = res.data?.results?.[0] || res.data?.[0];
       if (currentStore) {
         setStore(currentStore);
@@ -70,10 +73,10 @@ export function SellerProfileScreen({ navigation }: { navigation: any }) {
     if (!store?.id) return;
     setIsSaving(true);
     try {
-      await api.patch(`/stores/manage/${store.id}/`, formData);
-      Alert.alert('Success', 'Store profile updated successfully!');
+      await api.patch(`/stores/manage/${store.id}`, formData);
+      showAlert({ title: 'Changes Saved!', message: 'Store profile updated successfully.', variant: 'success', buttons: [{ text: 'Great' }] });
     } catch (err) {
-      Alert.alert('Error', 'Failed to update store settings.');
+      showAlert({ title: 'Save Failed', message: 'Failed to update store settings.', variant: 'error', buttons: [{ text: 'OK' }] });
       console.error(err);
     } finally {
       setIsSaving(false);
@@ -267,6 +270,15 @@ export function SellerProfileScreen({ navigation }: { navigation: any }) {
 
         </View>
       </ScrollView>
+
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        variant={alertState.variant}
+        buttons={alertState.buttons}
+        onDismiss={hideAlert}
+      />
     </KeyboardAvoidingView>
   );
 }

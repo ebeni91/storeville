@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-import { Loader2, ShoppingBag, MapPin, Search, Heart, User, SlidersHorizontal, ArrowRight, X, Check, Menu, Star, CheckCircle, Lock, Plus, LogOut } from 'lucide-react'
+import { Loader2, ShoppingBag, MapPin, Search, Heart, User, SlidersHorizontal, ArrowRight, X, Check, Menu, Star, CheckCircle, Lock, Plus, LogOut, Chrome, CheckCircle2 } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
 import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
 import ProfileDropdown from '@/components/ProfileDropdown'
@@ -18,7 +19,8 @@ export default function RetailStorefront({ store }: { store: any }) {
   const router = useRouter()
   
   // 🌟 UNIVERSAL AUTH & CART STATES
-  const { token, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useAuthStore()
+  const { data: session, isPending } = authClient.useSession()
+  const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuthStore()
   const { carts, addItem, removeItem, mergeCartWithBackend } = useCartStore()
   const { favorites, fetchFavorites, toggleFavorite } = useFavoriteStore()
   
@@ -39,11 +41,11 @@ export default function RetailStorefront({ store }: { store: any }) {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  // Auth Modal Forms
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
-  const [authData, setAuthData] = useState({ 
-    email: '', password: '', username: '', first_name: '', last_name: '', phone_number: '' 
-  })
+  // Auth Modal States
+  const [authPhone, setAuthPhone] = useState('')
+  const [authOtp, setAuthOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   const [isCheckoutIntent, setIsCheckoutIntent] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -58,14 +60,8 @@ export default function RetailStorefront({ store }: { store: any }) {
   }, [])
 
   useEffect(() => {
-    const wakeUpAuth = async () => {
-      if (!token) {
-        try { await api.get('/accounts/profile/') } catch (e) {}
-      }
-    }
-    wakeUpAuth()
-    if (token) fetchFavorites()
-  }, [token, fetchFavorites])
+    if (session) fetchFavorites()
+  }, [session, fetchFavorites])
 
   useEffect(() => {
     const fetchCatalog = async () => {
@@ -104,7 +100,7 @@ export default function RetailStorefront({ store }: { store: any }) {
   // 🛡️ THE CHECKOUT INTERCEPTOR
   const handleProceedToCheckout = async () => {
     setIsCheckoutIntent(true)
-    if (token) {
+    if (session) {
       try {
         if (cartItems.length > 0) {
           await mergeCartWithBackend(store.id, 'RETAIL')
@@ -118,39 +114,56 @@ export default function RetailStorefront({ store }: { store: any }) {
   }
 
   // 🤝 THE SILENT MERGE HANDSHAKE
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleGoogleAuth = async () => {
     setAuthLoading(true)
     try {
-      const endpoint = authMode === 'login' ? '/accounts/login/' : '/accounts/register/' 
-      const payload = authMode === 'login' 
-        ? { email: authData.email, password: authData.password } 
-        : { email: authData.email, password: authData.password, username: authData.username, first_name: authData.first_name, last_name: authData.last_name, phone_number: authData.phone_number }
-          
-      const res = await api.post(endpoint, payload)
-      const accessToken = res.data.access || res.data.token || res.data.key
-      const userData = res.data.user
+      await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: window.location.href,
+      })
+    } catch (err: any) {
+      setAuthError(err.message || "Google sign-in failed.")
+      setAuthLoading(false)
+    }
+  }
+
+  const handleSendOtp = async () => {
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      const { error: err } = await (authClient as any).phoneNumber.sendOtp({
+        phoneNumber: authPhone,
+      })
+      if (err) throw new Error(err.message)
+      setOtpSent(true)
+    } catch (err: any) {
+      setAuthError(err.message || 'Could not send OTP.')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      const { error: err } = await (authClient as any).phoneNumber.verify({
+        phoneNumber: authPhone,
+        code: authOtp,
+      })
+      if (err) throw new Error(err.message)
       
-      if (accessToken) {
-        if (userData) {
-          useAuthStore.getState().login(userData, accessToken)
-        } else {
-          useAuthStore.getState().setToken(accessToken)
-        }
-      }
-      
-      // MAGIC HAPPENS HERE: We tell Django about the guest cart items
+      // MAGIC: Merge cart
       await mergeCartWithBackend(store.id, 'RETAIL')
       
       closeAuthModal()
       if (isCheckoutIntent) {
-        router.push(`/store/${store.slug}/checkout`) // Now we proceed to checkout as a registered user
+        router.push(`/store/${store.slug}/checkout`)
         setIsCheckoutIntent(false)
       }
-      
     } catch (err: any) {
-      console.error("Auth Error:", err)
-      alert("Authentication failed. Please check your details.")
+      setAuthError(err.message || 'Invalid OTP.')
     } finally {
       setAuthLoading(false)
     }
@@ -165,13 +178,16 @@ export default function RetailStorefront({ store }: { store: any }) {
   // The clean, extracted logout function
   const handleSignOut = async () => {
     try {
-      await api.post('/accounts/logout/')
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            setIsUserMenuOpen(false)
+            window.location.reload()
+          }
+        }
+      })
     } catch (err) {
       console.error("Logout error:", err)
-    } finally {
-      logout()
-      setIsUserMenuOpen(false) // Close the dropdown menu
-      window.location.reload() // Hard reload to clear all guest states cleanly
     }
   }
   const bgRgb = hexToRgb(store.background_color)
@@ -193,53 +209,79 @@ export default function RetailStorefront({ store }: { store: any }) {
       {/* GLOBAL AUTH MODAL */}
       <div className={`fixed inset-0 z-[300] flex items-center justify-center transition-all duration-500 ${isAuthModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={closeAuthModal}></div>
-        <div className="relative w-full max-w-md p-8 rounded-[2rem] shadow-2xl border transition-transform duration-500 scale-100" style={{ backgroundColor: `rgba(${bgRgb}, 0.95)`, color: store.secondary_color, borderColor: `rgba(${textRgb}, 0.1)` }}>
+        <div className="relative w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl border transition-transform duration-500 scale-100" style={{ backgroundColor: `rgba(${bgRgb}, 0.98)`, color: store.secondary_color, borderColor: `rgba(${textRgb}, 0.1)` }}>
           <button onClick={closeAuthModal} className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/5 transition-colors"><X size={20} /></button>
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner" style={{ backgroundColor: `rgba(${textRgb}, 0.05)` }}>
-            <Lock size={28} style={{ color: store.primary_color }} />
+          
+          <div className="flex flex-col items-center text-center mb-10">
+            <div className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl border" style={{ backgroundColor: store.primary_color, color: '#fff', borderColor: 'rgba(255,255,255,0.2)' }}>
+              <CheckCircle2 size={32} />
+            </div>
+            <h2 className="text-3xl font-black tracking-tighter mb-2">Secure Checkout</h2>
+            <p className="text-sm opacity-60 font-medium">Verify your identity to place your order.</p>
           </div>
-          <h2 className="text-3xl font-black tracking-tight mb-2">{authMode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-          <p className="text-sm opacity-60 font-medium mb-8">Sign in to securely complete your purchase.</p>
 
-          <form onSubmit={handleAuthSubmit} className="space-y-4">
-            {authMode === 'register' && (
-              <>
-                <div>
-                  <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Username</label>
-                  <input type="text" required value={authData.username} onChange={e => setAuthData({...authData, username: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="StorevilleUser" />
+          <div className="space-y-6">
+            {/* Google Social */}
+            <button 
+              onClick={handleGoogleAuth}
+              disabled={authLoading}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white border border-gray-200 shadow-sm font-bold text-gray-700 hover:bg-gray-50 transition-all font-sans"
+            >
+              <Chrome size={20} className="text-indigo-500" />
+              Continue with Google
+            </button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+              <div className="relative flex justify-center text-[10px] uppercase font-black tracking-[0.2em] opacity-40"><span className="bg-transparent px-4">OR USE PHONE</span></div>
+            </div>
+
+            {authError && <div className="text-xs font-bold text-red-500 text-center bg-red-50 p-3 rounded-xl border border-red-100">{authError}</div>}
+
+            {!otpSent ? (
+              <div className="flex flex-col gap-3">
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[12px] font-black opacity-40">+251</div>
+                  <input 
+                    type="tel" 
+                    value={authPhone} 
+                    onChange={e => setAuthPhone(e.target.value)}
+                    placeholder="911 234 567"
+                    className="w-full bg-black/5 border-none rounded-2xl py-4 pl-14 pr-4 outline-none font-bold text-base focus:ring-2 focus:ring-indigo-500/20"
+                    style={{ color: store.secondary_color }}
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">First Name</label>
-                    <input type="text" required value={authData.first_name} onChange={e => setAuthData({...authData, first_name: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="John" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Last Name</label>
-                    <input type="text" required value={authData.last_name} onChange={e => setAuthData({...authData, last_name: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="Doe" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Phone Number</label>
-                  <input type="tel" required value={authData.phone_number} onChange={e => setAuthData({...authData, phone_number: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="+251 911 234 567" />
-                </div>
-              </>
+                <button 
+                  onClick={handleSendOtp}
+                  disabled={authLoading || authPhone.length < 9}
+                  className="w-full py-4 rounded-2xl font-black tracking-widest uppercase text-xs shadow-xl transition-all disabled:opacity-50"
+                  style={{ backgroundColor: store.primary_color, color: '#fff' }}
+                >
+                  {authLoading ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Send Verification Code'}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
+                <input 
+                  type="text" 
+                  maxLength={6}
+                  value={authOtp}
+                  onChange={e => setAuthOtp(e.target.value)}
+                  placeholder="······"
+                  className="w-full bg-black/5 border-none rounded-2xl py-5 text-center font-black text-3xl tracking-[1rem] outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  style={{ color: store.secondary_color }}
+                />
+                <button 
+                  type="submit"
+                  disabled={authLoading || authOtp.length < 6}
+                  className="w-full py-4 rounded-2xl font-black tracking-widest uppercase text-xs shadow-xl transition-all disabled:opacity-50"
+                  style={{ backgroundColor: store.primary_color, color: '#fff' }}
+                >
+                  {authLoading ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Verify & Checkout'}
+                </button>
+                <button type="button" onClick={() => setOtpSent(false)} className="text-[10px] font-black tracking-widest uppercase opacity-40 hover:opacity-100 transition-opacity">Change phone number</button>
+              </form>
             )}
-            <div>
-              <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Email Address</label>
-              <input type="email" required value={authData.email} onChange={e => setAuthData({...authData, email: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="you@example.com" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2">Password</label>
-              <input type="password" required value={authData.password} onChange={e => setAuthData({...authData, password: e.target.value})} className="w-full bg-black/5 border-none rounded-xl p-4 outline-none font-bold focus:ring-2" style={{ color: store.secondary_color }} placeholder="••••••••" />
-            </div>
-            <button type="submit" disabled={authLoading} className="w-full py-4 mt-4 rounded-xl text-sm font-black tracking-widest uppercase shadow-xl hover:opacity-90 transition-opacity flex items-center justify-center" style={{ backgroundColor: store.primary_color, color: '#fff' }}>
-              {authLoading ? <Loader2 className="animate-spin" size={20} /> : authMode === 'login' ? 'Sign In & Checkout' : 'Create & Checkout'}
-            </button>
-          </form>
-          <div className="mt-8 text-center">
-            <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} className="text-sm font-bold opacity-70 hover:opacity-100 transition-opacity">
-              {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
           </div>
         </div>
       </div>
@@ -291,7 +333,7 @@ export default function RetailStorefront({ store }: { store: any }) {
                 size={22} 
                 className="cursor-pointer hover:scale-110 transition-transform hidden md:block"
                 onClick={() => {
-                  if (!token) return openAuthModal();
+                  if (!session) return openAuthModal();
                   setIsFavOpen(!isFavOpen);
                 }}
               />
@@ -307,7 +349,7 @@ export default function RetailStorefront({ store }: { store: any }) {
             <div className="relative">
               <button 
                 onClick={() => {
-                  if (isMounted && token) {
+                  if (isMounted && session) {
                     setIsUserMenuOpen(!isUserMenuOpen)
                   } else {
                     setIsCheckoutIntent(false)
@@ -316,10 +358,10 @@ export default function RetailStorefront({ store }: { store: any }) {
                 }} 
                 className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors cursor-pointer relative z-50"
               >
-                <User size={22} className={(isMounted && token) ? "text-indigo-600" : ""} />
+                <User size={22} className={(isMounted && session) ? "text-indigo-600" : ""} />
               </button>
               
-              {isMounted && token && (
+              {isMounted && session && (
                 <ProfileDropdown 
                   isOpen={isUserMenuOpen} 
                   onClose={() => setIsUserMenuOpen(false)} 
@@ -432,7 +474,7 @@ export default function RetailStorefront({ store }: { store: any }) {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!token) return openAuthModal();
+                          if (!session) return openAuthModal();
                           toggleFavorite(p, 'RETAIL');
                         }}
                         className="w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center hover:scale-110 transition-transform shadow-sm" 
@@ -510,7 +552,7 @@ export default function RetailStorefront({ store }: { store: any }) {
                 <span style={{ color: store.primary_color }}>Br {cartTotal}</span>
               </div>
               <button onClick={handleProceedToCheckout} className="w-full py-3.5 rounded-xl text-sm font-black tracking-widest uppercase shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2" style={{ backgroundColor: store.primary_color, color: store.background_color }}>
-                {(!isMounted || !token) && <Lock size={16} />} Secure Checkout
+                {(!isMounted || !session) && <Lock size={16} />} Secure Checkout
               </button>
             </div>
           )}

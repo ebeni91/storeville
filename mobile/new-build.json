@@ -1,0 +1,51 @@
+{
+  "id": "06c6eb7a-026b-4742-8190-6cbbbd4a0828",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+    "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+  },
+  "artifacts": {},
+  "fingerprint": {
+    "id": "019d7b9c-0552-7957-90c6-5c949eaae533",
+    "hash": "1780e5ec50f3ced05334d2816876e97fb8726b83"
+  },
+  "initiatingActor": {
+    "id": "33f549d1-8d58-4025-8550-0167538589e3",
+    "displayName": "et3on"
+  },
+  "logFiles": [
+    "https://job-logs.eascdn.net/production/06c6eb7a-026b-4742-8190-6cbbbd4a0828/1775895315966-33c459d7-5bf9-41e2-9e43-f4344eccbded.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260411%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260411T081850Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=6085a9803d684605d5eded0a90b8beaeefeac3c9addddcf50cd72b0ae43ea6f2b69d35088ba704d67bf6ab9e38651e3a83845e60ffdab06cf97966fee193104bbb669c87cbd7d757a465c8892247dce4eac5e175380af4321223916e58955a3d49b786e7f2ba8bc518cab81127bf51f64b6ff9e0043724fe0b982ede03e7025031b65be0b6ceb57b1a8f76155ed9b25f759d5753beac76621c60a0cddb7e2dd96d2be133c2c4b08670e02cd56f4a647a12aa40a451727093bd47973ac52b7939b2d989411142a64bd98b301d42469e7771097b37515dfd08597bea6d1e29581d62732b0c876ff69f6399eb6f726c786b4b30df239271c2b085b38fdcd2c718f1",
+    "https://job-logs.eascdn.net/production/06c6eb7a-026b-4742-8190-6cbbbd4a0828/1775895321182-5ff9609a-a0a1-4763-8d7c-bd3df6b53782.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260411%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260411T081850Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=75285cc2255bfc9cc7a41be3098b4badfb65147a4f58db040a34f825b9e224bd2ce8a2a908cdcf01b1dbedb88bcbf00e47018fe028f499c8f99fc5d58b6a2c540e4f7c4fa2b9fca131b1bc6a821df33baa175f350a9b21cca4f7abc7120aa47c9458edb8d40d8d853962e9773e0be1c87ca6f15c20d9a51143325f3a792e47c2b45af50473a5a4c57ac0937381315736dc4be7d904845c5f2cdc855fe65b10812df8fc506ffb5bc20d499b3cf4d998866dd44cca1b4926df7ebe4d6f715305fa0c8381ba776a812338628da8046770f7772a5721ed1eb910c4161d5b835c09347d0cbb0a28db9f071ce79a77d85a1b08dfd9c0839c5b1a3fc9240352d96cead3",
+    "https://job-logs.eascdn.net/production/06c6eb7a-026b-4742-8190-6cbbbd4a0828/1775895321413-951d805e-3386-4615-9400-b97cf73efb5f.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260411%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260411T081850Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=c04feef5b30c323e7f6b30bfd9fe79ea8f4138c1d6660c2e8b8e6b5b96ef357c7d4085600e4b5e4483913ce0a6459a2a08aa25fcdf04c71c9dd4854bffb170b69bacfcae3ff3195f8010124306dae6c452b09327a6f4e56594d3d11cf444375bf2c336a16f4f191cd48eb15f3d5a507e37843a535eae7f23726bf6fc0affab68ea65419fb1d384ebc7051ddbf55554e6903bdb8f45056c89b3b0cc1e68472b9f8d5406fb65fef262e2716fb6669ea1df8380135326bc7c9e1c5e501c5fdd38e2818631a20107a3721e9ec2f25041eb55b309985be1623ddcf5acbdf58ba2945e47add029dac8c0174ec746eaad8bf353cb6adfcb0b589b211a2679960409927e",
+    "https://job-logs.eascdn.net/production/06c6eb7a-026b-4742-8190-6cbbbd4a0828/1775895321627-473f180d-1c5e-4db3-a441-78c2fefa0c9c.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260411%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260411T081850Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=4101b9b621b3fc4eb4384378c101560065776d435a4b7cf1ac2a1f015b83cef37e8b42b1c0d8daa24b3e3d7b38f6fb9dd2ee6b91323563ef3d814c137a4e0facd46a67e5dda3be3534d86dbd593514a9bb90ca81f931115d8e3041b4cc3a8bee62c56cf49293f6f9f81e29d6948c14bbb186f5979543c153b32d4923ba16f49522fb9fb7573ba0730732467486ae24d77bb77c1b89f94862d33f825d7571f921df0b6b5e40dd4a885c68cd8e57d4537ef6dc432e5948941ac558f75550edb69ad88367a3491ddb0f787c339f0f3e2f9f45067ab4df7b8d88799cd49692ef494e68d95007fec0c5ed63da9fd84d92a62104de5392f87dc51c8abe851fb535af57"
+  ],
+  "project": {
+    "id": "adc591c4-c59f-4a72-aa61-1f5049c54604",
+    "name": "mobile",
+    "slug": "mobile",
+    "ownerAccount": {
+      "id": "fc171f9b-2f8b-4345-b653-5152e603a23b",
+      "name": "et3on"
+    }
+  },
+  "distribution": "INTERNAL",
+  "buildProfile": "development",
+  "sdkVersion": "55.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "1",
+  "gitCommitHash": "c2ac07e99566d45d985d1ebc60c5ed917efc9c30",
+  "gitCommitMessage": "StoreVille: V1.018\nMobile: V1.032\n-Migrated from legacy sign in/sign up to better-auth authentication",
+  "priority": "NORMAL",
+  "createdAt": "2026-04-11T08:15:15.755Z",
+  "updatedAt": "2026-04-11T08:18:46.466Z",
+  "completedAt": "2026-04-11T08:18:41.193Z",
+  "expirationDate": "2026-04-25T08:15:15.789Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 105,
+    "buildQueueTime": 63807,
+    "buildDuration": 140911
+  }
+}

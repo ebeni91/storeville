@@ -11,6 +11,11 @@ import { useAuthStore } from '../../store/authStore';
 import * as Linking from 'expo-linking';
 import { CustomAlert } from '../../components/ui/CustomAlert';
 import { useAlert } from '../../lib/useAlert';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+GoogleSignin.configure({
+  webClientId: '1094916744734-hdl3nhf5a65poheorak33fpa87qpgrhe.apps.googleusercontent.com',
+});
 
 const { width, height } = Dimensions.get('window');
 
@@ -83,15 +88,29 @@ export function AuthScreen({ navigation }: Props) {
 
   const handleGoogle = async () => {
     try {
-      // 🌟 THE FIX: Use expo-linking to dynamically create the correct deep link.
-      // In Expo Go, this creates "exp://<ip>:8081". In production, it creates "storeville://".
-      // This prevents the browser from getting stuck because it doesn't know how to handle the URL.
+      // 1. Ensure Play Services
+      await GoogleSignin.hasPlayServices();
+      
+      // 2. Sign out first to clear cached account — forces picker to always appear
+      await GoogleSignin.signOut().catch(() => {}); // ignore if not signed in
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken || (userInfo as any).idToken;
+      
+      if (!idToken) throw new Error("Could not retrieve Google ID Token");
+
+      // 3. Send securely back to better-auth backend
+      // better-auth expects idToken as an object: { token: string }
       const { error } = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: Linking.createURL('/'),
+        idToken: { token: idToken },
       });
+
       if (error) throw new Error(error.message);
+      
     } catch (e: any) {
+      if (e.code === 'SIGN_IN_CANCELLED' || e.message?.includes('cancel')) {
+        return; // silently ignore if user swiped away the modal
+      }
       showAlert({ title: 'Sign-In Failed', message: e.message || 'Google sign-in failed. Try again.', variant: 'error', buttons: [{ text: 'OK' }] });
     }
   };

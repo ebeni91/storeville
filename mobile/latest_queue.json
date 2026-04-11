@@ -1,0 +1,42 @@
+[
+  {
+    "id": "763ef5d5-9ce0-4677-a15a-301550d6d7a5",
+    "status": "IN_PROGRESS",
+    "platform": "ANDROID",
+    "artifacts": {},
+    "fingerprint": {
+      "id": "019d7bb4-32cf-7495-b8d7-5505627887b2",
+      "hash": "f97a1d5353126799d48a97bb60c85e3d5dd7a9bc"
+    },
+    "initiatingActor": {
+      "id": "33f549d1-8d58-4025-8550-0167538589e3",
+      "displayName": "et3on"
+    },
+    "logFiles": [
+      "https://job-logs.eascdn.net/production/763ef5d5-9ce0-4677-a15a-301550d6d7a5/1775896900477-d58c388f-0e62-4d50-88f1-4c2cea3dc8f3.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260411%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260411T084224Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=5c89cddd6b68035d2f0ec477c18226cab8a20920407636de1854455866e3af1140da3598bd5aa36a8cd32c5d7cf3aba623303c98c5762ca90d78f0a87c9094d13c98ded70e5a258e719a9405d6009bd36f0b227548b78e2a6c554a5c6b0bf02dc64c52795ba134ab9567dab587fe822fd5aff37247b384a231b2c6625e8d1a6ebe09262060fee1c98498e3c1620f7e48641302b35ee06d2fa6f0d6418bdafe4817a3f1546796f2897402d4659c99aee63a16653aa7eb7afa32a3cf1d934dbe16dec29feb50864ea7d607bde8d5173c1032251194ef290c689b5d51630ea921b2511be8b8fcdb5a17da6e6b8a752e53cc4c795521814db74ec105fd6197494123",
+      "https://job-logs.eascdn.net/production/763ef5d5-9ce0-4677-a15a-301550d6d7a5/1775896908541-f7f546a7-f50d-4bd2-97c8-f4693c4e3550.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260411%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260411T084224Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=dcdbd6d4e8046b9bfad0e57160924f597a6bbb993ce3e20761fc8d180786e1b9908180012a0517cc6fe0517b5d13c8ece81acfa34f936403febb6d80ecdc72e3c0c1ad3dd1c430cf26b38c6661bae7f1b9e3054193e85691de3f73098a3ca34a5586bc4a16710aa3b6d447e9c254c2031503b1e4d5436c61c4c8678407ce8fa9977dcb8fe2eca3c3dd98d5aa57ed1515eda76fdda321914b10006460db7ab61d60eaa3cb2bf9775c133de7579fdbc52e61303914aa5e582e48b37a5de746d913228656bb194c793e72dc9ca0ee837f062530bebc17d40e48e2a734e4acdecdac15677cce5ff93b4831553eb2cf94ea7c5279a7245cef6af575e7fc8982a5d5d4",
+      "https://job-logs.eascdn.net/production/763ef5d5-9ce0-4677-a15a-301550d6d7a5/1775896908788-6ccc1820-971b-4ee5-9e25-f3814e625090.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260411%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260411T084224Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=1cfd96f867376870dcbe12029a9e9914af568d70372bddd8e174e715da8b9bde4e2ec6ee13a33d7d79e89ba8eb69d31fa0b18805cbf9a54fa705f8eb25fdc981994300b6bb0bd78885594ddfd7ebf0b14de860e4f9654bc54a469c8225920370d595cefa9bd2385d86a6a5742b46ce3775872fb537a5328e82de973455ae54628c28a8a83bf138b191ad438f634b9bc05b6716c8a254df0f27a68e83e0c7f769171e05957d76b57876ff9d1ef83a6816f8fbd4fc5019690cbfe1352a21d0ea9ad68a0b665edbc06678a6a5a763842ccc7328a1ccc4980aa975f339a941470625d3e2f9146d869a7de5ea9d40a046589023b867f3ea1ec8beee425f5b3dcf6c9a"
+    ],
+    "project": {
+      "id": "adc591c4-c59f-4a72-aa61-1f5049c54604",
+      "name": "mobile",
+      "slug": "mobile",
+      "ownerAccount": {
+        "id": "fc171f9b-2f8b-4345-b653-5152e603a23b",
+        "name": "et3on"
+      }
+    },
+    "distribution": "INTERNAL",
+    "buildProfile": "development",
+    "sdkVersion": "55.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "1",
+    "gitCommitHash": "c2ac07e99566d45d985d1ebc60c5ed917efc9c30",
+    "gitCommitMessage": "StoreVille: V1.018\nMobile: V1.032\n-Migrated from legacy sign in/sign up to better-auth authentication",
+    "priority": "NORMAL",
+    "createdAt": "2026-04-11T08:41:40.278Z",
+    "updatedAt": "2026-04-11T08:41:52.359Z",
+    "expirationDate": "2026-04-25T08:41:40.296Z",
+    "isForIosSimulator": false
+  }
+]

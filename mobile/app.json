@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.storeville.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,14 +23,26 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.storeville.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store",
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1094916744734-hdl3nhf5a65poheorak33fpa87qpgrhe"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "adc591c4-c59f-4a72-aa61-1f5049c54604"
+      }
+    }
   }
 }

@@ -47,7 +47,10 @@ export function SellerFinancialsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.topBar, { 
+        backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: isDark ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <ChevronLeft color={colors.text} size={24} strokeWidth={2} />
         </TouchableOpacity>
@@ -66,11 +69,17 @@ export function SellerFinancialsScreen({ navigation }: Props) {
 
         {/* Payment methods */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Payment Methods</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.card, { 
+          backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: isDark ? '#3b3f5c' : colors.border 
+        }]}>
           {METHODS.map((m, idx) => (
             <View
               key={m.id}
-              style={[styles.methodRow, idx < METHODS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
+              style={[
+                styles.methodRow, 
+                idx < METHODS.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? '#3b3f5c' : colors.border }
+              ]}
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? m.bg : m.bgLight }]}>
                 <m.icon color={m.color} size={18} strokeWidth={2} />
@@ -97,7 +106,10 @@ export function SellerFinancialsScreen({ navigation }: Props) {
         </View>
 
         {/* Integration notice */}
-        <View style={[styles.noticeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.noticeCard, { 
+          backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: isDark ? '#3b3f5c' : colors.border 
+        }]}>
           <View style={[styles.iconBox, { backgroundColor: colors.accentFaint }]}>
             <Plus color={colors.accent} size={18} strokeWidth={2} />
           </View>

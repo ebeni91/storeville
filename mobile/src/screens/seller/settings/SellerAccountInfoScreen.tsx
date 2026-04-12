@@ -69,7 +69,10 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.topBar, { 
+        backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: isDark ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <ChevronLeft color={colors.text} size={24} strokeWidth={2} />
         </TouchableOpacity>
@@ -81,14 +84,20 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
 
         {/* Fields */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Personal Details</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.card, { 
+          backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: isDark ? '#3b3f5c' : colors.border 
+        }]}>
           {[
             { key: 'first_name', label: 'First Name',    icon: User,  placeholder: 'Alex' },
             { key: 'last_name',  label: 'Last Name',     icon: User,  placeholder: 'Johnson' },
             { key: 'email',      label: 'Email Address', icon: Mail,  placeholder: 'you@store.com', editable: false },
             { key: 'phone_number', label: 'Phone',       icon: Phone, placeholder: '+251 9xx xxx xxx', kbType: 'phone-pad' },
           ].map((f, idx, arr) => (
-            <View key={f.key} style={[styles.fieldWrap, { borderBottomColor: colors.border, borderBottomWidth: idx < arr.length - 1 ? 1 : 0 }]}>
+            <View key={f.key} style={[styles.fieldWrap, { 
+              borderBottomColor: isDark ? '#3b3f5c' : colors.border, 
+              borderBottomWidth: idx < arr.length - 1 ? 1 : 0 
+            }]}>
               <View style={[styles.fieldIconBox, { backgroundColor: colors.accentFaint }]}>
                 <f.icon color={colors.accent} size={15} strokeWidth={2} />
               </View>
@@ -119,13 +128,16 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
 
         {/* Danger zone */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 16 }]}>Danger Zone</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.dangerBorder }]}>
+        <View style={[styles.card, { 
+          backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: isDark ? '#3b3f5c' : colors.dangerBorder 
+        }]}>
           {showDeleteConfirm ? (
             <View style={{ padding: 4 }}>
               <Text style={[styles.deleteTitle, { color: colors.danger }]}>Are you absolutely sure?</Text>
               <Text style={[styles.deleteSub, { color: colors.textMuted }]}>This action is permanent and cannot be undone. All store data will be erased.</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                <TouchableOpacity onPress={() => setShowDeleteConfirm(false)} style={[styles.dangerCancelBtn, { borderColor: colors.border, backgroundColor: colors.surfaceAlt }]}>
+                <TouchableOpacity onPress={() => setShowDeleteConfirm(false)} style={[styles.dangerCancelBtn, { borderColor: isDark ? '#3b3f5c' : colors.border, backgroundColor: isDark ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt }]}>
                   <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={deleteAccount} disabled={deleting} style={[styles.dangerConfirmBtn, { backgroundColor: colors.danger }]}>
@@ -137,7 +149,7 @@ export function SellerAccountInfoScreen({ navigation }: Props) {
           ) : (
             <TouchableOpacity onPress={() => setShowDeleteConfirm(true)} activeOpacity={0.7}
               style={[styles.menuRow, { borderBottomWidth: 0 }]}>
-              <View style={[styles.menuIconBox, { backgroundColor: colors.dangerFaint }]}>
+              <View style={[styles.menuIconBox, { backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : colors.dangerFaint }]}>
                 <Trash2 color={colors.danger} size={17} strokeWidth={2} />
               </View>
               <Text style={[styles.menuLabel, { color: colors.danger }]}>Delete Account</Text>

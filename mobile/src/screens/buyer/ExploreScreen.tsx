@@ -34,6 +34,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   const [activeGateway, setActiveGateway] = useState<Gateway>('RETAIL');
 
   const drawerAnim = useRef(new Animated.Value(0)).current;
+  const webviewRef = useRef<WebView>(null);
 
   const isFood = activeGateway === 'FOOD';
 
@@ -58,7 +59,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
         setLocation(await Promise.race([locationPromise, timeoutPromise]) as Location.LocationObject);
       } catch {
         setLocation({
-          coords: { latitude: 9.03, longitude: 38.74, altitude: null, accuracy: null, altitudeAccuracy: null, heading: null, speed: null },
+          coords: { latitude: 9.0192, longitude: 38.7525, altitude: null, accuracy: null, altitudeAccuracy: null, heading: null, speed: null },
           timestamp: Date.now()
         } as Location.LocationObject);
       }
@@ -100,8 +101,8 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   });
 
   // ── Map HTML ────────────────────────────────────
-  const lat = location?.coords.latitude || 9.03;
-  const lng = location?.coords.longitude || 38.74;
+  const lat = location?.coords.latitude || 9.0192;
+  const lng = location?.coords.longitude || 38.7525;
   const storesJson = JSON.stringify(stores || []);
 
   const leafletHTML = [
@@ -118,11 +119,11 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     '.store-pin{animation:pinPop 0.35s cubic-bezier(.175,.885,.32,1.275) forwards;}',
     '.pin-ripple{animation:ripple 1.8s ease-out infinite;}',
     '</style></head><body><div id="map"></div><script>',
-    'var map=L.map("map",{zoomControl:false,attributionControl:false}).setView([' + lat + ',' + lng + '],15);',
-    'L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{maxZoom:20}).addTo(map);',
+    'window.map=L.map("map",{zoomControl:false,attributionControl:false}).setView([' + lat + ',' + lng + '],15);',
+    'L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{maxZoom:20}).addTo(window.map);',
     // User dot
     'var ud=\'<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(99,102,241,0.35);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#6366f1;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(99,102,241,0.5);"></div></div>\';',
-    'L.marker([' + lat + ',' + lng + '],{icon:L.divIcon({html:ud,className:"",iconSize:[22,22],iconAnchor:[11,11]})}).addTo(map);',
+    'window.userMarker = L.marker([' + lat + ',' + lng + '],{icon:L.divIcon({html:ud,className:"",iconSize:[22,22],iconAnchor:[11,11]})}).addTo(window.map);',
     // Store pins
     'var stores=' + storesJson + ';',
     'stores.forEach(function(s){',
@@ -140,7 +141,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     '    +\'</div>\';',
     '  var ic=L.divIcon({className:"",html:h,iconSize:[46,54],iconAnchor:[23,54]});',
     '  L.marker([parseFloat(s.latitude),parseFloat(s.longitude)],{icon:ic})',
-    '    .addTo(map)',
+    '    .addTo(window.map)',
     '    .on("click",function(){window.ReactNativeWebView.postMessage(JSON.stringify({type:"STORE_CLICK",storeId:s.id}));});',
     '});',
     '</script></body></html>'
@@ -171,6 +172,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
         <View style={{ flex: 1 }}>
           {/* ── Full-screen Map ───────────────────── */}
           <WebView
+            ref={webviewRef}
             source={{ html: leafletHTML }}
             style={{ flex: 1 }}
             scrollEnabled={false}
@@ -188,7 +190,11 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
 
           {/* ── Floating Search Bar ───────────────── */}
           <View style={styles.searchContainer}>
-            <View style={[styles.searchBar, { backgroundColor: colors.surface }]}>
+            <View style={[styles.searchBar, { 
+              backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : '#ffffff',
+              borderWidth: mode === 'dark' ? 1 : 0,
+              borderColor: mode === 'dark' ? '#3b3f5c' : 'transparent'
+            }]}>
               <Search color={colors.accent} size={20} strokeWidth={2.5} />
               <TextInput
                 placeholder={isFood ? 'Search cafes, restaurants…' : 'Search stores, products…'}
@@ -213,16 +219,37 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
                     onPress={() => setActiveChip(chip)}
                     style={[
                       styles.chip,
-                      { backgroundColor: active ? colors.text : colors.surface, borderColor: active ? colors.text : colors.border },
+                      { backgroundColor: active ? colors.text : (mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface), borderColor: active ? colors.text : (mode === 'dark' ? '#3b3f5c' : colors.border) },
                     ]}
                     activeOpacity={0.75}
                   >
-                    <Text style={[styles.chipText, { color: active ? '#ffffff' : colors.textSub }]}>{chip}</Text>
+                    <Text style={[styles.chipText, { color: active ? colors.bg : colors.textSub }]}>{chip}</Text>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
           </View>
+
+          {/* ── Locate Me Button ──────────────────── */}
+          <TouchableOpacity
+            style={styles.locateButton}
+            activeOpacity={0.8}
+            onPress={async () => {
+              try {
+                const currentLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+                setLocation(currentLoc);
+                if (webviewRef.current) {
+                  webviewRef.current.injectJavaScript(`
+                    if (window.map) window.map.flyTo([${currentLoc.coords.latitude}, ${currentLoc.coords.longitude}], 15, { animate: true, duration: 1.5 });
+                    if (window.userMarker) window.userMarker.setLatLng([${currentLoc.coords.latitude}, ${currentLoc.coords.longitude}]);
+                    true;
+                  `);
+                }
+              } catch (e) { /* ignore */ }
+            }}
+          >
+            <Navigation color="#6366f1" size={24} strokeWidth={2.5} />
+          </TouchableOpacity>
 
           {/* ── Gateway Switcher Pills ────────────── */}
           <View style={styles.gatewaySwitcher}>
@@ -233,7 +260,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
                 styles.gatewayPill,
                 activeGateway === 'RETAIL'
                   ? styles.gatewayPillRetailActive
-                  : [styles.gatewayPillInactive, { backgroundColor: colors.surface }],
+                  : [styles.gatewayPillInactive, { backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : '#ffffff', borderWidth: mode === 'dark' ? 1 : 0, borderColor: mode === 'dark' ? '#3b3f5c' : 'transparent' }],
               ]}
             >
               <ShoppingBag size={14} color={activeGateway === 'RETAIL' ? '#ffffff' : colors.textSub} strokeWidth={2.5} style={{ marginRight: 6 }} />
@@ -245,7 +272,8 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
               activeOpacity={0.85}
               style={[
                 styles.gatewayPill,
-                activeGateway === 'FOOD' ? styles.gatewayPillFoodActive : [styles.gatewayPillInactive, { backgroundColor: colors.surface }],
+                activeGateway === 'FOOD' ? styles.gatewayPillFoodActive 
+                  : [styles.gatewayPillInactive, { backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : '#ffffff', borderWidth: mode === 'dark' ? 1 : 0, borderColor: mode === 'dark' ? '#3b3f5c' : 'transparent' }],
               ]}
             >
               <Coffee size={14} color={activeGateway === 'FOOD' ? '#ffffff' : colors.textSub} strokeWidth={2.5} style={{ marginRight: 6 }} />
@@ -362,6 +390,19 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: '#ffffff',
+  },
+
+  // ── Locate Me Button
+  locateButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: TAB_BAR_HEIGHT + 84, // Above the gateway pills
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: '#ffffff',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15, shadowRadius: 12, elevation: 8,
+    zIndex: 20,
   },
 
   // ── Gateway Switcher

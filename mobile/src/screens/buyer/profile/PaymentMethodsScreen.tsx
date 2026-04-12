@@ -22,7 +22,10 @@ export function PaymentMethodsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { 
+        backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surfaceAlt }]}>
           <ArrowLeft color={colors.text} size={22} strokeWidth={2} />
         </TouchableOpacity>
@@ -32,9 +35,12 @@ export function PaymentMethodsScreen({ navigation }: Props) {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Saved Cards</Text>
-        <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.section, { 
+          backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+        }]}>
           {mockCards.map((card, i) => (
-            <View key={card.id} style={[styles.cardRow, i > 0 && { borderTopWidth: 1, borderTopColor: colors.border }]}>
+            <View key={card.id} style={[styles.cardRow, i > 0 && { borderTopWidth: 1, borderTopColor: mode === 'dark' ? '#3b3f5c' : colors.border }]}>
               <View style={styles.cardVisual}>
                 <Text style={styles.cardType}>{card.type.toUpperCase()}</Text>
                 <Text style={styles.cardNumber}>•••• •••• •••• {card.last4}</Text>
@@ -46,16 +52,19 @@ export function PaymentMethodsScreen({ navigation }: Props) {
               {card.primary && <View style={styles.primaryBadge}><Text style={styles.primaryText}>Primary</Text></View>}
             </View>
           ))}
-          <TouchableOpacity style={[styles.addBtn, { borderTopColor: colors.border }]}>
+          <TouchableOpacity style={[styles.addBtn, { borderTopColor: mode === 'dark' ? '#3b3f5c' : colors.border }]}>
             <Plus color={colors.accent} size={20} strokeWidth={2.5} />
             <Text style={[styles.addText, { color: colors.accent }]}>Add New Card</Text>
           </TouchableOpacity>
         </View>
 
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Mobile Wallets & Banks</Text>
-        <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.section, { 
+          backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+        }]}>
           {wallets.map((m, i) => (
-            <TouchableOpacity key={m.label} style={[styles.walletRow, i < wallets.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+            <TouchableOpacity key={m.label} style={[styles.walletRow, i < wallets.length - 1 && { borderBottomWidth: 1, borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border }]}>
               <View style={[styles.walletIcon, { backgroundColor: m.bg }]}><m.icon color={m.color} size={18} strokeWidth={2} /></View>
               <Text style={[styles.walletLabel, { color: colors.text }]}>{m.label}</Text>
               <View style={[styles.comingSoon, { backgroundColor: colors.surfaceAlt }]}><Text style={[styles.comingSoonText, { color: colors.textMuted }]}>Coming Soon</Text></View>

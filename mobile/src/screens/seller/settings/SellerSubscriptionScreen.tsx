@@ -53,7 +53,10 @@ export function SellerSubscriptionScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.topBar, { 
+        backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: isDark ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <ChevronLeft color={colors.text} size={24} strokeWidth={2} />
         </TouchableOpacity>
@@ -74,8 +77,8 @@ export function SellerSubscriptionScreen({ navigation }: Props) {
             style={[
               styles.planCard,
               {
-                backgroundColor: plan.current ? plan.color : colors.surface,
-                borderColor: plan.current ? plan.color : colors.border,
+                backgroundColor: plan.current ? plan.color : (isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface),
+                borderColor: plan.current ? plan.color : (isDark ? '#3b3f5c' : colors.border),
                 borderWidth: plan.current ? 0 : 1,
               },
             ]}

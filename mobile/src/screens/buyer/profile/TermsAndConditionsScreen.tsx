@@ -22,7 +22,10 @@ export function TermsAndConditionsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { 
+        backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surfaceAlt }]}>
           <ArrowLeft color={colors.text} size={22} strokeWidth={2} />
         </TouchableOpacity>
@@ -31,7 +34,9 @@ export function TermsAndConditionsScreen({ navigation }: Props) {
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
         <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>Last updated: April 2026</Text>
-        <View style={[styles.intro, { backgroundColor: colors.accentFaint }]}>
+        <View style={[styles.intro, { 
+          backgroundColor: mode === 'dark' ? 'rgba(99,102,241,0.12)' : colors.accentFaint 
+        }]}>
           <Text style={[styles.introText, { color: colors.accentText }]}>Please read these Terms and Conditions carefully before using the StoreVille platform.</Text>
         </View>
         {sections.map((s, i) => (

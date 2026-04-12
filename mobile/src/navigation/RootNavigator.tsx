@@ -8,7 +8,6 @@ import { useAuthStore } from '../store/authStore';
 // Screens
 import { AuthScreen } from '../screens/auth/AuthScreen';
 import { SplashScreen } from '../screens/SplashScreen';
-import { GlobalLoadingOverlay } from '../components/ui/GlobalLoadingOverlay';
 
 // Navigators
 import { BuyerTabNavigator } from './BuyerTabNavigator';
@@ -70,9 +69,6 @@ export function RootNavigator() {
 
       {/* Splash overlay — removed when both animation + session are ready */}
       {!splashDone && <SplashScreen onFinish={handleSplashFinish} />}
-      
-      {/* Auth transition overlay (shows on OAuth return or initial deep link loading) */}
-      {splashDone && sessionLoading && <GlobalLoadingOverlay />}
     </View>
   );
 }

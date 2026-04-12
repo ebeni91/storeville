@@ -51,8 +51,11 @@ export function OrdersScreen() {
   const renderOrder = ({ item }: { item: any }) => {
     const s = STATUS_MAP[item.status] || { color: colors.textMuted, bg: colors.surfaceAlt, icon: Clock, label: item.status };
     const StatusIcon = s.icon;
+    // Explore-style soft dark card
+    const cardBg = mode === 'dark' ? 'rgba(28,30,43,0.95)' : colors.surface;
+    const cardBorder = mode === 'dark' ? '#3b3f5c' : colors.border;
     return (
-      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
         <View style={styles.cardTop}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.storeName, { color: colors.text }]}>{item.store_name || 'Store Order'}</Text>
@@ -77,7 +80,13 @@ export function OrdersScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[
+        styles.header,
+        {
+          backgroundColor: mode === 'dark' ? 'rgba(28,30,43,0.98)' : colors.surface,
+          borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border,
+        }
+      ]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>My Orders</Text>
         <Text style={[styles.headerSub, { color: colors.textMuted }]}>
           {selectedGateway === 'FOOD' ? 'Food & Coffee Orders' : 'Retail Orders'}
@@ -128,3 +137,4 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 18, fontWeight: '800', marginBottom: 6 },
   emptySub: { fontSize: 14, fontWeight: '500', textAlign: 'center' },
 });
+

@@ -2,164 +2,191 @@ import React, { useEffect, useRef } from 'react';
 import {
   View, Text, Animated, Dimensions, StyleSheet, StatusBar, Easing
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../store/themeStore';
 
 const { width, height } = Dimensions.get('window');
 
-interface Props {
-  onFinish: () => void;
-}
+const ACCENT = '#34d399'; // emerald-mint — matches AuthScreen
+
+interface Props { onFinish: () => void; }
 
 export function SplashScreen({ onFinish }: Props) {
   const { colors, mode } = useThemeStore();
   const isDark = mode === 'dark';
 
-  // Animation values
-  const storeOpacity    = useRef(new Animated.Value(0)).current;
-  const villeOpacity    = useRef(new Animated.Value(0)).current;
-  const rulerScaleX     = useRef(new Animated.Value(0)).current;
-  const taglineOpacity  = useRef(new Animated.Value(0)).current;
-  const dotOpacity1     = useRef(new Animated.Value(0)).current;
-  const dotOpacity2     = useRef(new Animated.Value(0)).current;
-  const dotOpacity3     = useRef(new Animated.Value(0)).current;
-  const containerOpacity = useRef(new Animated.Value(1)).current;
-  const wordmarkY       = useRef(new Animated.Value(12)).current;
+  // ── Animation values ─────────────────────────────────────────
+  const contentOpacity  = useRef(new Animated.Value(0)).current;
+  const contentY        = useRef(new Animated.Value(22)).current;
+  const shimmerX        = useRef(new Animated.Value(-width * 1.2)).current;
+  const exitOpacity     = useRef(new Animated.Value(1)).current;
+  const exitScale       = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const seq = Animated.sequence([
+    Animated.sequence([
 
-      // 1. "Store" word slides + fades in
+      // 1. Content rises + fades in — clean, elegant entrance
       Animated.parallel([
-        Animated.timing(storeOpacity, {
-          toValue: 1, duration: 500,
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: 680,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.timing(wordmarkY, {
-          toValue: 0, duration: 500,
+        Animated.timing(contentY, {
+          toValue: 0,
+          duration: 680,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
       ]),
 
-      // 2. Brief pause then "Ville" appears
-      Animated.delay(80),
-      Animated.timing(villeOpacity, {
-        toValue: 1, duration: 380,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
+      // 2. Hold — let the user read the brand
+      Animated.delay(600),
 
-      // 3. Ruler expands left→right
-      // Animated.delay(60),
-      // Animated.spring(rulerScaleX, {
-      //   toValue: 1, tension: 100, friction: 12,
-      //   useNativeDriver: true,
-      // }),
-
-      // 4. Tagline fades in
-      Animated.delay(70),
-      Animated.timing(taglineOpacity, {
-        toValue: 1, duration: 420,
+      // 3. Shimmer sweep — a bright light glides through the wordmark
+      Animated.timing(shimmerX, {
+        toValue: width * 1.4,
+        duration: 820,
         easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
       }),
 
-      // 5. Loading dots appear one by one
-      // Animated.delay(300),
-      // Animated.stagger(160, [
-      //   Animated.timing(dotOpacity1, { toValue: 1, duration: 220, useNativeDriver: true }),
-      //   Animated.timing(dotOpacity2, { toValue: 1, duration: 220, useNativeDriver: true }),
-      //   Animated.timing(dotOpacity3, { toValue: 1, duration: 220, useNativeDriver: true }),
-      // ]),
+      // 4. Brief pause after shimmer settles
+      Animated.delay(160),
 
-      // 6. Hold at peak
-      Animated.delay(600),
+      // 5. Graceful exit — fade + very gentle scale-up (feels like zooming into auth)
+      Animated.parallel([
+        Animated.timing(exitOpacity, {
+          toValue: 0,
+          duration: 520,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(exitScale, {
+          toValue: 1.06,
+          duration: 520,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
 
-      // 7. Fade out everything
-      Animated.timing(containerOpacity, {
-        toValue: 0, duration: 380,
-        easing: Easing.in(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]);
-
-    seq.start(() => onFinish());
+    ]).start(() => onFinish());
   }, []);
 
+  const bg = isDark ? '#0d0e14' : '#f7f7fb';
+
   return (
-    <Animated.View style={[styles.root, { backgroundColor: colors.bg, opacity: containerOpacity }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
+    <Animated.View
+      style={[
+        styles.root,
+        {
+          backgroundColor: bg,
+          opacity: exitOpacity,
+          transform: [{ scale: exitScale }],
+        },
+      ]}
+    >
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {/* Ambient glow orbs */}
-      <View style={styles.glowWrapper} pointerEvents="none">
-        <View style={[styles.glowOrb, {
-          width: width * 1.1, height: width * 1.1,
-          borderRadius: width * 0.55,
-          top: -width * 0.3, left: -width * 0.3,
-          backgroundColor: '#6366f1',
-          opacity: isDark ? 0.08 : 0.055,
-        }]} />
-        <View style={[styles.glowOrb, {
-          width: width * 0.75, height: width * 0.75,
-          borderRadius: width * 0.375,
-          bottom: height * 0.12, right: -width * 0.2,
-          backgroundColor: '#f59e0b',
-          opacity: isDark ? 0.065 : 0.045,
-        }]} />
-      </View>
+      {/* ── Subtle vignette / depth gradient ─────────────────── */}
+      <LinearGradient
+        colors={
+          isDark
+            ? ['rgba(99,102,241,0.06)', 'transparent', 'rgba(52,211,153,0.04)']
+            : ['rgba(99,102,241,0.04)', 'transparent', 'rgba(52,211,153,0.03)']
+        }
+        locations={[0, 0.5, 1]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
 
-      {/* ── Wordmark ──────────────────────────────────────── */}
-      <View style={styles.center}>
+      {/* ── Centre brand block ───────────────────────────────── */}
+      <Animated.View
+        style={[
+          styles.center,
+          {
+            opacity: contentOpacity,
+            transform: [{ translateY: contentY }],
+          },
+        ]}
+      >
+        {/* Hairline accent above wordmark */}
+        {/* <View style={styles.hairlineWrap}>
+          <View style={[styles.hairline, { backgroundColor: ACCENT }]} />
+        </View> */}
 
-        {/* Thin rule above — expands horizontally */}
-        <View style={styles.rulerContainer}>
-          <Animated.View style={[
-            styles.ruler,
-            { backgroundColor: '#6366f1', transform: [{ scaleX: rulerScaleX }] }
-          ]} />
+        {/* Wordmark — shimmer overlay clips to this area */}
+        <View style={styles.wordmarkWrap}>
+          {/* The text itself */}
+          <View style={styles.wordmarkRow}>
+            <Text
+              style={[
+                styles.wordStore,
+                { color: isDark ? 'rgba(255,255,255,0.38)' : 'rgba(15,15,35,0.35)' },
+              ]}
+            >
+              Store
+            </Text>
+            <Text
+              style={[
+                styles.wordVille,
+                { color: isDark ? '#ffffff' : '#0f0f23' },
+              ]}
+            >
+              Ville
+            </Text>
+            <Text style={[styles.trademark, { color: ACCENT }]}>™</Text>
+          </View>
+
+          {/* ── Shimmer sweep overlay — clipped to wordmark bounds ── */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { transform: [{ translateX: shimmerX }], overflow: 'hidden' },
+            ]}
+          >
+            <LinearGradient
+              colors={[
+                'transparent',
+                isDark ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.7)',
+                isDark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.9)',
+                isDark ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.7)',
+                'transparent',
+              ]}
+              locations={[0, 0.3, 0.5, 0.7, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.shimmerGradient]}
+            />
+          </Animated.View>
         </View>
-
-        {/* "StoreVille" using the same mixed-weight typography */}
-        <Animated.Text style={[
-          styles.wordmark,
-          { transform: [{ translateY: wordmarkY }] },
-        ]}>
-          <Animated.Text style={[
-            styles.wordmarkLight,
-            { opacity: storeOpacity, color: isDark ? 'rgba(255,255,255,0.52)' : colors.textSub }
-          ]}>
-            Store
-          </Animated.Text>
-          <Animated.Text style={[
-            styles.wordmarkBold,
-            { opacity: villeOpacity, color: colors.text }
-          ]}>
-            Ville
-          </Animated.Text>
-        </Animated.Text>
 
         {/* Tagline */}
-        <Animated.Text style={[
-          styles.tagline,
-          { opacity: taglineOpacity, color: colors.textMuted }
-        ]}>
+        <Text
+          style={[
+            styles.tagline,
+            { color: isDark ? 'rgba(255,255,255,0.26)' : 'rgba(15,15,35,0.3)' },
+          ]}
+        >
           The Digital Mall of Ethiopia
-        </Animated.Text>
+        </Text>
 
-        {/* Loading dots */}
-        <View style={styles.dotsRow}>
-          {[dotOpacity1, dotOpacity2, dotOpacity3].map((dot, i) => (
-            <Animated.View
-              key={i}
-              style={[styles.dot, { backgroundColor: colors.accent, opacity: dot }]}
-            />
-          ))}
-        </View>
-      </View>
+        {/* Mint accent dot */}
+        {/* <View style={[styles.mintDot, { backgroundColor: ACCENT }]} /> */}
+      </Animated.View>
 
-      {/* Footer */}
-      <Animated.Text style={[styles.footer, { opacity: taglineOpacity, color: colors.textMuted }]}>
+      {/* ── Bottom trademark ─────────────────────────────────── */}
+      <Animated.Text
+        style={[
+          styles.footer,
+          {
+            opacity: contentOpacity,
+            color: isDark ? 'rgba(255,255,255,0.13)' : 'rgba(15,15,35,0.18)',
+          },
+        ]}
+      >
         © 2026 StoreVille Technology
       </Animated.Text>
     </Animated.View>
@@ -173,66 +200,73 @@ const styles = StyleSheet.create({
     top: 0, left: 0, right: 0, bottom: 0,
     zIndex: 999,
   },
-  glowWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-  },
-  glowOrb: {
-    position: 'absolute',
-  },
   center: {
     flex: 1,
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 36,
   },
-  rulerContainer: {
-    width: 40,
-    height: 2,
-    marginBottom: 20,
-    overflow: 'hidden',
+  hairlineWrap: {
+    marginBottom: 26,
+    alignItems: 'center',
   },
-  ruler: {
-    width: '100%',
-    height: '100%',
+  hairline: {
+    width: 36,
+    height: 2.5,
     borderRadius: 99,
-    transformOrigin: 'left',
   },
-  wordmark: {
-    fontSize: 60,
-    lineHeight: 62,
+  wordmarkWrap: {
+    // Clip shimmer to this box
+    overflow: 'hidden',
+    marginBottom: 18,
+  },
+  wordmarkRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  wordStore: {
+    fontSize: 64,
+    fontWeight: '200',
     letterSpacing: -2.5,
-    marginBottom: 14,
+    lineHeight: 68,
     includeFontPadding: false,
   },
-  wordmarkLight: {
-    fontWeight: '300',
-  },
-  wordmarkBold: {
+  wordVille: {
+    fontSize: 64,
     fontWeight: '900',
+    letterSpacing: -2.5,
+    lineHeight: 68,
+    includeFontPadding: false,
+  },
+  trademark: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 10,
+    marginLeft: 3,
+  },
+  shimmerGradient: {
+    width: width * 0.55,
+    height: '100%',
   },
   tagline: {
     fontSize: 10,
     fontWeight: '600',
     letterSpacing: 4.5,
     textTransform: 'uppercase',
-    marginBottom: 40,
+    marginBottom: 28,
+    textAlign: 'center',
   },
-  dotsRow: {
-    flexDirection: 'row',
-    gap: 7,
-  },
-  dot: {
+  mintDot: {
     width: 5,
     height: 5,
     borderRadius: 99,
   },
   footer: {
     textAlign: 'center',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '600',
     letterSpacing: 2.5,
     textTransform: 'uppercase',
-    paddingBottom: 40,
+    paddingBottom: 46,
   },
 });

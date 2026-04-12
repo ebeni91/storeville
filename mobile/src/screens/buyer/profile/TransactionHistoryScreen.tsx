@@ -31,7 +31,10 @@ export function TransactionHistoryScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { 
+        backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surfaceAlt }]}>
           <ArrowLeft color={colors.text} size={22} strokeWidth={2} />
         </TouchableOpacity>
@@ -61,7 +64,10 @@ export function TransactionHistoryScreen({ navigation }: Props) {
             const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const total = `ETB ${order.total_price_with_delivery || order.total_price || '—'}`;
             return (
-              <View key={order.id} style={[styles.orderCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View key={order.id} style={[styles.orderCard, { 
+                backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+                borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+              }]}>
                 <View style={[styles.orderIcon, { backgroundColor: isFood ? (mode === 'dark' ? 'rgba(249,115,22,0.15)' : '#fff7ed') : colors.accentFaint }]}>
                   {isFood ? <Coffee color="#f97316" size={20} strokeWidth={2} /> : <ShoppingBag color={colors.accent} size={20} strokeWidth={2} />}
                 </View>

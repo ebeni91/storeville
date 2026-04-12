@@ -70,7 +70,10 @@ export function ProfileInfoScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { 
+        backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surfaceAlt }]}>
           <ArrowLeft color={colors.text} size={22} strokeWidth={2} />
         </TouchableOpacity>
@@ -90,9 +93,12 @@ export function ProfileInfoScreen({ navigation }: Props) {
           </View>
 
           <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Personal Details</Text>
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.card, { 
+            backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+            borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+          }]}>
             {infoRows.map((row, idx) => (
-              <View key={row.field} style={[styles.infoRow, idx < infoRows.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+              <View key={row.field} style={[styles.infoRow, idx < infoRows.length - 1 && { borderBottomWidth: 1, borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border }]}>
                 <View style={[styles.iconBox, { backgroundColor: row.bg }]}>
                   <row.icon color={row.color} size={16} strokeWidth={2} />
                 </View>
@@ -124,11 +130,14 @@ export function ProfileInfoScreen({ navigation }: Props) {
           </View>
 
           <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Saved Addresses</Text>
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.card, { 
+            backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+            borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+          }]}>
             {loadingAddresses ? <ActivityIndicator color={colors.accent} style={{ padding: 20 }} /> :
               addresses.length === 0 ? <Text style={[styles.emptyText, { color: colors.textMuted }]}>No addresses saved yet.</Text> :
               addresses.map((addr: any, idx: number) => (
-                <View key={addr.id} style={[styles.addressRow, idx < addresses.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+                <View key={addr.id} style={[styles.addressRow, idx < addresses.length - 1 && { borderBottomWidth: 1, borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border }]}>
                   <View style={[styles.iconBox, { backgroundColor: mode === 'dark' ? 'rgba(16,185,129,0.12)' : '#ecfdf5' }]}>
                     <MapPin color="#10b981" size={16} strokeWidth={2} />
                   </View>
@@ -149,7 +158,11 @@ export function ProfileInfoScreen({ navigation }: Props) {
               <View style={{ padding: 14, gap: 10 }}>
                 {[{ placeholder: 'Label (e.g. Home)', key: 'label' }, { placeholder: 'Street Address', key: 'street_address' }, { placeholder: 'City / Sub-city', key: 'city_subcity' }, { placeholder: 'Phone Number', key: 'phone_number' }].map(f => (
                   <TextInput key={f.key} placeholder={f.placeholder} placeholderTextColor={colors.textMuted} value={(newAddress as any)[f.key]} onChangeText={v => setNewAddress(prev => ({ ...prev, [f.key]: v }))}
-                    style={[styles.addInput, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]} />
+                    style={[styles.addInput, { 
+                      backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt, 
+                      color: colors.text, 
+                      borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+                    }]} />
                 ))}
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity onPress={() => setAddingAddress(false)} style={[styles.formBtn, { backgroundColor: colors.surfaceAlt, flex: 1 }]}><Text style={{ color: colors.textSub, fontWeight: '700' }}>Cancel</Text></TouchableOpacity>
@@ -167,7 +180,11 @@ export function ProfileInfoScreen({ navigation }: Props) {
           </View>
 
           {/* <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Danger Zone</Text> */}
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.dangerBorder, borderWidth: 1 }]}>
+          <View style={[styles.card, { 
+            backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+            borderColor: colors.dangerBorder, 
+            borderWidth: 1 
+          }]}>
             {showDeleteConfirm ? (
               <View style={{ padding: 4 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>

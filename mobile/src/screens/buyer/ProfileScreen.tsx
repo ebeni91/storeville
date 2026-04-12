@@ -195,7 +195,14 @@ export function ProfileScreen({ navigation }: Props) {
             { icon: ShoppingBag, color: '#6366f1', bg: colors.accentFaint, value: ordersCount, label: 'ORDERS' },
             { icon: Heart, color: '#db2777', bg: mode === 'dark' ? 'rgba(219,39,119,0.12)' : '#fdf2f8', value: wishlistCount, label: 'WISHLIST' },
           ].map((s, i) => (
-            <View key={i} style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+            <View key={i} style={[
+              styles.statCard,
+              {
+                backgroundColor: mode === 'dark' ? 'rgba(28,30,43,0.95)' : colors.surface,
+                borderColor: mode === 'dark' ? '#3b3f5c' : colors.border,
+                borderWidth: 1
+              }
+            ]}>
               <View style={[styles.statIconBox, { backgroundColor: s.bg }]}>
                 <s.icon color={s.color} size={20} />
               </View>
@@ -210,7 +217,13 @@ export function ProfileScreen({ navigation }: Props) {
           {/* ── Appearance Toggle ─────────────────────────── */}
           <View style={{ marginBottom: 24 }}>
             {/* <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Appearance</Text> */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[
+              styles.sectionCard,
+              {
+                backgroundColor: mode === 'dark' ? 'rgba(28,30,43,0.95)' : colors.surface,
+                borderColor: mode === 'dark' ? '#3b3f5c' : colors.border,
+              }
+            ]}>
               <View style={[styles.menuRow, { borderBottomWidth: 0 }]}>
                 <View style={[styles.menuIconBox, { backgroundColor: mode === 'dark' ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}>
                   {mode === 'dark'
@@ -227,7 +240,13 @@ export function ProfileScreen({ navigation }: Props) {
           {menuSections.map((section) => (
             <View key={section.title} style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
-              <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[
+                styles.sectionCard,
+                {
+                  backgroundColor: mode === 'dark' ? 'rgba(28,30,43,0.95)' : colors.surface,
+                  borderColor: mode === 'dark' ? '#3b3f5c' : colors.border,
+                }
+              ]}>
                 {section.items.map((item, idx) => (
                   <TouchableOpacity
                     key={item.route}

@@ -5,8 +5,9 @@ import {
   KeyboardAvoidingView, Dimensions
 } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { ArrowRight, MapPin, Store, Coffee } from 'lucide-react-native';
-import { authClient } from '../../lib/auth-client';
+import * as Location from 'expo-location';
+import { ArrowRight, MapPin, Store, Coffee, Navigation, CheckCircle } from 'lucide-react-native';
+import { authClient, useSession } from '../../lib/auth-client';
 import { api } from '../../lib/api';
 import { useThemeStore } from '../../store/themeStore';
 import { CustomAlert } from '../../components/ui/CustomAlert';
@@ -33,6 +34,8 @@ export function StoreLaunchScreen({ navigation }: Props) {
   const isDark = mode === 'dark';
   const { alertState, showAlert, hideAlert } = useAlert();
 
+  const webviewRef = useRef<WebView>(null);
+
   const [category, setCategory] = useState<'RETAIL' | 'FOOD'>('RETAIL');
   const [storeName, setStoreName] = useState('');
   const [businessType, setBusinessType] = useState('');
@@ -41,7 +44,23 @@ export function StoreLaunchScreen({ navigation }: Props) {
     latitude: DEFAULT_REGION.latitude,
     longitude: DEFAULT_REGION.longitude,
   });
+  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const { refetch: refetchSession } = useSession();
+
+  React.useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      try {
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setUserLocation(loc);
+        setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   const isRetail = category === 'RETAIL';
   const accentColor = isRetail ? '#6366f1' : '#f97316';
@@ -73,24 +92,27 @@ export function StoreLaunchScreen({ navigation }: Props) {
         category: businessType, // Changed from sending 'RETAIL' to sending the actual type like 'Electronics'
         store_type: category, // This is 'RETAIL' or 'FOOD'
         description: description.trim(),
-        latitude: location.latitude,
-        longitude: location.longitude,
+        latitude: parseFloat(location.latitude.toFixed(6)),
+        longitude: parseFloat(location.longitude.toFixed(6)),
       });
 
-      // Force a fresh session fetch to pick up upgraded SELLER role
-      await authClient.getSession({ fetchOptions: { cache: 'no-store' } });
-
-      // RootNavigator will automatically route to SellerTabNavigator
-      // because the refreshed session will have role === 'SELLER'
+      // Show success animation state
+      setSuccess(true);
+      
+      // Wait for user to see the success state, then smoothly transition navigation
+      setTimeout(async () => {
+        // Force a fresh session fetch to pick up upgraded SELLER role
+        await refetchSession();
+      }, 1500);
 
     } catch (e: any) {
+      setLoading(false);
+      setSuccess(false);
       if (e.response && e.response.data) {
         showAlert({ title: 'Validation Error', message: JSON.stringify(e.response.data), variant: 'error', buttons: [{ text: 'OK' }] });
       } else {
         showAlert({ title: 'Launch Failed', message: e.message || 'Failed to launch store. Try again.', variant: 'error', buttons: [{ text: 'OK' }] });
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -99,6 +121,11 @@ export function StoreLaunchScreen({ navigation }: Props) {
     fontSize: 16, fontWeight: '600' as const,
     paddingVertical: 16, paddingHorizontal: 20,
   };
+
+  const lat = location.latitude;
+  const lng = location.longitude;
+  const userLat = userLocation?.coords.latitude || lat;
+  const userLng = userLocation?.coords.longitude || lng;
 
   const mapHtml = `
     <html><head>
@@ -109,11 +136,18 @@ export function StoreLaunchScreen({ navigation }: Props) {
       body,html,#map{margin:0;padding:0;height:100vh;width:100vw;}
       .leaflet-control-attribution,.leaflet-control-zoom{display:none!important;}
       @keyframes pinPop{0%{transform:scale(0.3) translateY(20px);opacity:0;}80%{transform:scale(1.08) translateY(-2px);}100%{transform:scale(1) translateY(0);opacity:1;}}
+      @keyframes ripple{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(2.2);opacity:0;}}
       .store-pin{animation:pinPop 0.35s cubic-bezier(.175,.885,.32,1.275) forwards;}
+      .pin-ripple{animation:ripple 1.8s ease-out infinite;}
     </style></head><body><div id="map"></div><script>
-      var map=L.map("map",{zoomControl:false,attributionControl:false}).setView([${DEFAULT_REGION.latitude},${DEFAULT_REGION.longitude}],15);
-      L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{maxZoom:20}).addTo(map);
+      window.map=L.map("map",{zoomControl:false,attributionControl:false}).setView([${lat},${lng}],15);
+      L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{maxZoom:20}).addTo(window.map);
       
+      // User dot (identical to explore screen)
+      var ud='<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(99,102,241,0.35);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#6366f1;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(99,102,241,0.5);"></div></div>';
+      window.userMarker = L.marker([${userLat},${userLng}],{icon:L.divIcon({html:ud,className:"",iconSize:[22,22],iconAnchor:[11,11]})}).addTo(window.map);
+
+      // Store launch pin
       var col="${accentColor}";
       var svg='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
       var h='<div class="store-pin" style="position:relative;width:46px;height:54px;cursor:pointer;">'
@@ -124,10 +158,10 @@ export function StoreLaunchScreen({ navigation }: Props) {
         +'</div>';
       
       var ic=L.divIcon({className:"",html:h,iconSize:[46,54],iconAnchor:[23,54]});
-      var marker = L.marker([${DEFAULT_REGION.latitude},${DEFAULT_REGION.longitude}], {
+      window.storeMarker = L.marker([${lat},${lng}], {
         icon: ic,
         draggable: true
-      }).addTo(map);
+      }).addTo(window.map);
 
       function updateRN(latlng) {
         window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -136,8 +170,8 @@ export function StoreLaunchScreen({ navigation }: Props) {
         }));
       }
 
-      marker.on('dragend', function(e) { updateRN(e.target.getLatLng()); });
-      map.on('click', function(e) { marker.setLatLng(e.latlng); updateRN(e.latlng); });
+      window.storeMarker.on('dragend', function(e) { updateRN(e.target.getLatLng()); });
+      window.map.on('click', function(e) { window.storeMarker.setLatLng(e.latlng); updateRN(e.latlng); });
     </script></body></html>
   `;
 
@@ -280,14 +314,16 @@ export function StoreLaunchScreen({ navigation }: Props) {
             Store Location
           </Text>
 
-          <View style={{
-            borderRadius: 24, overflow: 'hidden', marginBottom: 10,
-            borderWidth: 1.5, borderColor,
-            shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: isDark ? 0.4 : 0.1, shadowRadius: 20, elevation: 6,
-          }}>
-            <WebView
-              style={{ width: '100%', height: 230 }}
+          <View style={{ position: 'relative' }}>
+            <View style={{
+              borderRadius: 24, overflow: 'hidden', marginBottom: 10,
+              borderWidth: 1.5, borderColor,
+              shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: isDark ? 0.4 : 0.1, shadowRadius: 20, elevation: 6,
+            }}>
+              <WebView
+                ref={webviewRef}
+                style={{ width: '100%', height: 230 }}
               source={{ html: mapHtml }}
               scrollEnabled={false}
               bounces={false}
@@ -301,36 +337,75 @@ export function StoreLaunchScreen({ navigation }: Props) {
               }}
             />
           </View>
-          <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', textAlign: 'center', marginBottom: 32 }}>
+          {/* Locate Me Floating Button inside relative container */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={async () => {
+              try {
+                const currentLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+                setUserLocation(currentLoc);
+                setLocation({ latitude: currentLoc.coords.latitude, longitude: currentLoc.coords.longitude });
+                if (webviewRef.current) {
+                  webviewRef.current.injectJavaScript(`
+                    if (window.map) window.map.flyTo([${currentLoc.coords.latitude}, ${currentLoc.coords.longitude}], 15, { animate: true, duration: 1.5 });
+                    if (window.userMarker) window.userMarker.setLatLng([${currentLoc.coords.latitude}, ${currentLoc.coords.longitude}]);
+                    if (window.storeMarker) window.storeMarker.setLatLng([${currentLoc.coords.latitude}, ${currentLoc.coords.longitude}]);
+                    true;
+                  `);
+                }
+              } catch (e) { /* ignore */ }
+            }}
+            style={{
+              position: 'absolute', bottom: 20, right: 12,
+              width: 44, height: 44, borderRadius: 22,
+              backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center',
+              shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15, shadowRadius: 8, elevation: 6,
+            }}
+          >
+            <Navigation color={accentColor} size={20} strokeWidth={2.5} />
+          </TouchableOpacity>
+        </View>
+        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', textAlign: 'center', marginBottom: 32 }}>
             Drag the pin to mark your exact store entrance
           </Text>
 
           {/* ── Launch Button ──────────────────────────────── */}
           <TouchableOpacity
             onPress={handleLaunch}
-            disabled={loading || !storeName.trim() || !businessType}
+            disabled={loading || success || !storeName.trim() || !businessType}
             activeOpacity={0.85}
             style={{
-              backgroundColor: loading || !storeName.trim() || !businessType
-                ? (isDark ? 'rgba(255,255,255,0.08)' : colors.surfaceAlt)
-                : accentColor,
+              backgroundColor: success 
+                ? '#10b981' // Green for success
+                : (loading || !storeName.trim() || !businessType
+                  ? (isDark ? 'rgba(255,255,255,0.08)' : colors.surfaceAlt)
+                  : accentColor),
               borderRadius: 999, paddingVertical: 20,
               flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
-              shadowColor: accentColor,
+              shadowColor: success ? '#10b981' : accentColor,
               shadowOffset: { width: 0, height: 14 },
-              shadowOpacity: storeName.trim() && businessType ? 0.5 : 0,
+              shadowOpacity: (storeName.trim() && businessType && !loading) || success ? 0.5 : 0,
               shadowRadius: 28, elevation: 10,
             }}
           >
-            {loading
-              ? <ActivityIndicator color="#fff" />
-              : <>
+            {success ? (
+              <>
+                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.3 }}>
+                  Store Launched!
+                </Text>
+                <CheckCircle color="#fff" size={22} strokeWidth={2.5} />
+              </>
+            ) : loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
                 <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.3 }}>
                   Launch My Digital Mall
                 </Text>
                 <ArrowRight color="#fff" size={22} strokeWidth={2.5} />
               </>
-            }
+            )}
           </TouchableOpacity>
 
         </View>

@@ -18,7 +18,10 @@ export function AboutUsScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { 
+        backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surfaceAlt }]}>
           <ArrowLeft color={colors.text} size={22} strokeWidth={2} />
         </TouchableOpacity>
@@ -35,12 +38,18 @@ export function AboutUsScreen({ navigation }: Props) {
           <Text style={[styles.heroTag, { color: colors.textMuted }]}>The Digital Mall of Ethiopia</Text>
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.card, { 
+          backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+        }]}>
           <Text style={[styles.cardTitle, { color: colors.text }]}>Our Mission</Text>
           <Text style={[styles.cardBody, { color: colors.textSub }]}>StoreVille was founded with a simple but powerful vision: to bring Ethiopia&#39;s vibrant market ecosystem into the digital age. We believe every local retailer, restaurant, and café deserves a world-class digital storefront — and every shopper deserves a seamless, modern discovery experience.</Text>
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.card, { 
+          backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+        }]}>
           <Text style={[styles.cardTitle, { color: colors.text }]}>What We Offer</Text>
           {[
             { emoji: '🛍', text: 'Discover retail stores, fashion, electronics, and more across your city.' },
@@ -55,10 +64,13 @@ export function AboutUsScreen({ navigation }: Props) {
           ))}
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.card, { 
+          backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+          borderColor: mode === 'dark' ? '#3b3f5c' : colors.border 
+        }]}>
           <Text style={[styles.cardTitle, { color: colors.text }]}>Contact Us</Text>
           {contacts.map((c, i) => (
-            <View key={i} style={[styles.contactRow, i > 0 && { borderTopWidth: 1, borderTopColor: colors.border }]}>
+            <View key={i} style={[styles.contactRow, i > 0 && { borderTopWidth: 1, borderTopColor: mode === 'dark' ? '#3b3f5c' : colors.border }]}>
               <View style={[styles.contactIcon, { backgroundColor: c.bg }]}><c.icon color={c.color} size={16} strokeWidth={2} /></View>
               <Text style={[styles.contactText, { color: colors.textSub }]}>{c.label}</Text>
             </View>

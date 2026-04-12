@@ -89,13 +89,19 @@ export function SellerStudioScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
 
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <View style={[styles.header, { 
+          backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+          borderBottomColor: isDark ? '#3b3f5c' : colors.border 
+        }]}>
           <View>
             <Text style={[styles.title, { color: colors.text }]}>Studio</Text>
             <Text style={[styles.subtitle, { color: colors.textMuted }]}>Design your luxury shopping experience.</Text>
           </View>
           {/* Segmented control */}
-          <View style={[styles.segmentWrap, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+          <View style={[styles.segmentWrap, { 
+            backgroundColor: isDark ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt, 
+            borderColor: isDark ? '#3b3f5c' : colors.border 
+          }]}>
             {(['theme', 'identity'] as const).map(tab => {
               const active = activeTab === tab;
               const Icon = tab === 'theme' ? Palette : LayoutTemplate;
@@ -103,7 +109,7 @@ export function SellerStudioScreen() {
                 <TouchableOpacity
                   key={tab}
                   onPress={() => setActiveTab(tab)}
-                  style={[styles.segment, active && { backgroundColor: colors.surface, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 }]}
+                  style={[styles.segment, active && { backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 }]}
                 >
                   <Icon size={16} color={active ? colors.accent : colors.textMuted} strokeWidth={2} />
                   <Text style={[styles.segmentLabel, { color: active ? colors.accent : colors.textMuted }]}>
@@ -128,7 +134,11 @@ export function SellerStudioScreen() {
                     <TouchableOpacity
                       key={t.id}
                       onPress={() => setFormData({ ...formData, background_color: t.bg, secondary_color: t.text, primary_color: t.primary, announcement_color: t.primary })}
-                      style={[styles.paletteCard, { backgroundColor: colors.surface, borderColor: isActive ? colors.text : colors.border, borderWidth: isActive ? 2 : 1 }]}
+                      style={[styles.paletteCard, { 
+                        backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+                        borderColor: isActive ? colors.text : (isDark ? '#3b3f5c' : colors.border), 
+                        borderWidth: isActive ? 2 : 1 
+                      }]}
                       activeOpacity={0.8}
                     >
                       <View style={styles.paletteSwatch}>
@@ -145,8 +155,14 @@ export function SellerStudioScreen() {
               </View>
 
               {/* Announcement bar */}
-              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={[styles.announcementRow, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+              <View style={[styles.card, { 
+                backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+                borderColor: isDark ? '#3b3f5c' : colors.border 
+              }]}>
+                <View style={[styles.announcementRow, { 
+                  backgroundColor: isDark ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt, 
+                  borderColor: isDark ? '#3b3f5c' : colors.border 
+                }]}>
                   <View>
                     <Text style={[styles.fieldLabel, { color: colors.text }]}>Announcement Bar</Text>
                     <Text style={[styles.fieldSub, { color: colors.textMuted }]}>Show a banner on your storefront</Text>
@@ -154,7 +170,7 @@ export function SellerStudioScreen() {
                   <Switch
                     value={formData.announcement_is_active}
                     onValueChange={v => setFormData({ ...formData, announcement_is_active: v })}
-                    trackColor={{ false: colors.border, true: colors.accent }}
+                    trackColor={{ false: isDark ? '#3b3f5c' : colors.border, true: colors.accent }}
                     thumbColor="#fff"
                   />
                 </View>
@@ -166,7 +182,11 @@ export function SellerStudioScreen() {
                       onChangeText={v => setFormData({ ...formData, announcement_text: v })}
                       placeholder="FREE SHIPPING ON ALL ORDERS"
                       placeholderTextColor={colors.textMuted}
-                      style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border }]}
+                      style={[styles.input, { 
+                        backgroundColor: isDark ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt, 
+                        color: colors.text, 
+                        borderColor: isDark ? '#3b3f5c' : colors.border 
+                      }]}
                     />
                   </View>
                 )}
@@ -176,12 +196,20 @@ export function SellerStudioScreen() {
 
           {/* IDENTITY TAB */}
           {activeTab === 'identity' && (
-            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.card, { 
+              backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+              borderColor: isDark ? '#3b3f5c' : colors.border 
+            }]}>
               <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Store Name</Text>
               <TextInput
                 value={formData.name}
                 onChangeText={v => setFormData({ ...formData, name: v })}
-                style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border, fontSize: 17, fontWeight: '800' }]}
+                style={[styles.input, { 
+                  backgroundColor: isDark ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt, 
+                  color: colors.text, 
+                  borderColor: isDark ? '#3b3f5c' : colors.border, 
+                  fontSize: 17, fontWeight: '800' 
+                }]}
                 placeholderTextColor={colors.textMuted}
               />
 
@@ -190,7 +218,12 @@ export function SellerStudioScreen() {
                 value={formData.description}
                 onChangeText={v => setFormData({ ...formData, description: v })}
                 multiline numberOfLines={3}
-                style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.text, borderColor: colors.border, minHeight: 90, textAlignVertical: 'top' }]}
+                style={[styles.input, { 
+                  backgroundColor: isDark ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt, 
+                  color: colors.text, 
+                  borderColor: isDark ? '#3b3f5c' : colors.border, 
+                  minHeight: 90, textAlignVertical: 'top' 
+                }]}
                 placeholderTextColor={colors.textMuted}
               />
 
@@ -202,7 +235,10 @@ export function SellerStudioScreen() {
                     <TouchableOpacity
                       key={font}
                       onPress={() => setFormData({ ...formData, heading_font: font })}
-                      style={[styles.fontChip, { backgroundColor: sel ? colors.accent : colors.surfaceAlt, borderColor: sel ? colors.accent : colors.border }]}
+                      style={[styles.fontChip, { 
+                        backgroundColor: sel ? colors.accent : (isDark ? 'rgba(28, 30, 43, 0.5)' : colors.surfaceAlt), 
+                        borderColor: sel ? colors.accent : (isDark ? '#3b3f5c' : colors.border) 
+                      }]}
                     >
                       <Text style={{ color: sel ? '#fff' : colors.textSub, fontWeight: '700', fontSize: 13 }}>{font}</Text>
                     </TouchableOpacity>

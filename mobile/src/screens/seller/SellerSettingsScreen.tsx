@@ -58,14 +58,14 @@ export function SellerSettingsScreen({ navigation }: Props) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
 
         {/* Indigo header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : '#6366f1' }]}>
           <View style={styles.avatarRow}>
-            <View style={[styles.avatarCircle, { backgroundColor: isFood ? '#f97316' : '#818cf8' }]}>
+            <View style={[styles.avatarCircle, { backgroundColor: isFood ? '#f97316' : '#818cf8', borderColor: isDark ? '#3b3f5c' : 'rgba(255,255,255,0.35)' }]}>
               <Text style={styles.avatarLetter}>{initial}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.sellerLabel}>Seller Account</Text>
-              <Text style={styles.storeName}>{storeName}</Text>
+              <Text style={[styles.sellerLabel, { color: isDark ? colors.textMuted : 'rgba(255,255,255,0.7)' }]}>Seller Account</Text>
+              <Text style={[styles.storeName, { color: isDark ? colors.text : '#ffffff' }]}>{storeName}</Text>
             </View>
           </View>
         </View>
@@ -74,7 +74,13 @@ export function SellerSettingsScreen({ navigation }: Props) {
 
           {/* Appearance toggle */}
           <View style={{ marginBottom: 24 }}>
-            <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[
+              styles.sectionCard,
+              {
+                backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface,
+                borderColor: isDark ? '#3b3f5c' : colors.border,
+              }
+            ]}>
               <TouchableOpacity onPress={toggleTheme} activeOpacity={0.7} style={[styles.menuRow, { borderBottomWidth: 0 }]}>
                 <View style={[styles.menuIconBox, { backgroundColor: isDark ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}>
                   {isDark
@@ -98,7 +104,13 @@ export function SellerSettingsScreen({ navigation }: Props) {
           {menuSections.map((section) => (
             <View key={section.title} style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
-              <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[
+                styles.sectionCard,
+                {
+                  backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface,
+                  borderColor: isDark ? '#3b3f5c' : colors.border,
+                }
+              ]}>
                 {section.items.map((item, idx) => (
                   <TouchableOpacity
                     key={item.route}

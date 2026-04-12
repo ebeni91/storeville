@@ -141,7 +141,6 @@ export function CustomAlert({
               borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
               transform: [{ scale: scaleAnim }],
               opacity: opacityAnim,
-              shadowColor: cfg.accentColor,
             },
           ]}
         >
@@ -224,11 +223,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 12,
   },
   iconBadge: {
     width: 60,

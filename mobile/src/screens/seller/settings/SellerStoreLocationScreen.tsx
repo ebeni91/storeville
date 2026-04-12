@@ -47,7 +47,10 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
     if (!store?.id || !lat || !lng) return;
     setSaving(true);
     try {
-      await api.patch(`/stores/manage/${store.id}`, { latitude: lat, longitude: lng });
+      await api.patch(`/stores/manage/${store.id}`, { 
+        latitude: parseFloat(lat.toFixed(6)), 
+        longitude: parseFloat(lng.toFixed(6)) 
+      });
       showAlert({ title: 'Location Saved!', message: 'Your store location has been updated.', variant: 'success', buttons: [{ text: 'Great' }] });
     } catch { showAlert({ title: 'Save Failed', message: 'Could not update location.', variant: 'error', buttons: [{ text: 'OK' }] }); }
     finally { setSaving(false); }
@@ -56,7 +59,10 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.topBar, { 
+        backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
+        borderBottomColor: isDark ? '#3b3f5c' : colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <ChevronLeft color={colors.text} size={24} strokeWidth={2} />
         </TouchableOpacity>
@@ -68,7 +74,10 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
         {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} /> : (
           <>
             {/* Store info strip */}
-            <View style={[styles.storeStrip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.storeStrip, { 
+              backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+              borderColor: isDark ? '#3b3f5c' : colors.border 
+            }]}>
               <View style={[styles.iconBox, { backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : '#ecfdf5' }]}>
                 <MapPin color="#10b981" size={20} strokeWidth={2} />
               </View>
@@ -80,7 +89,10 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
 
             {/* Current coords */}
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Current Coordinates</Text>
-            <View style={[styles.coordCard, { backgroundColor: colors.surface, borderColor: lat ? '#10b981' : colors.border }]}>
+            <View style={[styles.coordCard, { 
+              backgroundColor: isDark ? 'rgba(28, 30, 43, 0.95)' : colors.surface, 
+              borderColor: lat ? '#10b981' : (isDark ? '#3b3f5c' : colors.border) 
+            }]}>
               <View style={[styles.coordDot, { backgroundColor: lat ? '#10b981' : colors.textMuted }]} />
               <Text style={[styles.coordText, { color: lat ? '#10b981' : colors.textMuted }]}>
                 {lat != null && Number.isFinite(lat) && lng != null && Number.isFinite(lng)

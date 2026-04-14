@@ -20,8 +20,8 @@ GoogleSignin.configure({
 const { width, height } = Dimensions.get('window');
 
 // Load images statically
-const mapImageDark = require('../../../assets/images/isometric-dark.png');
-const mapImageLight = require('../../../assets/images/isometric-light.png');
+const mapImageDark = require('../../../assets/images/isometric-dark.jpg');
+const mapImageLight = require('../../../assets/images/isometric-light.jpg');
 
 interface Props { navigation: any; }
 

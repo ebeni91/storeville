@@ -11,6 +11,7 @@ import { SellerProductsScreen } from '../screens/seller/SellerProductsScreen';
 import { SellerOrdersScreen } from '../screens/seller/SellerOrdersScreen';
 import { SellerStudioScreen } from '../screens/seller/SellerStudioScreen';
 import { SellerSettingsScreen } from '../screens/seller/SellerSettingsScreen';
+import { StorePreviewScreen } from '../screens/seller/StorePreviewScreen';
 
 // Settings sub-screens
 import { SellerAccountInfoScreen } from '../screens/seller/settings/SellerAccountInfoScreen';
@@ -20,6 +21,7 @@ import { SellerSubscriptionScreen } from '../screens/seller/settings/SellerSubsc
 
 const Tab = createBottomTabNavigator();
 const SettingsStack = createNativeStackNavigator();
+const StudioStack   = createNativeStackNavigator();
 const { width } = Dimensions.get('window');
 
 const PILL_H = 66;
@@ -62,6 +64,15 @@ function SellerTabBar({ state, navigation }: BottomTabBarProps) {
   );
 }
 
+function StudioStackNavigator() {
+  return (
+    <StudioStack.Navigator screenOptions={{ headerShown: false }}>
+      <StudioStack.Screen name="StudioHome"   component={SellerStudioScreen} />
+      <StudioStack.Screen name="StorePreview" component={StorePreviewScreen} />
+    </StudioStack.Navigator>
+  );
+}
+
 function SettingsStackNavigator() {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
@@ -83,7 +94,7 @@ export function SellerTabNavigator() {
       <Tab.Screen name="Dashboard" component={SellerHomeScreen} />
       <Tab.Screen name="Products"  component={SellerProductsScreen} />
       <Tab.Screen name="Orders"    component={SellerOrdersScreen} />
-      <Tab.Screen name="Studio"    component={SellerStudioScreen} />
+      <Tab.Screen name="Studio"    component={StudioStackNavigator} />
       <Tab.Screen name="Settings"  component={SettingsStackNavigator} />
     </Tab.Navigator>
   );

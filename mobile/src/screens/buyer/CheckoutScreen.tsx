@@ -23,10 +23,12 @@ interface Props {
 export function CheckoutScreen({ route, navigation }: Props) {
   const { store } = route.params;
   const isFood = store.store_type === 'FOOD';
-  const accentColor = isFood ? '#f97316' : '#4f46e5';
+  // Use the store's own accent color if available, fallback to type defaults
+  const accentColor = store.accent_color || (isFood ? '#f97316' : '#4f46e5');
+  const bgColor = accentColor + '0D'; // 5% tint of accent for background
 
   const { items, updateQuantity, removeItem, clearCart, getTotal, getItemCount } = useCartStore();
-  const { isGuest } = useAuthStore();
+  const { isGuest, exitGuestMode } = useAuthStore();
   const { data: session } = authClient.useSession();
   const isAuthenticated = !!session?.user;
 
@@ -47,7 +49,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
       variant: 'warning',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Login', onPress: () => navigation.getParent()?.getParent()?.navigate('Auth', { intendedRole: 'CUSTOMER' }) },
+        { text: 'Login', onPress: exitGuestMode },
       ],
     });
   };
@@ -149,7 +151,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
     <>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1, backgroundColor: '#f9fafb' }}
+      style={{ flex: 1, backgroundColor: bgColor }}
     >
       <StatusBar barStyle="light-content" />
 
@@ -304,7 +306,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
       <View style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
         backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f3f4f6',
-        padding: 16, paddingBottom: Platform.OS === 'ios' ? 32 : 16,
+        padding: 16, paddingBottom: Platform.OS === 'ios' ? 90 : 80,
       }}>
         <TouchableOpacity
           onPress={handleCheckout}

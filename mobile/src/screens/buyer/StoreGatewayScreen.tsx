@@ -1,13 +1,3 @@
-/**
- * StoreGatewayScreen — Premium Mobile Storefront
- *
- * Design DNA:
- *   • Header collapse + morphing nav  →  Uber Eats / Apple Maps
- *   • Editorial product grid          →  Zara / SSENSE app
- *   • Smart color theming             →  Shopify Shop app
- *   • Staggered entrance animations   →  Apple App Store
- *   • Shimmer skeleton loading        →  Instagram / Airbnb
- */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
@@ -26,7 +16,7 @@ import {
 } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
-const HERO_H   = height * 0.52;
+const HERO_H   = height * 0.50;
 const CARD_W   = (width - 48) / 2;
 const COLLAPSE = HERO_H - (Platform.OS === 'ios' ? 90 : 70);
 
@@ -231,7 +221,7 @@ function ProductCard({ item, accent, isFood, qty, onAdd, onRemove, index }: any)
 }
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
-export function StoreGatewayScreen({ route, navigation }: { route: any; navigation: any }) {
+export function StoreGatewayScreen({ route, navigation, previewMode = false }: { route: any; navigation: any; previewMode?: boolean }) {
   const { store } = route.params;
   const isFood     = store.store_type === 'FOOD';
   const accent     = store.primary_color    || (isFood ? '#f97316' : '#6366f1');
@@ -261,8 +251,8 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
   const { data: itemData, isLoading } = useQuery({
     queryKey: [isFood ? 'food-items' : 'retail-products', store.id],
     queryFn: async () => {
-      const res = await api.get(isFood ? `/food/items/?store_id=${store.id}` : `/retail/products/?store_id=${store.id}`);
-      return res.data.results ?? res.data;
+      const res = await api.get(isFood ? `/food/items?store_id=${store.id}` : `/retail/products?store_id=${store.id}`);
+      return res.data?.results || res.data || [];
     },
   });
 
@@ -282,10 +272,10 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      {/* <StatusBar barStyle="light-content" translucent backgroundColor="transparent" /> */}
 
-      {/* ── Announcement bar: pinned to very top, above status bar  ──────── */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 60 }}>
+      {/* ── Announcement bar: inset to match hero card width ─────────── */}
+      <View style={{ position: 'absolute', top: 30, left: 14, right: 14, zIndex: 60, borderRadius: 8, overflow: 'hidden' }}>
         <AnnouncementBar store={store} accent={accent} />
       </View>
 
@@ -302,29 +292,10 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
         <Animated.View style={[styles.navSep, { opacity: navBg, borderBottomColor: `rgba(255,255,255,0.12)` }]} />
 
         <View style={[styles.navRow, { paddingTop: STATUS_H }]}>
-          {/* Back */}
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.navGlass} activeOpacity={0.75}>
-            <ArrowLeft color="#fff" size={19} strokeWidth={2.5} />
-          </TouchableOpacity>
-
           {/* Store name caption: only visible once header collapses */}
           <Animated.Text style={[styles.navTitle, { opacity: titleVisible }]} numberOfLines={1}>
             {store.name}
           </Animated.Text>
-
-          {/* Cart */}
-          <TouchableOpacity
-            onPress={() => cartCount > 0 && navigation.navigate('Checkout', { store })}
-            style={styles.navGlass}
-            activeOpacity={0.75}
-          >
-            <ShoppingCart color="#fff" size={19} strokeWidth={2} />
-            {cartCount > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={{ color: '#fff', fontSize: 9, fontWeight: '900' }}>{cartCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -337,16 +308,50 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
         contentContainerStyle={{ paddingBottom: cartCount > 0 ? 130 : 48 }}
       >
         {/* ── HERO ─────────────────────────────────────────────────────── */}
-        <Animated.View style={{ height: HERO_H, overflow: 'hidden', marginTop: announcementH }}>
+        {/* Outer card shell: inset + shadow + radius on all 4 sides */}
+        <View style={{
+          marginHorizontal: 14,
+          marginTop: announcementH + 40,
+          borderRadius: 28,
+          overflow: 'hidden',
+          height: HERO_H - 160,
+          shadowColor: '#000',
+          shadowOpacity: 0.28,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 12,
+        }}>
+          {/* Back + Cart buttons pinned inside the card header */}
+          <View style={{
+            position: 'absolute', top: 16, left: 14, right: 14,
+            flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+            zIndex: 20,
+          }}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.navGlass} activeOpacity={0.75}>
+              <ArrowLeft color="#fff" size={19} strokeWidth={2.5} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => cartCount > 0 && navigation.navigate('Checkout', { store })}
+              style={styles.navGlass}
+              activeOpacity={0.75}
+            >
+              <ShoppingCart color="#fff" size={19} strokeWidth={2} />
+              {cartCount > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={{ color: '#fff', fontSize: 9, fontWeight: '900' }}>{cartCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
           <Animated.View style={{ flex: 1, transform: [{ translateY: heroParallax }, { scale: heroScale }] }}>
             {store.banner_image
               ? <Image source={{ uri: store.banner_image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-              : <View style={{ flex: 1, backgroundColor: accent, opacity: 0.18 }} />}
+              : <View style={{ flex: 1, backgroundColor: accent }} />}
           </Animated.View>
 
           {/* Multi-stop gradient for deep cinematic feel */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.08)', 'rgba(0,0,0,0.78)']}
+            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.82)']}
             locations={[0, 0.4, 1]}
             style={StyleSheet.absoluteFill}
           />
@@ -364,11 +369,11 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
             <View style={styles.trustRow}>
               <View style={styles.trustPill}>
                 <Star color="#facc15" fill="#facc15" size={10} />
-                <Text style={styles.trustTxt}>4.9</Text>
+                <Text style={styles.trustTxt}>4.9 Rating</Text>
               </View>
               <View style={styles.trustPill}>
                 <CheckCircle color="#34d399" size={10} />
-                <Text style={styles.trustTxt}>Verified</Text>
+                <Text style={styles.trustTxt}>Verified Seller</Text>
               </View>
               {store.city && (
                 <View style={styles.trustPill}>
@@ -404,7 +409,7 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
               <ChevronRight color={onColor(accent)} size={14} strokeWidth={2.5} />
             </TouchableOpacity>
           </Animated.View>
-        </Animated.View>
+        </View>
 
         {/* ── INFO STRIP ───────────────────────────────────────────────── */}
         <View style={[styles.infoStrip, { backgroundColor: bg, borderBottomColor: `rgba(${rgbStr(secondary)},0.07)` }]}>
@@ -534,14 +539,14 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
       </Animated.ScrollView>
 
       {/* ── FLOATING CART BAR ─────────────────────────────────────────────── */}
-      {cartCount > 0 && (
+      {/* {cartCount > 0 && (
         <View style={styles.cartBarWrap}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Checkout', { store })}
             style={[styles.cartBar, { backgroundColor: accent }]}
             activeOpacity={0.88}
           >
-            {/* Left: count pill + label */}
+        
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={styles.cartPill}>
                 <Text style={{ color: accent, fontSize: 13, fontWeight: '900' }}>{cartCount}</Text>
@@ -549,14 +554,13 @@ export function StoreGatewayScreen({ route, navigation }: { route: any; navigati
               <Text style={[styles.cartLabel, { color: onColor(accent) }]}>View Cart</Text>
             </View>
 
-            {/* Right: total */}
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={{ color: `rgba(${rgbStr(onColor(accent))},0.7)`, fontSize: 9, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' }}>Total</Text>
               <Text style={[styles.cartTotal, { color: onColor(accent) }]}>Br {cartTotal.toFixed(2)}</Text>
             </View>
           </TouchableOpacity>
         </View>
-      )}
+      )} */}
     </View>
   );
 }

@@ -16,6 +16,11 @@ class RetailProductSerializer(serializers.ModelSerializer):
         model = RetailProduct
         fields = ['id', 'name', 'description', 'price', 'image', 'sku', 'stock_quantity', 'category', 'category_name', 'is_active', 'store_id', 'store_name', 'store_slug']
 
+    def validate_sku(self, value):
+        if value == "":
+            return None
+        return value
+
 from .models import RetailFavorite
 
 class RetailFavoriteSerializer(serializers.ModelSerializer):

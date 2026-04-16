@@ -58,6 +58,10 @@ class Store(models.Model):
     header_layout = models.CharField(max_length=50, default='logo-left') # logo-left, logo-center
     card_style = models.CharField(max_length=50, default='rounded-shadow') # sharp, rounded, rounded-shadow
     
+    # Business Hours
+    working_days = models.CharField(max_length=100, blank=True, default='', help_text="e.g. Monday – Saturday")
+    delivery_hours = models.CharField(max_length=100, blank=True, default='', help_text="e.g. 09:00 – 22:00")
+
     # Marketing: Announcement Bar
     announcement_is_active = models.BooleanField(default=False)
     announcement_text = models.CharField(max_length=255, blank=True)

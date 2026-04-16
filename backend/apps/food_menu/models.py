@@ -41,6 +41,31 @@ class MenuItem(models.Model):
     def __str__(self):
         return self.name
 
+
+class MenuItemOption(models.Model):
+    """Represents a variant group for a menu item, e.g. 'Size' with choices ['Small', 'Medium', 'Large']."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE, related_name='options')
+    name = models.CharField(max_length=100, help_text="e.g. Size, Crust Type")
+    choices = models.JSONField(default=list, help_text="List of choice strings, e.g. ['Small', 'Medium', 'Large']")
+    is_required = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.menu_item.name} — {self.name}"
+
+
+class MenuItemExtra(models.Model):
+    """Represents an optional add-on for a menu item, e.g. 'Extra Cheese' at +Br 15."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE, related_name='extras')
+    name = models.CharField(max_length=100, help_text="e.g. Extra Cheese, Avocado")
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.menu_item.name} — {self.name} (+Br {self.price})"
+
+
+
 class FoodFavorite(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='food_favorites')

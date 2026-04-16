@@ -11,8 +11,12 @@ import { OrdersScreen } from '../screens/buyer/OrdersScreen';
 import { ProfileScreen } from '../screens/buyer/ProfileScreen';
 import { StoreGatewayScreen } from '../screens/buyer/StoreGatewayScreen';
 import { CheckoutScreen } from '../screens/buyer/CheckoutScreen';
+import { CartScreen } from '../screens/buyer/CartScreen';
+import { WishlistScreen } from '../screens/buyer/WishlistScreen';
+import { ProductDetailScreen } from '../screens/buyer/ProductDetailScreen';
 // ✅ NEW: Store launch from profile
 import { StoreLaunchScreen } from '../screens/seller/StoreLaunchScreen';
+
 
 // Profile sub-screens
 import { ProfileInfoScreen } from '../screens/buyer/profile/ProfileInfoScreen';
@@ -38,8 +42,18 @@ const ICON_MAP: Record<string, any> = {
   Profile: User,
 };
 
-function WhiteTabBar({ state, navigation }: BottomTabBarProps) {
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+
+function WhiteTabBar({ state, navigation, descriptors }: BottomTabBarProps) {
   const { colors } = useThemeStore();
+
+  const focusedRoute = state.routes[state.index];
+  const focusedOptions = descriptors[focusedRoute.key].options;
+
+  // @ts-ignore - access display property to optionally hide tab bar
+  if (focusedOptions.tabBarStyle?.display === 'none') {
+    return null;
+  }
 
   return (
     <View style={styles.outerWrapper} pointerEvents="box-none">
@@ -70,9 +84,12 @@ function WhiteTabBar({ state, navigation }: BottomTabBarProps) {
 function ExploreStackNavigator() {
   return (
     <ExploreStack.Navigator screenOptions={{ headerShown: false }}>
-      <ExploreStack.Screen name="ExploreMap" component={ExploreScreen} />
-      <ExploreStack.Screen name="StoreGateway" component={StoreGatewayScreen} />
-      <ExploreStack.Screen name="Checkout" component={CheckoutScreen} />
+      <ExploreStack.Screen name="ExploreMap"     component={ExploreScreen} />
+      <ExploreStack.Screen name="StoreGateway"   component={StoreGatewayScreen} />
+      <ExploreStack.Screen name="ProductDetail"  component={ProductDetailScreen} />
+      <ExploreStack.Screen name="Cart"           component={CartScreen} />
+      <ExploreStack.Screen name="Wishlist"       component={WishlistScreen} />
+      <ExploreStack.Screen name="Checkout"       component={CheckoutScreen} />
     </ExploreStack.Navigator>
   );
 }
@@ -100,7 +117,19 @@ export function BuyerTabNavigator() {
       tabBar={(props) => <WhiteTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="Explore" component={ExploreStackNavigator} />
+      <Tab.Screen 
+        name="Explore" 
+        component={ExploreStackNavigator} 
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'ExploreMap';
+          const hiddenRoutes = ['StoreGateway', 'ProductDetail', 'Cart', 'Wishlist', 'Checkout'];
+          
+          if (hiddenRoutes.includes(routeName)) {
+            return { tabBarStyle: { display: 'none' } };
+          }
+          return {};
+        }}
+      />
       <Tab.Screen name="Orders" component={OrdersScreen} />
       <Tab.Screen name="Profile" component={ProfileStackNavigator} />
     </Tab.Navigator>

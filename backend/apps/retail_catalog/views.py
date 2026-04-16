@@ -31,7 +31,9 @@ class RetailCategoryViewSet(viewsets.ModelViewSet):
         return RetailCategory.objects.none()
 
     def perform_create(self, serializer):
-        serializer.save(store=Store.objects.get(owner=self.request.user))
+        store_id = self.request.data.get('store_id')
+        store = Store.objects.filter(id=store_id, owner=self.request.user).first() if store_id else Store.objects.filter(owner=self.request.user).first()
+        serializer.save(store=store)
 
 class RetailProductViewSet(viewsets.ModelViewSet):
     serializer_class = RetailProductSerializer
@@ -50,7 +52,9 @@ class RetailProductViewSet(viewsets.ModelViewSet):
 
 
     def perform_create(self, serializer):
-        serializer.save(store=Store.objects.get(owner=self.request.user))
+        store_id = self.request.data.get('store_id')
+        store = Store.objects.filter(id=store_id, owner=self.request.user).first() if store_id else Store.objects.filter(owner=self.request.user).first()
+        serializer.save(store=store)
 
 class RetailFavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = RetailFavoriteSerializer

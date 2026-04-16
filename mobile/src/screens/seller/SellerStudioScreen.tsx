@@ -55,10 +55,13 @@ export function SellerStudioScreen({ navigation }: any) {
     announcement_is_active: false,
     announcement_text: '',
     announcement_color: '#000000',
+    working_days: '',
+    delivery_hours: '',
     // Images are stored as existing URL strings (for display) or null (no change)
     logo: null as string | null,
     banner_image: null as string | null,
   });
+
 
   // ── Derived current theme ──────────────────────────────────────────────────
   const currentTheme = THEMES.find(
@@ -92,6 +95,8 @@ export function SellerStudioScreen({ navigation }: any) {
           announcement_is_active: s.announcement_is_active || false,
           announcement_text: s.announcement_text || '',
           announcement_color: s.announcement_color || '#000000',
+          working_days: s.working_days || '',
+          delivery_hours: s.delivery_hours || '',
           logo: s.logo || null,
           banner_image: s.banner_image || null,
         });
@@ -115,6 +120,8 @@ export function SellerStudioScreen({ navigation }: any) {
         announcement_is_active: formData.announcement_is_active,
         announcement_text: formData.announcement_text,
         announcement_color: formData.announcement_color,
+        working_days: formData.working_days,
+        delivery_hours: formData.delivery_hours,
       };
       await api.patch(`/stores/manage/${store.id}`, payload);
       showAlert({ title: 'Changes Saved!', message: 'Your store design is live instantly.', variant: 'success', buttons: [{ text: 'Great' }] });
@@ -342,6 +349,33 @@ export function SellerStudioScreen({ navigation }: any) {
                   })}
                 </ScrollView>
               </View>
+
+              {/* Business Hours */}
+              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Business Hours</Text>
+              <View style={[styles.card, { backgroundColor: card, borderColor: cardBorder }]}>
+                <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Working Days</Text>
+                <TextInput
+                  value={formData.working_days}
+                  onChangeText={v => setFormData({ ...formData, working_days: v })}
+                  placeholder="e.g. Monday – Saturday"
+                  placeholderTextColor={colors.textMuted}
+                  style={[styles.input, { backgroundColor: inputBg, color: colors.text, borderColor: cardBorder }]}
+                />
+                <Text style={[styles.inputLabel, { color: colors.textMuted, marginTop: 16 }]}>
+                  {store?.store_type === 'FOOD' ? 'Delivery Hours' : 'Opening Hours'}
+                </Text>
+                <TextInput
+                  value={formData.delivery_hours}
+                  onChangeText={v => setFormData({ ...formData, delivery_hours: v })}
+                  placeholder="e.g. 09:00 – 22:00"
+                  placeholderTextColor={colors.textMuted}
+                  style={[styles.input, { backgroundColor: inputBg, color: colors.text, borderColor: cardBorder }]}
+                />
+                <Text style={[{ fontSize: 11, fontWeight: '500', marginTop: 8 }, { color: colors.textMuted }]}>
+                  Use 24h format (HH:MM – HH:MM) for the Open/Closed badge to work on your storefront.
+                </Text>
+              </View>
+
             </>
           )}
 

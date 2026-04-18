@@ -10,6 +10,7 @@ import {
   Clock, Leaf, Flame, Package, ChevronRight,
 } from 'lucide-react-native';
 import { useCartStore, WishlistItem, SelectedExtra, SelectedOption, getItemUnitPrice } from '../../store/cartStore';
+import { api } from '../../lib/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,10 +27,16 @@ const onColor= (hex: string) => luma(hex) > 160 ? '#0a0a0a' : '#ffffff';
 export function ProductDetailScreen({ route, navigation }: any) {
   const { item, store } = route.params;
   const isFood  = store.store_type === 'FOOD';
-  const accent  = store.primary_color || (isFood ? '#f97316' : '#6366f1');
+  const accent  = store.primary_color || (isFood ? '#f97316' : '#111827');
   const bg      = store.background_color || '#ffffff';
   const acRgb   = rgbStr(accent);
   const fg      = onColor(accent);
+
+  const isDark        = luma(bg) < 128;
+  const surface       = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.025)';
+  const textPrimary   = isDark ? '#f9fafb' : '#0a0a0a';
+  const textSecondary = isDark ? '#a5b4d4' : '#6b7280';
+  const border        = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)';
 
   const { addItem, addToWishlist, removeFromWishlist, isInWishlist } = useCartStore();
   const wishlisted = isInWishlist(item.id);
@@ -43,6 +50,27 @@ export function ProductDetailScreen({ route, navigation }: any) {
 
   const options: any[] = item.options || [];
   const extras:  any[] = item.extras  || [];
+
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(true);
+
+  useEffect(() => {
+    const fetchRecs = async () => {
+      try {
+        const endpoint = isFood ? `/food/items?store_id=${store.id}` : `/retail/products?store_id=${store.id}`;
+        const res = await api.get(endpoint);
+        const data = res.data?.results || res.data || [];
+        const filtered = data.filter((x: any) => x.id !== item.id);
+        const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 4);
+        setRecommendations(shuffled);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingRecs(false);
+      }
+    };
+    fetchRecs();
+  }, [item.id, store.id]);
 
   // Running total
   const extrasTotal = selectedExtras.reduce((s, e) => s + e.price, 0);
@@ -121,10 +149,10 @@ export function ProductDetailScreen({ route, navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
 
-      {/* ── Sticky header (fades in on scroll) ─────────────────────────────── */}
-      <Animated.View style={[styles.stickyHeader, { opacity: headerOpacity, backgroundColor: bg }]}>
+      {/* ── Sticky header ─────────────────────────────────── */}
+      <Animated.View style={[styles.stickyHeader, { opacity: headerOpacity, backgroundColor: bg, borderBottomColor: border }]}>
         <View style={[styles.stickyInner, { paddingTop: Platform.OS === 'ios' ? 52 : 36 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.glassBtn, { backgroundColor: `rgba(${rgbStr(bg === '#ffffff' ? '#000000' : bg)},0.08)` }]}>
             <ArrowLeft color={accent} size={20} strokeWidth={2.5} />
@@ -180,7 +208,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
         {/* ── Content card (rounded top) ───────────────────────────────────── */}
         <View style={[styles.contentCard, { backgroundColor: bg, marginTop: -24 }]}>
           {/* Name + badges */}
-          <Text style={[styles.itemName, { color: '#0a0a0a' }]}>{item.name}</Text>
+          <Text style={[styles.itemName, { color: textPrimary }]}>{item.name}</Text>
 
           {/* Badges row */}
           {isFood && (
@@ -198,9 +226,9 @@ export function ProductDetailScreen({ route, navigation }: any) {
                 </View>
               )}
               {item.preparation_time_minutes > 0 && (
-                <View style={[styles.badge, { backgroundColor: '#f3f4f6' }]}>
-                  <Clock color="#6b7280" size={11} />
-                  <Text style={[styles.badgeTxt, { color: '#6b7280' }]}>{item.preparation_time_minutes} min</Text>
+                <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#f3f4f6' }]}>
+                  <Clock color={textSecondary} size={11} />
+                  <Text style={[styles.badgeTxt, { color: textSecondary }]}>{item.preparation_time_minutes} min</Text>
                 </View>
               )}
             </View>
@@ -214,8 +242,8 @@ export function ProductDetailScreen({ route, navigation }: any) {
                 </Text>
               </View>
               {item.sku ? (
-                <View style={[styles.badge, { backgroundColor: '#f3f4f6' }]}>
-                  <Text style={[styles.badgeTxt, { color: '#6b7280' }]}>SKU: {item.sku}</Text>
+                <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#f3f4f6' }]}>
+                  <Text style={[styles.badgeTxt, { color: textSecondary }]}>SKU: {item.sku}</Text>
                 </View>
               ) : null}
             </View>
@@ -223,7 +251,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
 
           {/* Description */}
           {item.description ? (
-            <Text style={styles.description}>{item.description}</Text>
+            <Text style={[styles.description, { color: textSecondary }]}>{item.description}</Text>
           ) : null}
 
           {/* ── OPTIONS (food only) ────────────────────────────────────────── */}
@@ -252,7 +280,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
                         }]}
                         activeOpacity={0.75}
                       >
-                        <Text style={[styles.pillTxt, { color: active ? fg : '#374151' }]}>{choice}</Text>
+                        <Text style={[styles.pillTxt, { color: active ? fg : textPrimary }]}>{choice}</Text>
                         {active && <Check color={fg} size={12} strokeWidth={3} />}
                       </TouchableOpacity>
                     );
@@ -274,7 +302,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
                     onPress={() => toggleExtra(extra)}
                     style={[styles.extraRow, {
                       backgroundColor: selected ? `rgba(${acRgb},0.07)` : 'transparent',
-                      borderColor: selected ? `rgba(${acRgb},0.25)` : '#f3f4f6',
+                      borderColor: selected ? `rgba(${acRgb},0.25)` : border,
                     }]}
                     activeOpacity={0.75}
                   >
@@ -284,11 +312,42 @@ export function ProductDetailScreen({ route, navigation }: any) {
                     }]}>
                       {selected && <Check color="#fff" size={11} strokeWidth={3} />}
                     </View>
-                    <Text style={[styles.extraName, { color: '#111827' }]}>{extra.name}</Text>
+                    <Text style={[styles.extraName, { color: textPrimary }]}>{extra.name}</Text>
                     <Text style={[styles.extraPrice, { color: accent }]}>+Br {parseFloat(extra.price).toFixed(2)}</Text>
                   </TouchableOpacity>
                 );
               })}
+            </View>
+          )}
+
+          {/* ── RECOMMENDATIONS ────────────────────────────────────────────── */}
+          {!loadingRecs && recommendations.length > 0 && (
+            <View style={[styles.section, { marginTop: 16 }]}>
+              <Text style={styles.sectionLabel}>You may also like</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 12, gap: 16 }}>
+                {recommendations.map(rec => (
+                  <TouchableOpacity
+                    key={rec.id}
+                    activeOpacity={0.8}
+                    style={styles.recCard}
+                    onPress={() => navigation.push('ProductDetail', { item: rec, store })}
+                  >
+                    <View style={styles.recImgWrapper}>
+                      {rec.image ? (
+                        <Image source={{ uri: rec.image }} style={styles.recImg} resizeMode="cover" />
+                      ) : (
+                        <View style={[styles.recImg, { backgroundColor: `rgba(${acRgb},0.08)`, alignItems: 'center', justifyContent: 'center' }]}>
+                          <Text style={{ fontSize: 40, opacity: 0.8 }}>{isFood ? '🍽️' : '📦'}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={{ marginTop: 10 }}>
+                      <Text style={[styles.recName, { color: textPrimary }]} numberOfLines={1}>{rec.name}</Text>
+                      <Text style={[styles.recPrice, { color: accent }]}>Br {parseFloat(rec.price).toFixed(2)}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           )}
         </View>
@@ -300,9 +359,9 @@ export function ProductDetailScreen({ route, navigation }: any) {
           {/* Running total */}
           <View style={{ marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <View>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={[styles.totalLabel, { color: textSecondary }]}>Total</Text>
               {selectedExtras.length > 0 && (
-                <Text style={[styles.basePrice, { color: '#9ca3af' }]}>Base Br {parseFloat(item.price).toFixed(2)}</Text>
+                <Text style={[styles.basePrice, { color: textSecondary }]}>Base Br {parseFloat(item.price).toFixed(2)}</Text>
               )}
             </View>
             <Text style={[styles.totalAmount, { color: accent }]}>Br {unitPrice.toFixed(2)}</Text>
@@ -372,4 +431,10 @@ const styles = StyleSheet.create({
   totalAmount: { fontSize: 26, fontWeight: '900', letterSpacing: -0.8 },
   addToCartBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 18, paddingVertical: 17 },
   addToCartTxt: { fontSize: 17, fontWeight: '900', letterSpacing: -0.2 },
+  
+  recCard: { width: 140 },
+  recImgWrapper: { width: 140, height: 140, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' },
+  recImg: { width: '100%', height: '100%' },
+  recName: { fontSize: 14, fontWeight: '800', letterSpacing: -0.3 },
+  recPrice: { fontSize: 13, fontWeight: '700', marginTop: 2 },
 });

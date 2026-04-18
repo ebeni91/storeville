@@ -39,6 +39,22 @@ class Store(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     city = models.CharField(max_length=100, default='Addis Ababa')
     
+    # Subscriptions & Billing
+    SUBSCRIPTION_CHOICES = [
+        ('STARTER', 'Starter (Free Trial)'),
+        ('PRO', 'Pro'),
+        ('ELITE', 'Elite'),
+    ]
+    subscription_plan = models.CharField(max_length=20, choices=SUBSCRIPTION_CHOICES, default='STARTER')
+    
+    STATUS_CHOICES = [
+        ('ACTIVE', 'Active'),
+        ('PAST_DUE', 'Past Due'),
+        ('CANCELED', 'Canceled'),
+    ]
+    subscription_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ACTIVE')
+
+    
     # ==========================================
     # 🎨 PREMIUM STORE CUSTOMIZATION ENGINE
     # ==========================================

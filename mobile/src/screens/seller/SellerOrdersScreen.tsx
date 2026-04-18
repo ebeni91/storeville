@@ -107,7 +107,7 @@ export function SellerOrdersScreen() {
           <Text style={{ fontWeight: '900', color: colors.text, fontSize: 20 }}>
             Br {parseFloat(item.total_amount).toFixed(2)}
           </Text>
-          <View style={{ backgroundColor: isDark ? 'rgba(99,102,241,0.15)' : '#eef2ff', padding: 8, borderRadius: 14, marginTop: 12 }}>
+          <View style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.08)' : '#f3f4f6', padding: 8, borderRadius: 14, marginTop: 12 }}>
             <Eye size={20} color="#4f46e5" />
           </View>
         </View>

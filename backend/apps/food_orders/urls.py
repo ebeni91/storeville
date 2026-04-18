@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import CartDetailView, FoodOrderViewSet, CartMergeView
 
-router = DefaultRouter(trailing_slash=False)
+router = DefaultRouter(trailing_slash=True)
 router.register(r'', FoodOrderViewSet, basename='food-orders')
 
 urlpatterns = [

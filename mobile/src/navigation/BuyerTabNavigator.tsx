@@ -16,7 +16,7 @@ import { WishlistScreen } from '../screens/buyer/WishlistScreen';
 import { ProductDetailScreen } from '../screens/buyer/ProductDetailScreen';
 // ✅ NEW: Store launch from profile
 import { StoreLaunchScreen } from '../screens/seller/StoreLaunchScreen';
-
+import { SubscriptionCheckoutScreen } from '../screens/seller/SubscriptionCheckoutScreen';
 
 // Profile sub-screens
 import { ProfileInfoScreen } from '../screens/buyer/profile/ProfileInfoScreen';
@@ -100,6 +100,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} />
       {/* ✅ NEW: Store launch from within profile stack */}
       <ProfileStack.Screen name="StoreLaunch" component={StoreLaunchScreen} />
+      <ProfileStack.Screen name="SubscriptionCheckout" component={SubscriptionCheckoutScreen} />
       <ProfileStack.Screen name="ProfileInfo" component={ProfileInfoScreen} />
       <ProfileStack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
       <ProfileStack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />

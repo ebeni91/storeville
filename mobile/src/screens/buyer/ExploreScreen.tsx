@@ -122,14 +122,14 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     'window.map=L.map("map",{zoomControl:false,attributionControl:false}).setView([' + lat + ',' + lng + '],15);',
     'L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{maxZoom:20}).addTo(window.map);',
     // User dot
-    'var ud=\'<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(99,102,241,0.35);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#6366f1;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(99,102,241,0.5);"></div></div>\';',
+    'var ud=\'<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(0,0,0,0.20);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#111827;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(0,0,0,0.30);"></div></div>\';',
     'window.userMarker = L.marker([' + lat + ',' + lng + '],{icon:L.divIcon({html:ud,className:"",iconSize:[22,22],iconAnchor:[11,11]})}).addTo(window.map);',
     // Store pins
     'var stores=' + storesJson + ';',
     'stores.forEach(function(s){',
     '  if(!s.latitude||!s.longitude) return;',
     '  var isF=s.store_type==="FOOD";',
-    '  var col=isF?"#f97316":"#6366f1";',
+    '  var col=isF?"#f97316":"#111827";',
     '  var svg=isF',
     '    ?\'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>\'',
     '    :\'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>\';',
@@ -161,12 +161,12 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
 
       {!location ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={{ color: '#6366f1', fontWeight: '600', marginTop: 14, fontSize: 15 }}>Finding you on the map…</Text>
+          <ActivityIndicator size="large" color="#111827" />
+          <Text style={{ color: '#111827', fontWeight: '600', marginTop: 14, fontSize: 15 }}>Finding you on the map…</Text>
         </View>
       ) : (
         <View style={{ flex: 1 }}>
@@ -248,7 +248,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
               } catch (e) { /* ignore */ }
             }}
           >
-            <Navigation color="#6366f1" size={24} strokeWidth={2.5} />
+            <Navigation color="#111827" size={24} strokeWidth={2.5} />
           </TouchableOpacity>
 
           {/* ── Gateway Switcher Pills ────────────── */}
@@ -293,10 +293,10 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
                 </TouchableOpacity>
 
                 {/* Hero banner */}
-                <View style={[styles.heroBanner, { backgroundColor: isFood ? '#fff7ed' : '#eef2ff', borderColor: isFood ? '#fed7aa' : '#c7d2fe' }]}>
+                <View style={[styles.heroBanner, { backgroundColor: isFood ? '#fff7ed' : '#f3f4f6', borderColor: isFood ? '#fed7aa' : '#c7d2fe' }]}>
                   <View style={[styles.heroIconCircle, {
-                    backgroundColor: isFood ? '#f97316' : '#6366f1',
-                    shadowColor: isFood ? '#f97316' : '#6366f1',
+                    backgroundColor: isFood ? '#f97316' : '#111827',
+                    shadowColor: isFood ? '#f97316' : '#111827',
                   }]}>
                     {isFood
                       ? <Coffee color="#ffffff" size={30} />
@@ -318,7 +318,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
                   <View style={{ flexDirection: 'row', gap: 10 }}>
                     {[
-                      { icon: Navigation, label: '1.2 km', sub: 'Distance', color: '#6366f1' },
+                      { icon: Navigation, label: '1.2 km', sub: 'Distance', color: '#111827' },
                       { icon: Star, label: '4.8', sub: '200+ reviews', color: '#f59e0b' },
                       { icon: CheckCircle, label: 'Open', sub: 'Until 10 PM', color: '#16a34a' },
                     ].map((s, i) => (
@@ -335,7 +335,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
                 <TouchableOpacity
                   onPress={() => { closeDrawer(); navigation.navigate('StoreGateway', { store: selectedStore }); }}
                   activeOpacity={0.85}
-                  style={[styles.ctaButton, { backgroundColor: isFood ? '#f97316' : '#6366f1', shadowColor: isFood ? '#f97316' : '#6366f1' }]}
+                  style={[styles.ctaButton, { backgroundColor: isFood ? '#f97316' : '#111827', shadowColor: isFood ? '#f97316' : '#111827' }]}
                 >
                   <Text style={styles.ctaText}>{isFood ? 'Order From This Place' : 'Enter Store'}</Text>
                   <ArrowRight color="#ffffff" size={20} strokeWidth={2.5} />
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15, shadowRadius: 12, elevation: 8,
   },
   gatewayPillRetailActive: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#111827',
   },
   gatewayPillFoodActive: {
     backgroundColor: '#f97316',

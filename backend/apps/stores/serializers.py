@@ -14,7 +14,7 @@ class StoreDiscoverySerializer(serializers.ModelSerializer):
             'header_layout', 'card_style', 'announcement_is_active',
             'announcement_text', 'announcement_color', 'social_instagram',
             'social_tiktok', 'social_facebook', 'social_twitter',
-            'working_days', 'delivery_hours',
+            'working_days', 'delivery_hours', 'subscription_plan', 'subscription_status'
         ]
 
 

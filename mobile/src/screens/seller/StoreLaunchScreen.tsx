@@ -6,9 +6,15 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
-import { ArrowRight, MapPin, Store, Coffee, Navigation, CheckCircle } from 'lucide-react-native';
+import { ArrowRight, MapPin, Store, Coffee, Navigation, CheckCircle, Star, Zap, Crown } from 'lucide-react-native';
 import { authClient, useSession } from '../../lib/auth-client';
 import { api } from '../../lib/api';
+
+const PLANS = [
+  { id: 'starter', name: 'Starter', price: 'Free trial (1 Mo)', icon: Star, color: '#6b7280', accent: 'rgba(107,114,128,0.1)' },
+  { id: 'pro', name: 'Pro', price: 'Br 299/mo', icon: Zap, color: '#111827', accent: 'rgba(0,0,0,0.05)' },
+  { id: 'elite', name: 'Elite', price: 'Br 799/mo', icon: Crown, color: '#f59e0b', accent: 'rgba(245,158,11,0.1)' },
+];
 import { useThemeStore } from '../../store/themeStore';
 import { CustomAlert } from '../../components/ui/CustomAlert';
 import { useAlert } from '../../lib/useAlert';
@@ -47,6 +53,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState('starter');
 
   const { refetch: refetchSession } = useSession();
 
@@ -63,8 +70,8 @@ export function StoreLaunchScreen({ navigation }: Props) {
   }, []);
 
   const isRetail = category === 'RETAIL';
-  const accentColor = isRetail ? '#6366f1' : '#f97316';
-  const accentBg = isRetail ? 'rgba(99,102,241,0.1)' : 'rgba(249,115,22,0.1)';
+  const accentColor = isRetail ? '#111827' : '#f97316';
+  const accentBg = isRetail ? 'rgba(0,0,0,0.05)' : 'rgba(249,115,22,0.1)';
   const accentBorder = isRetail ? 'rgba(99,102,241,0.3)' : 'rgba(249,115,22,0.3)';
   const businessTypes = isRetail ? RETAIL_TYPES : FOOD_TYPES;
 
@@ -81,38 +88,35 @@ export function StoreLaunchScreen({ navigation }: Props) {
       return;
     }
 
-    setLoading(true);
-    try {
-      // Build slug from store name
-      const slug = storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const storeData = {
+      name: storeName.trim(),
+      category: businessType,
+      store_type: category,
+      description: description.trim(),
+      latitude: parseFloat(location.latitude.toFixed(6)),
+      longitude: parseFloat(location.longitude.toFixed(6)),
+    };
 
-      // Create the store via the Django backend
-      await api.post('/stores/manage', {
-        name: storeName.trim(),
-        category: businessType, // Changed from sending 'RETAIL' to sending the actual type like 'Electronics'
-        store_type: category, // This is 'RETAIL' or 'FOOD'
-        description: description.trim(),
-        latitude: parseFloat(location.latitude.toFixed(6)),
-        longitude: parseFloat(location.longitude.toFixed(6)),
-      });
-
-      // Show success animation state
-      setSuccess(true);
-      
-      // Wait for user to see the success state, then smoothly transition navigation
-      setTimeout(async () => {
-        // Force a fresh session fetch to pick up upgraded SELLER role
-        await refetchSession();
-      }, 1500);
-
-    } catch (e: any) {
-      setLoading(false);
-      setSuccess(false);
-      if (e.response && e.response.data) {
-        showAlert({ title: 'Validation Error', message: JSON.stringify(e.response.data), variant: 'error', buttons: [{ text: 'OK' }] });
-      } else {
-        showAlert({ title: 'Launch Failed', message: e.message || 'Failed to launch store. Try again.', variant: 'error', buttons: [{ text: 'OK' }] });
+    if (selectedPlanId === 'starter') {
+      setLoading(true);
+      try {
+        await api.post('/stores/manage', { ...storeData, subscription_plan: 'STARTER' });
+        setSuccess(true);
+        setTimeout(async () => {
+          await refetchSession();
+        }, 1500);
+      } catch (e: any) {
+        setLoading(false);
+        setSuccess(false);
+        if (e.response && e.response.data) {
+          showAlert({ title: 'Validation Error', message: JSON.stringify(e.response.data), variant: 'error', buttons: [{ text: 'OK' }] });
+        } else {
+          showAlert({ title: 'Launch Failed', message: e.message || 'Failed to launch store. Try again.', variant: 'error', buttons: [{ text: 'OK' }] });
+        }
       }
+    } else {
+      const plan = PLANS.find(p => p.id === selectedPlanId);
+      navigation.navigate('SubscriptionCheckout', { storeData, plan });
     }
   };
 
@@ -144,7 +148,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
       L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{maxZoom:20}).addTo(window.map);
       
       // User dot (identical to explore screen)
-      var ud='<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(99,102,241,0.35);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#6366f1;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(99,102,241,0.5);"></div></div>';
+      var ud='<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(0,0,0,0.20);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#111827;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(0,0,0,0.30);"></div></div>';
       window.userMarker = L.marker([${userLat},${userLng}],{icon:L.divIcon({html:ud,className:"",iconSize:[22,22],iconAnchor:[11,11]})}).addTo(window.map);
 
       // Store launch pin
@@ -180,7 +184,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1, backgroundColor: colors.bg }}
     >
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bg} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent={true} />
 
       {/* Ambient glow */}
       <View style={{ position: 'absolute', top: -width * 0.4, right: -width * 0.3, width: width * 1.2, height: width * 1.2, borderRadius: width * 0.6, backgroundColor: accentColor, opacity: isDark ? 0.07 : 0.04 }} pointerEvents="none" />
@@ -214,7 +218,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
           }}>
             {(['RETAIL', 'FOOD'] as const).map(cat => {
               const isActive = category === cat;
-              const catAccent = cat === 'RETAIL' ? '#6366f1' : '#f97316';
+              const catAccent = cat === 'RETAIL' ? '#111827' : '#f97316';
               return (
                 <TouchableOpacity
                   key={cat}
@@ -366,11 +370,43 @@ export function StoreLaunchScreen({ navigation }: Props) {
             <Navigation color={accentColor} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
-        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', textAlign: 'center', marginBottom: 32 }}>
+        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', textAlign: 'center', marginBottom: 24 }}>
             Drag the pin to mark your exact store entrance
-          </Text>
+        </Text>
 
-          {/* ── Launch Button ──────────────────────────────── */}
+        {/* ── Subscription Plan Selection ────────────────── */}
+        <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 10, marginLeft: 4 }}>
+          Subscription Plan
+        </Text>
+        <View style={{ gap: 10, marginBottom: 32 }}>
+          {PLANS.map(plan => {
+            const isSelected = selectedPlanId === plan.id;
+            const PlanIcon = plan.icon;
+            return (
+              <TouchableOpacity
+                key={plan.id}
+                onPress={() => setSelectedPlanId(plan.id)}
+                activeOpacity={0.8}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.surface,
+                  padding: 16, borderRadius: 20, borderWidth: 1.5,
+                  borderColor: isSelected ? plan.color : (isDark ? 'rgba(255,255,255,0.08)' : colors.border)
+                }}
+              >
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: isSelected ? plan.accent : (isDark ? 'rgba(255,255,255,0.05)' : colors.bg), alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
+                  <PlanIcon color={isSelected ? plan.color : colors.textMuted} size={22} strokeWidth={2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: isSelected ? plan.color : colors.text }}>{plan.name}</Text>
+                  <Text style={{ fontSize: 13, color: colors.textMuted, fontWeight: '500' }}>{plan.price}</Text>
+                </View>
+                {isSelected && <CheckCircle color={plan.color} size={22} />}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* ── Launch Button ──────────────────────────────── */}
           <TouchableOpacity
             onPress={handleLaunch}
             disabled={loading || success || !storeName.trim() || !businessType}
@@ -401,7 +437,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
             ) : (
               <>
                 <Text style={{ color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.3 }}>
-                  Launch My Digital Mall
+                  {selectedPlanId === 'starter' ? 'Launch My Digital Mall' : 'Continue to Payment'}
                 </Text>
                 <ArrowRight color="#fff" size={22} strokeWidth={2.5} />
               </>

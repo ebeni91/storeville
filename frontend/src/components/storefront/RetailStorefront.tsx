@@ -13,7 +13,7 @@ import { useFavoriteStore } from '@/store/favoriteStore'
 import FavoriteDropdown from '@/components/FavoriteDropdown'
 
 interface RetailCategory { id: string; name: string; slug: string }
-interface RetailProduct { id: string; category: string; category_name: string; name: string; description: string; price: string; image: string | null; stock_quantity: number }
+interface RetailProduct { id: string; category: string; category_name: string; name: string; description: string; price: string; image: string | null; stock_quantity: number; options?: string | any[]; extras?: string | any[] }
 
 export default function RetailStorefront({ store }: { store: any }) {
   const router = useRouter()
@@ -455,8 +455,15 @@ export default function RetailStorefront({ store }: { store: any }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-              {filteredProducts.map(p => (
-                <div key={p.id} className="group cursor-pointer flex flex-col rounded-2xl p-2 border shadow-sm hover:shadow-xl transition-all duration-500 bg-white/5 backdrop-blur-sm hover:-translate-y-1.5" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
+              {filteredProducts.map(p => {
+                let hasConfig = false;
+                try {
+                  const opts = typeof p.options === 'string' ? JSON.parse(p.options) : (p.options || [])
+                  const exts = typeof p.extras === 'string' ? JSON.parse(p.extras) : (p.extras || [])
+                  if (opts.length > 0 || exts.length > 0) hasConfig = true
+                } catch(e){}
+                return (
+                <div key={p.id} onClick={() => router.push(`/store/${store.slug}/product/${p.id}`)} className="group cursor-pointer flex flex-col rounded-2xl p-2 border shadow-sm hover:shadow-xl transition-all duration-500 bg-white/5 backdrop-blur-sm hover:-translate-y-1.5" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
                   
                   <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-black/5 mb-3 shadow-inner">
                     {p.image ? (
@@ -486,12 +493,20 @@ export default function RetailStorefront({ store }: { store: any }) {
 
                     <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20">
                       <button 
-                        onClick={(e) => { e.stopPropagation(); handleAddToCart(p); setIsCartOpen(true); }}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          if (hasConfig) {
+                            router.push(`/store/${store.slug}/product/${p.id}`)
+                          } else {
+                            handleAddToCart(p); 
+                            setIsCartOpen(true); 
+                          }
+                        }}
                         disabled={p.stock_quantity === 0}
                         className="w-full py-2.5 rounded-lg text-[10px] font-black tracking-widest uppercase flex items-center justify-center gap-1.5 shadow-xl hover:opacity-90 transition-opacity backdrop-blur-xl border disabled:opacity-50" 
                         style={{ backgroundColor: `rgba(${hexToRgb(store.primary_color)}, 0.95)`, color: store.background_color, borderColor: `rgba(${bgRgb}, 0.2)` }}
                       >
-                        {p.stock_quantity === 0 ? 'Out of Stock' : <><Plus size={14} /> Quick Add</>}
+                        {p.stock_quantity === 0 ? 'Out of Stock' : hasConfig ? 'Choose Options' : <><Plus size={14} /> Quick Add</>}
                       </button>
                     </div>
                   </div>
@@ -506,7 +521,8 @@ export default function RetailStorefront({ store }: { store: any }) {
                   </div>
 
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </section>
@@ -537,7 +553,8 @@ export default function RetailStorefront({ store }: { store: any }) {
                   <div className="flex-1 overflow-hidden">
                     <h4 className="text-sm font-bold tracking-tight line-clamp-1">{item.name}</h4>
                     <p className="text-xs opacity-60 mt-0.5">Qty: {item.quantity}</p>
-                    <p className="text-sm font-black mt-2" style={{ color: store.primary_color }}>Br {item.price}</p>
+                    {item.special_requests && <p className="text-[10px] opacity-70 mt-1 line-clamp-2">{item.special_requests}</p>}
+                    <p className="text-sm font-black mt-2" style={{ color: store.primary_color }}>Br {parseFloat(item.price).toFixed(2)}</p>
                   </div>
                   <button onClick={() => removeFromCart(item.id)} className="p-2 opacity-50 hover:opacity-100 hover:text-red-500 transition-colors shrink-0"><X size={16}/></button>
                 </div>

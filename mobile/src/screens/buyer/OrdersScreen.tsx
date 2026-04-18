@@ -38,7 +38,7 @@ export function OrdersScreen() {
 
   const STATUS_MAP: Record<string, { color: string; bg: string; icon: any; label: string }> = {
     PENDING:          { color: '#f59e0b', bg: mode === 'dark' ? 'rgba(245,158,11,0.15)' : '#fffbeb', icon: Clock,         label: 'Pending' },
-    ACCEPTED:         { color: '#6366f1', bg: mode === 'dark' ? 'rgba(99,102,241,0.15)' : '#eef2ff', icon: CheckCircle,   label: 'Accepted' },
+    ACCEPTED:         { color: '#111827', bg: mode === 'dark' ? 'rgba(0,0,0,0.08)' : '#f3f4f6', icon: CheckCircle,   label: 'Accepted' },
     COOKING:          { color: '#f97316', bg: mode === 'dark' ? 'rgba(249,115,22,0.15)' : '#fff7ed',  icon: Clock,        label: 'In Kitchen' },
     PROCESSING:       { color: '#0ea5e9', bg: mode === 'dark' ? 'rgba(14,165,233,0.15)' : '#f0f9ff', icon: Package,       label: 'Processing' },
     SHIPPED:          { color: '#8b5cf6', bg: mode === 'dark' ? 'rgba(139,92,246,0.15)' : '#f5f3ff', icon: Truck,         label: 'Shipped' },
@@ -79,7 +79,7 @@ export function OrdersScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <View style={[
         styles.header,
         {

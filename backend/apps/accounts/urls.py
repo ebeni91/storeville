@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import ProfileView, CustomerAddressViewSet, SavedPaymentMethodViewSet, SyncUserView
 
-router = DefaultRouter(trailing_slash=False)
+router = DefaultRouter(trailing_slash=True)
 router.register(r'addresses', CustomerAddressViewSet, basename='addresses')
 router.register(r'payment-methods', SavedPaymentMethodViewSet, basename='payment-methods')
 

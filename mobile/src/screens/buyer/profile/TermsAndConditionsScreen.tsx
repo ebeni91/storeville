@@ -21,7 +21,7 @@ export function TermsAndConditionsScreen({ navigation }: Props) {
   const { colors, mode } = useThemeStore();
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <View style={[styles.header, { 
         backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
         borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 

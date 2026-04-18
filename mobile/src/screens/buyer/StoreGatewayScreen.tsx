@@ -48,7 +48,7 @@ const parseOpenStatus = (deliveryHours: string): boolean | null => {
 };
 
 // ─── Shimmer skeleton ──────────────────────────────────────────────────────────
-function Shimmer({ w, h: ht, r = 12, style }: { w: number | string; h: number; r?: number; style?: any }) {
+function Shimmer({ w, h: ht, r = 12, style, color = '#e0e0e8' }: { w: number | string; h: number; r?: number; style?: any; color?: string }) {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.loop(
@@ -59,7 +59,7 @@ function Shimmer({ w, h: ht, r = 12, style }: { w: number | string; h: number; r
     ).start();
   }, []);
   const opacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.9] });
-  return <Animated.View style={[{ width: w as any, height: ht, borderRadius: r, backgroundColor: '#e0e0e8', opacity }, style]} />;
+  return <Animated.View style={[{ width: w as any, height: ht, borderRadius: r, backgroundColor: color, opacity }, style]} />;
 }
 
 // ─── Announcement bar ──────────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ function AnnouncementBar({ store, accent }: { store: any; accent: string }) {
 }
 
 // ─── Shared minimal product card (heart + tap to detail) ─────────────────────
-function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlisted, index }: any) {
+function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlisted, index, surface = '#ffffff', textPrimary = '#0a0a0a' }: any) {
   const slideY  = useRef(new Animated.Value(28)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const heartAnim = useRef(new Animated.Value(1)).current;
@@ -119,7 +119,7 @@ function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlist
 
   return (
     <Animated.View style={{ width: CARD_W, opacity, transform: [{ translateY: slideY }] }}>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.92} style={[styles.card, { width: CARD_W }]}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.92} style={[styles.card, { width: CARD_W, backgroundColor: surface }]}>
         {/* Image */}
         <View style={[styles.cardImg, { height: IMG_H, backgroundColor: `rgba(${acRgb},0.07)` }]}>
           {item.image
@@ -136,7 +136,7 @@ function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlist
         </View>
         {/* Info */}
         <View style={{ padding: 11, paddingBottom: 13 }}>
-          <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
+          <Text style={[styles.cardName, { color: textPrimary }]} numberOfLines={1}>{item.name}</Text>
           <Text style={[styles.cardPrice, { color: accent }]}>Br {parseFloat(item.price).toFixed(2)}</Text>
           {/* Food extras hint */}
           {isFood && (item.extras || []).length > 0 && (
@@ -152,11 +152,15 @@ function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlist
 export function StoreGatewayScreen({ route, navigation, previewMode = false }: { route: any; navigation: any; previewMode?: boolean }) {
   const { store } = route.params;
   const isFood    = store.store_type === 'FOOD';
-  const accent    = store.primary_color    || (isFood ? '#f97316' : '#6366f1');
+  const accent    = store.primary_color    || (isFood ? '#f97316' : '#111827');
   const bg        = store.background_color || '#ffffff';
   const secondary = store.secondary_color  || '#111827';
   const acRgb     = rgbStr(accent);
-  const bgRgb     = rgbStr(bg);
+  const bgRgb         = rgbStr(bg);
+  const isDark         = luma(bg) < 128;
+  const surface        = isDark ? 'rgba(255,255,255,0.08)' : '#ffffff';
+  const textPrimary    = isDark ? '#f9fafb' : '#101827';
+  const shimmerColor   = isDark ? 'rgba(255,255,255,0.12)' : '#e0e0e8';
   const hasAnnouncement = !!(store.announcement_is_active && store.announcement_text);
 
   // Open/closed badge
@@ -194,8 +198,6 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
   const navBg       = scrollY.interpolate({ inputRange: [COLLAPSE - 40, COLLAPSE], outputRange: [0, 1], extrapolate: 'clamp' });
   const heroParallax= scrollY.interpolate({ inputRange: [0, HERO_H], outputRange: [0, -HERO_H * 0.35], extrapolate: 'clamp' });
   const heroScale   = scrollY.interpolate({ inputRange: [-100, 0], outputRange: [1.08, 1], extrapolate: 'clamp' });
-  const heroOpacity = scrollY.interpolate({ inputRange: [0, COLLAPSE * 0.6], outputRange: [1, 0.3], extrapolate: 'clamp' });
-  const titleVisible= scrollY.interpolate({ inputRange: [COLLAPSE - 20, COLLAPSE + 20], outputRange: [0, 1], extrapolate: 'clamp' });
 
   const handleWishlist = (item: any) => {
     if (isInWishlist(item.id)) {
@@ -220,20 +222,11 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      {/* Announcement bar inset */}
-      <View style={{ position: 'absolute', top: 30, left: 14, right: 14, zIndex: 60, borderRadius: 8, overflow: 'hidden' }}>
-        <AnnouncementBar store={store} accent={accent} />
-      </View>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent={true} />
 
-      {/* ── Sticky nav ──────────────────────────────────────────────────────── */}
-      <View style={[styles.navWrap, { top: announcementH }]}>
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: navBg }]}>
-          <LinearGradient colors={[`rgba(${acRgb},0.96)`, `rgba(${acRgb},0.94)`]} style={StyleSheet.absoluteFill} />
-        </Animated.View>
-        <Animated.View style={[styles.navSep, { opacity: navBg, borderBottomColor: 'rgba(255,255,255,0.12)' }]} />
-        <View style={[styles.navRow, { paddingTop: STATUS_H }]}>
-          <Animated.Text style={[styles.navTitle, { opacity: titleVisible }]} numberOfLines={1}>{store.name}</Animated.Text>
-        </View>
+      {/* Announcement bar inset */}
+      <View style={{ position: 'absolute', top: STATUS_H + 6, left: 14, right: 14, zIndex: 60, borderRadius: 8, overflow: 'hidden' }}>
+        <AnnouncementBar store={store} accent={accent} />
       </View>
 
       {/* ── Main scrollable ─────────────────────────────────────────────────── */}
@@ -245,7 +238,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         {/* ── Hero card ───────────────────────────────────────────────────── */}
-        <View style={[styles.heroCard, { marginTop: announcementH + 40, height: HERO_H - 160 }]}>
+        <View style={[styles.heroCard, { marginTop: STATUS_H + announcementH + 16, height: HERO_H - 160 }]}>
           {/* Back + Cart + Wishlist */}
           <View style={[styles.heroNav, { paddingTop: 16 }]}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.navGlass}>
@@ -284,7 +277,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
           <LinearGradient colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.82)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} />
 
           {/* Hero content */}
-          <Animated.View style={[styles.heroContent, { opacity: heroOpacity }]}>
+          <Animated.View style={styles.heroContent}>
             {store.logo && (
               <View style={styles.logoWrap}>
                 <Image source={{ uri: store.logo }} style={{ width: '100%', height: '100%', borderRadius: 14 }} resizeMode="cover" />
@@ -384,11 +377,11 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
               {[0, 1].map(k => (
                 <View key={k} style={{ marginBottom: 24 }}>
                   <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
-                    <Shimmer w={100} h={13} /><Shimmer w={40} h={13} />
+                    <Shimmer w={100} h={13} color={shimmerColor} /><Shimmer w={40} h={13} color={shimmerColor} />
                   </View>
                   <View style={{ flexDirection: 'row', gap: 14 }}>
-                    <Shimmer w={RETAIL_CARD_W} h={RETAIL_CARD_W * 1.5} r={18} />
-                    <Shimmer w={RETAIL_CARD_W} h={RETAIL_CARD_W * 1.5} r={18} />
+                    <Shimmer w={RETAIL_CARD_W} h={RETAIL_CARD_W * 1.5} r={18} color={shimmerColor} />
+                    <Shimmer w={RETAIL_CARD_W} h={RETAIL_CARD_W * 1.5} r={18} color={shimmerColor} />
                   </View>
                 </View>
               ))}
@@ -431,6 +424,8 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
                       onWishlist={() => handleWishlist(item)}
                       wishlisted={isInWishlist(item.id)}
                       index={itemIdx}
+                      surface={surface}
+                      textPrimary={textPrimary}
                     />
                   ))}
                 </ScrollView>
@@ -467,6 +462,8 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
                         onWishlist={() => handleWishlist(item)}
                         wishlisted={isInWishlist(item.id)}
                         index={globalItemIndex + itemIdx}
+                        surface={surface}
+                        textPrimary={textPrimary}
                       />
                     ))}
                   </View>

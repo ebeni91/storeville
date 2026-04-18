@@ -1,63 +1,31 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { api } from '@/lib/api'
-import { Loader2, AlertCircle } from 'lucide-react'
-
-// 🌟 PREPARING THE MODULAR IMPORTS
-// We will build these two specialized engines next. 
-// For now, we will render a placeholder block if they aren't created yet.
+import { AlertCircle } from 'lucide-react'
 import FoodStorefront from '@/components/storefront/FoodStorefront'
 import RetailStorefront from '@/components/storefront/RetailStorefront'
-export default function StorefrontGateway() {
-  const params = useParams()
-  const subdomain = params.subdomain as string
+
+export default async function StorefrontGateway({ params }: { params: { subdomain: string } }) {
+  const subdomain = params.subdomain
   
-  // Core Store State (Preserved)
-  const [store, setStore] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  // Fetch the Store profile from Django using the subdomain
-  useEffect(() => {
-    const fetchStore = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        
-        // Query the core stores app to get the routing information
-        const response = await api.get(`/stores/discovery/by_slug/?slug=${subdomain}`)
-        
-        if (response.data) {
-          setStore(response.data)
-        } else {
-          throw new Error("Store data is empty")
-        }
-      } catch (err: any) {
-        console.error("Store Fetch Error:", err)
-        setError('Store not found or is currently unavailable.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  let store: any = null
+  let error: string | null = null
+  
+  try {
+    const djangoUrl = process.env.DJANGO_INTERNAL_URL || 'http://backend:8000'
+    const res = await fetch(`${djangoUrl}/api/stores/discovery/by_slug/?slug=${subdomain}`, {
+      // Allow slight caching in production for extreme performance, revalidating every 10 seconds
+      next: { revalidate: 10 }
+    })
     
-    if (subdomain) {
-      fetchStore()
+    if (res.ok) {
+      store = await res.json()
+    } else {
+      error = "Store not found."
     }
-  }, [subdomain])
-
-  // 1. Loading State (Preserving your UI/UX standards)
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50/50">
-        <Loader2 size={40} className="text-indigo-600 animate-spin mb-4" />
-        <p className="font-black tracking-widest uppercase text-sm text-gray-400 animate-pulse">
-          Connecting to {subdomain}...
-        </p>
-      </div>
-    )
+  } catch (err) {
+    console.error("SSR Store Fetch Error:", err)
+    error = "Service unavailable."
   }
+
+
 
   // 2. Error State (If the subdomain doesn't exist in Django)
   if (error || !store) {

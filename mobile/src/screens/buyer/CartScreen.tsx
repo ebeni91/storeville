@@ -17,9 +17,15 @@ const onColor = (hex: string) => luma(hex) > 160 ? '#0a0a0a' : '#ffffff';
 
 export function CartScreen({ route, navigation }: any) {
   const { store } = route.params;
-  const accent = store.primary_color || (store.store_type === 'FOOD' ? '#f97316' : '#6366f1');
+  const accent = store.primary_color || (store.store_type === 'FOOD' ? '#f97316' : '#111827');
   const bg     = store.background_color || '#ffffff';
   const fg     = onColor(accent);
+
+  const isDark        = luma(bg) < 128;
+  const surface       = isDark ? 'rgba(255,255,255,0.08)' : '#ffffff';
+  const textPrimary   = isDark ? '#f9fafb' : '#111827';
+  const textSecondary = isDark ? '#a5b4d4' : '#6b7280';
+  const border        = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)';
 
   const { items, updateQuantity, removeItem, getTotal, getItemCount, wishlist } = useCartStore();
   const wishlistCount = wishlist.length;
@@ -27,16 +33,16 @@ export function CartScreen({ route, navigation }: any) {
   if (items.length === 0) {
     return (
       <View style={[styles.root, { backgroundColor: bg }]}>
-        <StatusBar barStyle="dark-content" />
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: 'rgba(0,0,0,0.07)' }]}>
+        <View style={[styles.header, { backgroundColor: bg, borderBottomColor: border }]}>
           <View style={[styles.headerInner, { paddingTop: Platform.OS === 'ios' ? 56 : 36 }]}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-              <ArrowLeft color="#111827" size={20} strokeWidth={2.5} />
+            <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: surface }]}>
+              <ArrowLeft color={textPrimary} size={20} strokeWidth={2.5} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Your Cart</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Wishlist', { store })} style={styles.backBtn}>
-              <Heart color={wishlistCount > 0 ? '#ef4444' : '#9ca3af'} size={20} fill={wishlistCount > 0 ? '#ef4444' : 'none'} strokeWidth={2} />
+            <Text style={[styles.headerTitle, { color: textPrimary }]}>Your Cart</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Wishlist', { store })} style={[styles.backBtn, { backgroundColor: surface }]}>
+              <Heart color={wishlistCount > 0 ? '#ef4444' : textSecondary} size={20} fill={wishlistCount > 0 ? '#ef4444' : 'none'} strokeWidth={2} />
               {wishlistCount > 0 && (
                 <View style={styles.badge}><Text style={styles.badgeTxt}>{wishlistCount}</Text></View>
               )}
@@ -46,11 +52,11 @@ export function CartScreen({ route, navigation }: any) {
 
         {/* Empty state */}
         <View style={styles.emptyWrap}>
-          <View style={[styles.emptyIcon, { backgroundColor: `rgba(${hexRgb(accent).r},${hexRgb(accent).g},${hexRgb(accent).b},0.08)` }]}>
+          <View style={[styles.emptyIcon, { backgroundColor: `rgba(${hexRgb(accent).r},${hexRgb(accent).g},${hexRgb(accent).b},0.1)` }]}>
             <ShoppingBag color={accent} size={44} strokeWidth={1.5} />
           </View>
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySub}>Add items from the store to get started</Text>
+          <Text style={[styles.emptyTitle, { color: textPrimary }]}>Your cart is empty</Text>
+          <Text style={[styles.emptySub, { color: textSecondary }]}>Add items from the store to get started</Text>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.shopBtn, { backgroundColor: accent }]}>
             <Text style={[styles.shopBtnTxt, { color: fg }]}>Continue Shopping</Text>
           </TouchableOpacity>
@@ -61,20 +67,20 @@ export function CartScreen({ route, navigation }: any) {
 
   return (
     <View style={[styles.root, { backgroundColor: bg }]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
 
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: 'rgba(0,0,0,0.07)' }]}>
+      <View style={[styles.header, { backgroundColor: bg, borderBottomColor: border }]}>
         <View style={[styles.headerInner, { paddingTop: Platform.OS === 'ios' ? 56 : 36 }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <ArrowLeft color="#111827" size={20} strokeWidth={2.5} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: surface }]}>
+            <ArrowLeft color={textPrimary} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>Your Cart</Text>
+            <Text style={[styles.headerTitle, { color: textPrimary }]}>Your Cart</Text>
             <Text style={[styles.headerSub, { color: accent }]}>{store.name}</Text>
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Wishlist', { store })} style={styles.backBtn}>
-            <Heart color={wishlistCount > 0 ? '#ef4444' : '#9ca3af'} size={20} fill={wishlistCount > 0 ? '#ef4444' : 'none'} strokeWidth={2} />
+          <TouchableOpacity onPress={() => navigation.navigate('Wishlist', { store })} style={[styles.backBtn, { backgroundColor: surface }]}>
+            <Heart color={wishlistCount > 0 ? '#ef4444' : textSecondary} size={20} fill={wishlistCount > 0 ? '#ef4444' : 'none'} strokeWidth={2} />
             {wishlistCount > 0 && (
               <View style={styles.badge}><Text style={styles.badgeTxt}>{wishlistCount}</Text></View>
             )}
@@ -83,27 +89,27 @@ export function CartScreen({ route, navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 200 }}>
-        <Text style={styles.sectionLabel}>{getItemCount()} items from {store.name}</Text>
+        <Text style={[styles.sectionLabel, { color: textSecondary }]}>{getItemCount()} items from {store.name}</Text>
 
         {items.map(item => {
           const unitPrice  = getItemUnitPrice(item);
           const totalPrice = getItemTotal(item);
           return (
-            <View key={item.id} style={styles.itemCard}>
+            <View key={item.id} style={[styles.itemCard, { backgroundColor: surface, borderColor: border }]}>
               {/* Image */}
-              <View style={styles.itemImg}>
+              <View style={[styles.itemImg, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }]}>
                 {item.image
                   ? <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                  : <ShoppingBag color="#d1d5db" size={24} />}
+                  : <ShoppingBag color={textSecondary} size={24} />}
               </View>
 
               {/* Info */}
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+                <Text style={[styles.itemName, { color: textPrimary }]} numberOfLines={1}>{item.name}</Text>
 
                 {/* Options */}
                 {(item.selectedOptions || []).length > 0 && (
-                  <Text style={styles.itemMeta} numberOfLines={1}>
+                  <Text style={[styles.itemMeta, { color: textSecondary }]} numberOfLines={1}>
                     {item.selectedOptions!.map(o => `${o.optionName}: ${o.choice}`).join(' · ')}
                   </Text>
                 )}
@@ -121,7 +127,7 @@ export function CartScreen({ route, navigation }: any) {
                   <View>
                     <Text style={[styles.itemPrice, { color: accent }]}>Br {totalPrice.toFixed(2)}</Text>
                     {(item.selectedExtras || []).length > 0 && (
-                      <Text style={styles.itemBasePrice}>Br {unitPrice.toFixed(2)} ea.</Text>
+                      <Text style={[styles.itemBasePrice, { color: textSecondary }]}>Br {unitPrice.toFixed(2)} ea.</Text>
                     )}
                   </View>
 
@@ -129,11 +135,11 @@ export function CartScreen({ route, navigation }: any) {
                   <View style={styles.qtyRow}>
                     <TouchableOpacity
                       onPress={() => updateQuantity(item.id, item.quantity - 1)}
-                      style={[styles.qtyBtn, { backgroundColor: '#f3f4f6' }]}
+                      style={[styles.qtyBtn, { backgroundColor: surface }]}
                     >
-                      <Minus color="#374151" size={12} strokeWidth={2.5} />
+                      <Minus color={textPrimary} size={12} strokeWidth={2.5} />
                     </TouchableOpacity>
-                    <Text style={styles.qtyNum}>{item.quantity}</Text>
+                    <Text style={[styles.qtyNum, { color: textPrimary }]}>{item.quantity}</Text>
                     <TouchableOpacity
                       onPress={() => updateQuantity(item.id, item.quantity + 1)}
                       style={[styles.qtyBtn, { backgroundColor: accent }]}
@@ -154,21 +160,21 @@ export function CartScreen({ route, navigation }: any) {
         })}
 
         {/* Order summary */}
-        <View style={styles.summaryCard}>
-          <Text style={[styles.sectionLabel, { marginBottom: 14 }]}>Order Summary</Text>
+        <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: border }]}>
+          <Text style={[styles.sectionLabel, { color: textSecondary, marginBottom: 14 }]}>Order Summary</Text>
           {items.map(item => (
             <View key={item.id} style={styles.summaryRow}>
-              <Text style={styles.summaryItem}>{item.name} ×{item.quantity}</Text>
-              <Text style={styles.summaryPrice}>Br {getItemTotal(item).toFixed(2)}</Text>
+              <Text style={[styles.summaryItem, { color: textSecondary }]}>{item.name} ×{item.quantity}</Text>
+              <Text style={[styles.summaryPrice, { color: textPrimary }]}>Br {getItemTotal(item).toFixed(2)}</Text>
             </View>
           ))}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: border }]} />
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryItem}>{store.store_type === 'FOOD' ? 'Delivery Fee' : 'Shipping Fee'}</Text>
+            <Text style={[styles.summaryItem, { color: textSecondary }]}>{store.store_type === 'FOOD' ? 'Delivery Fee' : 'Shipping Fee'}</Text>
             <Text style={{ color: '#22c55e', fontWeight: '700' }}>Free</Text>
           </View>
           <View style={[styles.summaryRow, { marginTop: 8 }]}>
-            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={[styles.totalLabel, { color: textPrimary }]}>Total</Text>
             <Text style={[styles.totalAmt, { color: accent }]}>Br {getTotal().toFixed(2)}</Text>
           </View>
         </View>

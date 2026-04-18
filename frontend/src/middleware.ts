@@ -4,11 +4,23 @@ import type { NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
+  // 0. QUICK EXIT: If no session cookie exists, skip the network fetch completely
+  const hasSessionCookie = request.cookies.has('better-auth.session_token') || request.cookies.has('__Secure-better-auth.session_token')
+  
+  if (!hasSessionCookie) {
+    // If accessing a protected route without a token, fast-fail
+    if (pathname.startsWith('/dashboard/seller')) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+    return NextResponse.next()
+  }
+
   // 1. Resolve Session from Better Auth
   // We perform an internal fetch to check role-based access at the edge
   let session = null
   try {
-    const sessionRes = await fetch(`${request.nextUrl.origin}/api/auth/get-session`, {
+    const baseURL = process.env.BETTER_AUTH_URL || request.nextUrl.origin
+    const sessionRes = await fetch(`${baseURL}/api/auth/get-session`, {
       headers: {
         cookie: request.headers.get('cookie') || ''
       }

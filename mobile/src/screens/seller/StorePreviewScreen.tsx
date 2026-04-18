@@ -24,7 +24,7 @@ export function StorePreviewScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content"  backgroundColor="transparent" translucent={true} />
 
       {/* Preview Banner */}
       <View style={styles.banner}>

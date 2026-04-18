@@ -281,7 +281,7 @@ export function SellerProductsScreen() {
                 </View>
                 {item.is_vegan   && <View style={[styles.badge, { backgroundColor: 'rgba(5,150,105,0.12)' }]}><Text style={[styles.badgeTxt, { color: '#059669' }]}>Vegan</Text></View>}
                 {item.is_spicy   && <View style={[styles.badge, { backgroundColor: 'rgba(239,68,68,0.12)' }]}><Text style={[styles.badgeTxt, { color: '#ef4444' }]}>Spicy</Text></View>}
-                {(item.options || []).length > 0 && <View style={[styles.badge, { backgroundColor: 'rgba(99,102,241,0.12)' }]}><Text style={[styles.badgeTxt, { color: '#6366f1' }]}>{(item.options || []).length} option{(item.options || []).length > 1 ? 's' : ''}</Text></View>}
+                {(item.options || []).length > 0 && <View style={[styles.badge, { backgroundColor: 'rgba(99,102,241,0.12)' }]}><Text style={[styles.badgeTxt, { color: '#111827' }]}>{(item.options || []).length} option{(item.options || []).length > 1 ? 's' : ''}</Text></View>}
                 {(item.extras  || []).length > 0 && <View style={[styles.badge, { backgroundColor: 'rgba(168,85,247,0.12)' }]}><Text style={[styles.badgeTxt, { color: '#a855f7' }]}>{(item.extras  || []).length} extra{(item.extras  || []).length > 1 ? 's' : ''}</Text></View>}
               </>
             )}
@@ -456,15 +456,15 @@ export function SellerProductsScreen() {
                   </View>
 
                   {/* ── Options section ──────────────────────────────────────── */}
-                  <View style={[styles.optionsCard, { backgroundColor: 'rgba(99,102,241,0.05)', borderColor: 'rgba(99,102,241,0.15)' }]}>
-                    <Text style={[styles.optionsLabel, { color: '#6366f1' }]}>Size / Variant Options <Text style={{ fontSize: 10, fontWeight: '600' }}>(Optional)</Text></Text>
+                  <View style={[styles.optionsCard, { backgroundColor: 'rgba(99,102,241,0.05)', borderColor: 'rgba(0,0,0,0.08)' }]}>
+                    <Text style={[styles.optionsLabel, { color: '#111827' }]}>Size / Variant Options <Text style={{ fontSize: 10, fontWeight: '600' }}>(Optional)</Text></Text>
 
                     {/* Existing options */}
                     {pendingOptions.map((opt, idx) => (
                       <View key={opt.id} style={[styles.optionRow, { borderColor: 'rgba(99,102,241,0.2)' }]}>
                         <View style={{ flex: 1 }}>
                           <Text style={[styles.optionName, { color: colors.text }]}>{opt.name} {opt.is_required ? '(required)' : ''}</Text>
-                          <Text style={[styles.optionChoices, { color: '#6366f1' }]}>{(opt.choices || []).join(', ')}</Text>
+                          <Text style={[styles.optionChoices, { color: '#111827' }]}>{(opt.choices || []).join(', ')}</Text>
                         </View>
                         <TouchableOpacity onPress={() => setPendingOptions(p => p.filter((_, i) => i !== idx))} style={styles.removeBtn}>
                           <X size={14} color="#ef4444" />
@@ -482,10 +482,10 @@ export function SellerProductsScreen() {
                         style={[styles.optionInput, { color: colors.text, borderColor: inputBorder, marginTop: 8 }]} />
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <Switch value={newOptionRequired} onValueChange={setNewOptionRequired} trackColor={{ false: inputBorder, true: '#6366f1' }} thumbColor="#fff" style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }} />
+                          <Switch value={newOptionRequired} onValueChange={setNewOptionRequired} trackColor={{ false: inputBorder, true: '#111827' }} thumbColor="#fff" style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }} />
                           <Text style={[{ fontSize: 13, fontWeight: '600' }, { color: colors.textSub }]}>Required</Text>
                         </View>
-                        <TouchableOpacity onPress={addPendingOption} style={[styles.addSmallBtn, { backgroundColor: '#6366f1' }]}>
+                        <TouchableOpacity onPress={addPendingOption} style={[styles.addSmallBtn, { backgroundColor: '#111827' }]}>
                           <Plus color="#fff" size={14} strokeWidth={2.5} />
                           <Text style={{ color: '#fff', fontWeight: '800', fontSize: 12 }}>Add Option</Text>
                         </TouchableOpacity>

@@ -19,7 +19,7 @@ export function PaymentModal({ visible, onClose, paymentToEdit }: PaymentModalPr
              <View style={{ borderTopLeftRadius: 30, borderTopRightRadius: 30 }} className="bg-white p-6 shadow-2xl h-1/2">
                <View className="flex-row justify-between items-center mb-6">
                  <View className="flex-row items-center">
-                   <CreditCard size={24} color="#6366f1" />
+                   <CreditCard size={24} color="#111827" />
                    <Text className="text-2xl font-black text-gray-900 ml-3">
                      Payment Methods
                    </Text>

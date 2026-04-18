@@ -18,7 +18,7 @@ import { useAlert } from '../../lib/useAlert';
 // ─── Payment methods ───────────────────────────────────────────────────────────
 const PAYMENT_METHODS = [
   { id: 'cod',      label: 'Cash on Delivery', icon: Banknote,   color: '#16a34a', bg: '#dcfce7' },
-  { id: 'telebirr', label: 'Telebirr',          icon: Smartphone, color: '#6366f1', bg: '#eef2ff' },
+  { id: 'telebirr', label: 'Telebirr',          icon: Smartphone, color: '#111827', bg: '#f3f4f6' },
   { id: 'cbe',      label: 'CBE Birr',           icon: Building2,  color: '#0ea5e9', bg: '#f0f9ff' },
 ];
 
@@ -38,6 +38,14 @@ export function CheckoutScreen({ route, navigation }: Props) {
   const accent   = store.primary_color || (isFood ? '#f97316' : '#4f46e5');
   const bg       = store.background_color || '#ffffff';
   const fg       = onColor(accent);
+
+  const isDark        = luma(bg) < 128;
+  const surface       = isDark ? 'rgba(255,255,255,0.08)' : '#ffffff';
+  const textPrimary   = isDark ? '#f9fafb' : '#111827';
+  const textSecondary = isDark ? '#a5b4d4' : '#9ca3af';
+  const border        = isDark ? 'rgba(255,255,255,0.1)' : '#f3f4f6';
+  const inputBg       = isDark ? 'rgba(255,255,255,0.06)' : '#ffffff';
+  const inputText     = isDark ? '#f9fafb' : '#111827';
 
   const { items, clearCart, getTotal } = useCartStore();
   const { isGuest, exitGuestMode } = useAuthStore();
@@ -107,19 +115,19 @@ export function CheckoutScreen({ route, navigation }: Props) {
   if (orderSuccess) {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-        <StatusBar barStyle="dark-content" />
-        <View style={[styles.successCircle, { backgroundColor: isFood ? '#fff7ed' : '#eef2ff' }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
+        <View style={[styles.successCircle, { backgroundColor: isFood ? '#fff7ed' : '#f3f4f6' }]}>
           <CheckCircle color={accent} size={56} />
         </View>
-        <Text style={styles.successTitle}>Order Placed! 🎉</Text>
-        <Text style={styles.successSub}>
+        <Text style={[styles.successTitle, { color: textPrimary }]}>Order Placed! 🎉</Text>
+        <Text style={[styles.successSub, { color: textSecondary }]}>
           Your order has been sent to {store.name}.{'\n'}
           {isFood ? "Sit tight, it's being prepared!" : 'Your items will be shipped shortly!'}
         </Text>
         {orderId && (
-          <View style={styles.orderIdBox}>
-            <Text style={styles.orderIdLabel}>Order ID</Text>
-            <Text style={styles.orderIdVal}>{String(orderId).slice(0, 8).toUpperCase()}</Text>
+          <View style={[styles.orderIdBox, { backgroundColor: surface, borderColor: border }]}>
+            <Text style={[styles.orderIdLabel, { color: textSecondary }]}>Order ID</Text>
+            <Text style={[styles.orderIdVal, { color: textPrimary }]}>{String(orderId).slice(0, 8).toUpperCase()}</Text>
           </View>
         )}
         <TouchableOpacity onPress={() => navigation.popToTop()} style={[styles.backHomeBtn, { backgroundColor: accent }]} activeOpacity={0.85}>
@@ -132,7 +140,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
   return (
     <>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.root, { backgroundColor: bg }]}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar barStyle="light-content"  backgroundColor="transparent" translucent={true} />
 
         {/* Header */}
         <View style={[styles.header, { backgroundColor: accent }]}>
@@ -149,14 +157,14 @@ export function CheckoutScreen({ route, navigation }: Props) {
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160 }}>
 
           {/* ── Read-only order summary ──────────────────────────────────────── */}
-          <Text style={styles.sectionLabel}>Your {isFood ? 'Order' : 'Cart'} · {items.length} items</Text>
-          <View style={styles.summaryCard}>
+          <Text style={[styles.sectionLabel, { color: textSecondary }]}>Your {isFood ? 'Order' : 'Cart'} · {items.length} items</Text>
+          <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: border }]}>
             {items.map(item => (
               <View key={item.id} style={styles.summaryRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.summaryName}>{item.name} ×{item.quantity}</Text>
+                  <Text style={[styles.summaryName, { color: textPrimary }]}>{item.name} ×{item.quantity}</Text>
                   {(item.selectedOptions || []).length > 0 && (
-                    <Text style={styles.summaryMeta}>{item.selectedOptions!.map(o => `${o.optionName}: ${o.choice}`).join(' · ')}</Text>
+                    <Text style={[styles.summaryMeta, { color: textSecondary }]}>{item.selectedOptions!.map(o => `${o.optionName}: ${o.choice}`).join(' · ')}</Text>
                   )}
                   {(item.selectedExtras || []).length > 0 && (
                     <Text style={styles.summaryExtra}>{item.selectedExtras!.map(e => `+ ${e.name}`).join(', ')}</Text>
@@ -165,25 +173,25 @@ export function CheckoutScreen({ route, navigation }: Props) {
                 <Text style={[styles.summaryAmt, { color: accent }]}>Br {getItemTotal(item).toFixed(2)}</Text>
               </View>
             ))}
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: border }]} />
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryName}>{isFood ? 'Delivery Fee' : 'Shipping Fee'}</Text>
+              <Text style={[styles.summaryName, { color: textSecondary }]}>{isFood ? 'Delivery Fee' : 'Shipping Fee'}</Text>
               <Text style={{ color: '#22c55e', fontWeight: '700' }}>Free</Text>
             </View>
             <View style={[styles.summaryRow, { marginTop: 6 }]}>
-              <Text style={{ fontSize: 17, fontWeight: '900', color: '#111827' }}>Total</Text>
+              <Text style={{ fontSize: 17, fontWeight: '900', color: textPrimary }}>Total</Text>
               <Text style={{ fontSize: 17, fontWeight: '900', color: accent }}>Br {getTotal().toFixed(2)}</Text>
             </View>
           </View>
 
           {/* ── Delivery / Shipping address ─────────────────────────────────── */}
-          <Text style={[styles.sectionLabel, { marginTop: 16 }]}>{isFood ? 'Delivery Address' : 'Shipping Address'}</Text>
-          <View style={styles.inputCard}>
+          <Text style={[styles.sectionLabel, { marginTop: 16, color: textSecondary }]}>{isFood ? 'Delivery Address' : 'Shipping Address'}</Text>
+          <View style={[styles.inputCard, { backgroundColor: surface, borderColor: border }]}>
             <MapPin color={accent} size={20} style={{ marginTop: 2 }} />
             <TextInput
-              style={[styles.input, { flex: 1, marginLeft: 10 }]}
+              style={[styles.input, { flex: 1, marginLeft: 10, color: inputText }]}
               placeholder={isFood ? 'Enter your delivery address...' : 'Enter your shipping address...'}
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={textSecondary}
               value={address}
               onChangeText={setAddress}
               multiline
@@ -193,11 +201,11 @@ export function CheckoutScreen({ route, navigation }: Props) {
           {/* ── Special instructions (food only) ────────────────────────────── */}
           {isFood && (
             <>
-              <Text style={[styles.sectionLabel, { marginTop: 12 }]}>Special Instructions</Text>
+              <Text style={[styles.sectionLabel, { marginTop: 12, color: textSecondary }]}>Special Instructions</Text>
               <TextInput
-                style={styles.textareaCard}
+                style={[styles.textareaCard, { backgroundColor: surface, borderColor: border, color: inputText }]}
                 placeholder="e.g. No onions, extra spicy, ring bell on arrival..."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={textSecondary}
                 value={instructions}
                 onChangeText={setInstructions}
                 multiline
@@ -206,7 +214,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
           )}
 
           {/* ── Payment method ───────────────────────────────────────────────── */}
-          <Text style={[styles.sectionLabel, { marginTop: 12 }]}>Payment Method</Text>
+          <Text style={[styles.sectionLabel, { marginTop: 12, color: textSecondary }]}>Payment Method</Text>
           <View style={styles.paymentGrid}>
             {PAYMENT_METHODS.map(m => {
               const active = paymentMethod === m.id;
@@ -217,15 +225,15 @@ export function CheckoutScreen({ route, navigation }: Props) {
                   onPress={() => setPaymentMethod(m.id)}
                   activeOpacity={0.8}
                   style={[styles.paymentPill, {
-                    backgroundColor: active ? m.color : '#fff',
-                    borderColor: active ? m.color : '#e5e7eb',
+                    backgroundColor: active ? m.color : surface,
+                    borderColor: active ? m.color : border,
                     borderWidth: active ? 2 : 1,
                   }]}
                 >
                   <View style={[styles.payIconWrap, { backgroundColor: active ? 'rgba(255,255,255,0.2)' : m.bg }]}>
                     <Icon color={active ? '#fff' : m.color} size={18} strokeWidth={2} />
                   </View>
-                  <Text style={[styles.payLabel, { color: active ? '#fff' : '#374151' }]}>{m.label}</Text>
+                  <Text style={[styles.payLabel, { color: active ? '#fff' : textPrimary }]}>{m.label}</Text>
                   {active && (
                     <View style={styles.payCheckWrap}>
                       <CheckCircle color="#fff" size={16} />
@@ -246,7 +254,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
         </ScrollView>
 
         {/* ── Sticky place order button ─────────────────────────────────────── */}
-        <View style={[styles.bottomBar, { backgroundColor: '#fff' }]}>
+        <View style={[styles.bottomBar, { backgroundColor: bg, borderTopColor: border }]}>
           <TouchableOpacity
             onPress={handlePlace}
             disabled={loading || items.length === 0}
@@ -284,7 +292,7 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
   summaryName: { fontSize: 14, fontWeight: '700', color: '#374151', flexShrink: 1 },
   summaryMeta: { fontSize: 11, color: '#9ca3af', marginTop: 2 },
-  summaryExtra: { fontSize: 11, color: '#6366f1', fontWeight: '600', marginTop: 2 },
+  summaryExtra: { fontSize: 11, color: '#111827', fontWeight: '600', marginTop: 2 },
   summaryAmt: { fontSize: 14, fontWeight: '800', marginLeft: 8 },
   divider: { height: 1, backgroundColor: '#f3f4f6', marginVertical: 10 },
 

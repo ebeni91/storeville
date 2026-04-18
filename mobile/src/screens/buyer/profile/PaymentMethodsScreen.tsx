@@ -21,7 +21,7 @@ export function PaymentMethodsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <View style={[styles.header, { 
         backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
         borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginLeft: 4 },
   section: { borderRadius: 20, marginBottom: 24, borderWidth: 1, overflow: 'hidden' },
   cardRow: { padding: 16 },
-  cardVisual: { backgroundColor: '#6366f1', borderRadius: 16, padding: 20 },
+  cardVisual: { backgroundColor: '#111827', borderRadius: 16, padding: 20 },
   cardType: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.6)', letterSpacing: 2, marginBottom: 16 },
   cardNumber: { fontSize: 18, fontWeight: '700', color: '#ffffff', letterSpacing: 2 },
   cardSub: { fontSize: 12, fontWeight: '500', color: 'rgba(255,255,255,0.7)' },

@@ -4,6 +4,7 @@ build:
 	docker compose build
 build-frontend:
 	docker compose build frontend
+	docker-compose up -d --build frontend
 build-backend:
 	docker compose build backend
 up:

@@ -13,9 +13,9 @@ const METHODS = [
     label: 'Chapa',
     sub: 'Accept payments via Chapa gateway',
     icon: CreditCard,
-    color: '#6366f1',
+    color: '#111827',
     bg: 'rgba(99,102,241,0.12)',
-    bgLight: '#eef2ff',
+    bgLight: '#f3f4f6',
     status: 'connected',
   },
   {
@@ -46,7 +46,7 @@ export function SellerFinancialsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <View style={[styles.topBar, { 
         backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
         borderBottomColor: isDark ? '#3b3f5c' : colors.border 
@@ -61,7 +61,7 @@ export function SellerFinancialsScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
 
         {/* Earnings summary */}
-        <View style={[styles.summaryCard, { backgroundColor: '#6366f1' }]}>
+        <View style={[styles.summaryCard, { backgroundColor: '#111827' }]}>
           <Text style={styles.summaryLabel}>Available Balance</Text>
           <Text style={styles.summaryAmount}>Br 0.00</Text>
           <Text style={styles.summaryNote}>Payouts available after integration</Text>

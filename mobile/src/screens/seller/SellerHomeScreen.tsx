@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { TrendingUp, Package, ClipboardList, Clock, Store, ChevronRight } from 'lucide-react-native';
+import { TrendingUp, Package, ClipboardList, Clock, Store, ChevronRight, Star, Zap, Crown } from 'lucide-react-native';
 import { authClient } from '../../lib/auth-client';
 import { api } from '../../lib/api';
 import { useThemeStore } from '../../store/themeStore';
@@ -76,7 +76,23 @@ export function SellerHomeScreen({ navigation }: { navigation: any }) {
       }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
-            <Text style={{ fontSize: 32, fontWeight: '900', color: colors.text, letterSpacing: -1, marginBottom: 4 }}>Dashboard</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <Text style={{ fontSize: 32, fontWeight: '900', color: colors.text, letterSpacing: -1 }}>Dashboard</Text>
+              
+              {store?.subscription_plan && (
+                <View style={{ 
+                  flexDirection: 'row', alignItems: 'center', gap: 4, 
+                  backgroundColor: store.subscription_plan === 'PRO' ? 'rgba(0,0,0,0.08)' : (store.subscription_plan === 'ELITE' ? 'rgba(245,158,11,0.15)' : 'rgba(107,114,128,0.1)'),
+                  paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 4
+                }}>
+                  {store.subscription_plan === 'PRO' ? <Zap color="#111827" size={12} strokeWidth={3} /> : (store.subscription_plan === 'ELITE' ? <Crown color="#f59e0b" size={12} strokeWidth={3} /> : <Star color="#6b7280" size={12} strokeWidth={3} />)}
+                  <Text style={{ 
+                    fontSize: 10, fontWeight: '800', letterSpacing: 1, 
+                    color: store.subscription_plan === 'PRO' ? '#111827' : (store.subscription_plan === 'ELITE' ? '#f59e0b' : '#6b7280') 
+                  }}>{store.subscription_plan}</Text>
+                </View>
+              )}
+            </View>
             <Text style={{ color: colors.textMuted, fontWeight: '600', fontSize: 14 }}>Welcome back, {identifier}</Text>
           </View>
           <View style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: isFood ? 'rgba(249,115,22,0.12)' : 'rgba(79,70,229,0.12)', alignItems: 'center', justifyContent: 'center' }}>

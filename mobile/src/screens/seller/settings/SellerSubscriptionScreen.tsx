@@ -26,9 +26,9 @@ const PLANS = [
     price: 'Br 299',
     priceSub: 'per month',
     icon: Zap,
-    color: '#6366f1',
+    color: '#111827',
     accent: 'rgba(99,102,241,0.12)',
-    accentLight: '#eef2ff',
+    accentLight: '#f3f4f6',
     features: ['Unlimited products', 'Advanced analytics', 'Priority map listing', 'Remove branding', 'Announcement bar'],
     current: false,
   },
@@ -52,7 +52,7 @@ export function SellerSubscriptionScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <View style={[styles.topBar, { 
         backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
         borderBottomColor: isDark ? '#3b3f5c' : colors.border 

@@ -29,7 +29,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
             <View style={{ borderTopLeftRadius: 30, borderTopRightRadius: 30 }} className="bg-white p-6 shadow-2xl">
               <View className="flex-row justify-between items-center mb-6">
                 <View className="flex-row items-center">
-                  <User size={24} color="#6366f1" />
+                  <User size={24} color="#111827" />
                   <Text className="text-2xl font-black text-gray-900 ml-3">
                     Edit Profile
                   </Text>

@@ -8,6 +8,7 @@ export interface CartItem {
   price: string
   quantity: number
   image?: string | null
+  special_requests?: string
 }
 
 interface CartState {
@@ -69,7 +70,8 @@ export const useCartStore = create<CartState>()(
             store_id: store_id,
             items: storeCart.map(item => ({
               product_id: item.id,
-              quantity: item.quantity
+              quantity: item.quantity,
+              special_requests: (item as any).special_requests || ''
             }))
           }
           

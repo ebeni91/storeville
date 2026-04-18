@@ -51,9 +51,9 @@ const VARIANT_CONFIG: Record<AlertVariant, {
   },
   info: {
     icon: Info,
-    iconColor: '#6366f1',
+    iconColor: '#111827',
     iconBg: 'rgba(99,102,241,0.12)',
-    accentColor: '#6366f1',
+    accentColor: '#111827',
   },
   danger: {
     icon: LogOut,
@@ -63,9 +63,9 @@ const VARIANT_CONFIG: Record<AlertVariant, {
   },
   default: {
     icon: Info,
-    iconColor: '#6366f1',
+    iconColor: '#111827',
     iconBg: 'rgba(99,102,241,0.12)',
-    accentColor: '#6366f1',
+    accentColor: '#111827',
   },
 };
 

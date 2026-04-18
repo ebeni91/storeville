@@ -17,6 +17,16 @@ export default function SmartProductsPage() {
   const [formData, setFormData] = useState<any>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Advanced Options & Extras
+  const [pendingOptions, setPendingOptions] = useState<any[]>([])
+  const [newOptionName, setNewOptionName] = useState('')
+  const [newOptionChoices, setNewOptionChoices] = useState('')
+  const [newOptionRequired, setNewOptionRequired] = useState(false)
+
+  const [pendingExtras, setPendingExtras] = useState<any[]>([])
+  const [newExtraName, setNewExtraName] = useState('')
+  const [newExtraPrice, setNewExtraPrice] = useState('')
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -59,6 +69,8 @@ export default function SmartProductsPage() {
   const handleOpenCreate = () => {
     setEditingItemId(null)
     setFormData({ is_active: true, is_available: true, stock_quantity: 10, preparation_time_minutes: 15 })
+    setPendingOptions([])
+    setPendingExtras([])
     setIsModalOpen(true)
   }
 
@@ -66,9 +78,36 @@ export default function SmartProductsPage() {
     setEditingItemId(item.id)
     setFormData({
       ...item,
-      // Default to what the backend returned
     })
+    setPendingOptions(item.options || [])
+    setPendingExtras(item.extras || [])
     setIsModalOpen(true)
+  }
+
+  const addPendingOption = () => {
+    if (!newOptionName.trim() || !newOptionChoices.trim()) return;
+    const choicesList = newOptionChoices.split(',').map((s: string) => s.trim()).filter(Boolean);
+    if (choicesList.length === 0) return;
+    setPendingOptions([...pendingOptions, {
+      id: Date.now().toString(),
+      name: newOptionName.trim(),
+      choices: choicesList,
+      required: newOptionRequired
+    }]);
+    setNewOptionName('');
+    setNewOptionChoices('');
+    setNewOptionRequired(false);
+  }
+
+  const addPendingExtra = () => {
+    if (!newExtraName.trim() || !newExtraPrice.trim()) return;
+    setPendingExtras([...pendingExtras, {
+      id: Date.now().toString(),
+      name: newExtraName.trim(),
+      price: newExtraPrice.trim()
+    }]);
+    setNewExtraName('');
+    setNewExtraPrice('');
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,7 +126,7 @@ export default function SmartProductsPage() {
         // If image is still a String URL, don't append it! Django ImageField expects File objects only on upload
         if (key === 'image' && typeof formData[key] === 'string') return;
 
-        if (formData[key] !== undefined && formData[key] !== null) {
+        if (formData[key] !== undefined && formData[key] !== null && typeof formData[key] !== 'object') {
           // Serialize booleans to string for Multipart Form Data
           if (typeof formData[key] === 'boolean') {
             submitData.append(key, formData[key] ? 'true' : 'false')
@@ -96,6 +135,10 @@ export default function SmartProductsPage() {
           }
         }
       })
+
+      // Attach Options and Extras as JSON arrays
+      if (pendingOptions.length > 0) submitData.append('options', JSON.stringify(pendingOptions))
+      if (pendingExtras.length > 0) submitData.append('extras', JSON.stringify(pendingExtras))
 
       if (editingItemId) {
         await api.patch(submitEndpoint, submitData, { headers: { 'Content-Type': 'multipart/form-data' } })
@@ -344,6 +387,28 @@ export default function SmartProductsPage() {
                     <input type="checkbox" checked={formData.is_spicy || false} onChange={e => setFormData({...formData, is_spicy: e.target.checked})} className="w-5 h-5 accent-red-600" /> 
                     <span className="text-sm font-bold text-red-700 flex items-center gap-1.5"><Flame size={16}/> Spicy</span>
                   </label>
+                  
+                  {/* FOOD EXTRAS SECTION */}
+                  <div className="col-span-2 lg:col-span-3 mt-4 pt-4 border-t border-orange-200 border-dashed space-y-4">
+                    <h4 className="text-sm font-black text-orange-900 tracking-tight flex items-center gap-2 mb-2">Extras & Add-ons <span className="opacity-50 text-[10px] uppercase font-bold">(Optional)</span></h4>
+                    
+                    {/* Existing extras */}
+                    {pendingExtras.map((extra, idx) => (
+                      <div key={extra.id} className="flex items-center justify-between bg-white border border-orange-200 p-3 rounded-xl shadow-sm">
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">{extra.name}</p>
+                          <p className="text-xs font-black text-orange-600">+Br {parseFloat(extra.price).toFixed(2)}</p>
+                        </div>
+                        <button type="button" onClick={() => setPendingExtras(p => p.filter((_, i) => i !== idx))} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={14}/></button>
+                      </div>
+                    ))}
+
+                    <div className="flex flex-col md:flex-row gap-3 bg-white p-3 rounded-xl border border-orange-200 mt-2">
+                       <input type="text" value={newExtraName} onChange={e => setNewExtraName(e.target.value)} placeholder="Extra (e.g. Extra Cheese)" className="flex-1 bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-orange-500"/>
+                       <input type="number" value={newExtraPrice} onChange={e => setNewExtraPrice(e.target.value)} placeholder="Price (Br)" className="w-full md:w-32 bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none text-orange-600 focus:ring-1 focus:ring-orange-500"/>
+                       <button type="button" onClick={addPendingExtra} className="bg-orange-100 text-orange-700 hover:bg-orange-200 px-4 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap"><Plus size={16}/> Add Extra</button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4 bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100">
@@ -360,6 +425,39 @@ export default function SmartProductsPage() {
                   </div>
                 </div>
               )}
+
+              {/* OPTIONS (SHARED BETWEEN RETAIL / FOOD) */}
+              <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-200 space-y-4">
+                 <h4 className="text-sm font-black text-gray-900 tracking-tight flex items-center gap-2 mb-2">Variants & Custom Size Options <span className="opacity-50 text-[10px] uppercase font-bold">(Optional)</span></h4>
+                 <p className="text-xs text-gray-500 font-medium -mt-2 mb-4">Define product variants or customizations that your customers can select from.</p>
+                 
+                 {/* Existing Option Rows */}
+                 {pendingOptions.map((opt, idx) => (
+                    <div key={opt.id} className="flex items-center justify-between bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-black text-gray-900">{opt.name}</p>
+                          {opt.required && <span className="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded uppercase font-bold tracking-widest">Required</span>}
+                        </div>
+                        <p className="text-xs font-bold text-indigo-600">Choices: {opt.choices.join(', ')}</p>
+                      </div>
+                      <button type="button" onClick={() => setPendingOptions(p => p.filter((_, i) => i !== idx))} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={16}/></button>
+                    </div>
+                 ))}
+
+                 {/* Add New Option Area */}
+                 <div className="bg-white border border-gray-200 p-4 rounded-xl space-y-3 mt-4">
+                    <input type="text" value={newOptionName} onChange={e => setNewOptionName(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Variant Name (e.g. Size, Color, Delivery Mode)"/>
+                    <input type="text" value={newOptionChoices} onChange={e => setNewOptionChoices(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Comma separated choices (e.g. Small, Medium, Large)"/>
+                    <div className="flex items-center justify-between pt-2">
+                       <label className="flex items-center gap-2 cursor-pointer">
+                         <input type="checkbox" checked={newOptionRequired} onChange={e => setNewOptionRequired(e.target.checked)} className="w-4 h-4 accent-indigo-600"/>
+                         <span className="text-xs font-bold text-gray-700">Selection is Required</span>
+                       </label>
+                       <button type="button" onClick={addPendingOption} className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16}/> Add Variant</button>
+                    </div>
+                 </div>
+              </div>
 
               <div className="flex gap-4 pt-6 border-t border-gray-100 mt-8">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-black tracking-widest uppercase text-xs hover:bg-gray-200 transition-colors">Cancel</button>

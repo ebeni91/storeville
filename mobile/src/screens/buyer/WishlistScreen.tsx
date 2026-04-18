@@ -7,7 +7,7 @@ import { ArrowLeft, Heart, ShoppingCart, ShoppingBag } from 'lucide-react-native
 import { useCartStore, WishlistItem } from '../../store/cartStore';
 
 const hexRgb = (hex: string) => {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#6366f1');
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#111827');
   return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : { r: 99, g: 102, b: 241 };
 };
 const luma    = (hex: string) => { const c = hexRgb(hex); return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b; };
@@ -15,8 +15,14 @@ const onColor = (hex: string) => luma(hex) > 160 ? '#0a0a0a' : '#ffffff';
 
 export function WishlistScreen({ route, navigation }: any) {
   const { store } = route.params;
-  const accent = store.primary_color || '#6366f1';
-  const fg     = onColor(accent);
+  const accent        = store.primary_color    || '#111827';
+  const bg            = store.background_color || '#ffffff';
+  const fg            = onColor(accent);
+  const isDark        = luma(bg) < 128;
+  const surface       = isDark ? 'rgba(255,255,255,0.08)' : '#ffffff';
+  const textPrimary   = isDark ? '#f9fafb' : '#0a0a0a';
+  const textSecondary = isDark ? '#a5b4d4' : '#6b7280';
+  const border        = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)';
 
   const { wishlist, removeFromWishlist, addItem, storeId } = useCartStore();
 
@@ -32,21 +38,21 @@ export function WishlistScreen({ route, navigation }: any) {
 
   if (wishlist.length === 0) {
     return (
-      <View style={[styles.root, { backgroundColor: store.background_color || '#fff' }]}>
-        <StatusBar barStyle="dark-content" />
-        <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 56 : 36 }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <ArrowLeft color="#111827" size={20} strokeWidth={2.5} />
+      <View style={[styles.root, { backgroundColor: bg }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
+        <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 56 : 36, backgroundColor: bg, borderBottomColor: border }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: surface }]}>
+            <ArrowLeft color={textPrimary} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Wishlist</Text>
+          <Text style={[styles.headerTitle, { color: textPrimary }]}>Wishlist</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyWrap}>
-          <View style={[styles.emptyIcon, { backgroundColor: `rgba(${hexRgb(accent).r},${hexRgb(accent).g},${hexRgb(accent).b},0.08)` }]}>
+          <View style={[styles.emptyIcon, { backgroundColor: `rgba(${hexRgb(accent).r},${hexRgb(accent).g},${hexRgb(accent).b},0.1)` }]}>
             <Heart color={accent} size={44} strokeWidth={1.5} />
           </View>
-          <Text style={styles.emptyTitle}>Nothing saved yet</Text>
-          <Text style={styles.emptySub}>Tap the heart on any product to save it here</Text>
+          <Text style={[styles.emptyTitle, { color: textPrimary }]}>Nothing saved yet</Text>
+          <Text style={[styles.emptySub, { color: textSecondary }]}>Tap the heart on any product to save it here</Text>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.ctaBtn, { backgroundColor: accent }]}>
             <Text style={[styles.ctaTxt, { color: fg }]}>Browse Products</Text>
           </TouchableOpacity>
@@ -56,16 +62,16 @@ export function WishlistScreen({ route, navigation }: any) {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: store.background_color || '#fff' }]}>
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.root, { backgroundColor: bg }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 56 : 36 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <ArrowLeft color="#111827" size={20} strokeWidth={2.5} />
+      <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 56 : 36, backgroundColor: bg, borderBottomColor: border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: surface }]}>
+          <ArrowLeft color={textPrimary} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={{ alignItems: 'center' }}>
-          <Text style={styles.headerTitle}>Wishlist</Text>
+          <Text style={[styles.headerTitle, { color: textPrimary }]}>Wishlist</Text>
           <Text style={[styles.headerSub, { color: accent }]}>{wishlist.length} saved items</Text>
         </View>
         <View style={{ width: 40 }} />
@@ -73,22 +79,22 @@ export function WishlistScreen({ route, navigation }: any) {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
         {wishlist.map((item: WishlistItem) => (
-          <View key={item.id} style={styles.card}>
+          <View key={item.id} style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
             {/* Image */}
-            <View style={styles.cardImg}>
+            <View style={[styles.cardImg, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }]}>
               {item.image
                 ? <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                : <ShoppingBag color="#d1d5db" size={28} />}
+                : <ShoppingBag color={textSecondary} size={28} />}
             </View>
 
             {/* Info */}
             <View style={{ flex: 1, marginLeft: 14 }}>
-              <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+              <Text style={[styles.itemName, { color: textPrimary }]} numberOfLines={2}>{item.name}</Text>
               {item.description ? (
-                <Text style={styles.itemDesc} numberOfLines={1}>{item.description}</Text>
+                <Text style={[styles.itemDesc, { color: textSecondary }]} numberOfLines={1}>{item.description}</Text>
               ) : null}
               <Text style={[styles.itemPrice, { color: accent }]}>Br {item.price.toFixed(2)}</Text>
-              <Text style={styles.storeName}>{item.storeName}</Text>
+              <Text style={[styles.storeName, { color: textSecondary }]}>{item.storeName}</Text>
             </View>
 
             {/* Actions */}

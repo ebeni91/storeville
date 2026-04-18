@@ -139,14 +139,13 @@ export const auth = betterAuth({
     freshAge: 0,
   },
 
-  // ── Cookies ───────────────────────────────────────────────────────────────
-  cookies: {
-    sessionToken: {
-      options: {
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      }
-    }
+  // ── Advanced ──────────────────────────────────────────────────────────────
+  advanced: {
+    // 🌟 THE FIX: Force secure cookies.
+    // Ngrok provides HTTPS to the browser, but terminates it before hitting 
+    // our Docker container. This forces Better Auth to keep the 'Secure' 
+    // attribute so the browser actually saves and returns the cookies.
+    useSecureCookies: true,
   }
 });
 

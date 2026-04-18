@@ -44,7 +44,7 @@ export function SellerSettingsScreen({ navigation }: Props) {
     {
       title: 'Account',
       items: [
-        { icon: User,      color: '#6366f1', bg: colors.accentFaint,                                    label: 'Account Information', route: 'AccountInfo' },
+        { icon: User,      color: '#111827', bg: colors.accentFaint,                                    label: 'Account Information', route: 'AccountInfo' },
         { icon: MapPin,    color: '#10b981', bg: isDark ? 'rgba(16,185,129,0.12)' : '#ecfdf5',          label: 'Store Location',      route: 'StoreLocation' },
         { icon: CreditCard, color: '#0ea5e9', bg: isDark ? 'rgba(14,165,233,0.12)' : '#f0f9ff',         label: 'Financials',          route: 'Financials' },
         { icon: Star,      color: '#f59e0b', bg: isDark ? 'rgba(245,158,11,0.12)' : '#fffbeb',          label: 'Subscription',        route: 'Subscription' },
@@ -54,13 +54,13 @@ export function SellerSettingsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+      <StatusBar barStyle="light-content" backgroundColor="#111827"  backgroundColor="transparent" translucent={true} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
 
         {/* Indigo header */}
-        <View style={[styles.header, { backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : '#6366f1' }]}>
+        <View style={[styles.header, { backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : '#111827' }]}>
           <View style={styles.avatarRow}>
-            <View style={[styles.avatarCircle, { backgroundColor: isFood ? '#f97316' : '#818cf8', borderColor: isDark ? '#3b3f5c' : 'rgba(255,255,255,0.35)' }]}>
+            <View style={[styles.avatarCircle, { backgroundColor: isFood ? '#f97316' : '#ffffff', borderColor: isDark ? '#3b3f5c' : 'rgba(255,255,255,0.35)' }]}>
               <Text style={styles.avatarLetter}>{initial}</Text>
             </View>
             <View style={{ flex: 1 }}>
@@ -82,10 +82,10 @@ export function SellerSettingsScreen({ navigation }: Props) {
               }
             ]}>
               <TouchableOpacity onPress={toggleTheme} activeOpacity={0.7} style={[styles.menuRow, { borderBottomWidth: 0 }]}>
-                <View style={[styles.menuIconBox, { backgroundColor: isDark ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}>
+                <View style={[styles.menuIconBox, { backgroundColor: isDark ? 'rgba(0,0,0,0.08)' : '#f3f4f6' }]}>
                   {isDark
-                    ? <Moon color="#818cf8" size={18} strokeWidth={2} />
-                    : <Sun  color="#6366f1" size={18} strokeWidth={2} />}
+                    ? <Moon color="#ffffff" size={18} strokeWidth={2} />
+                    : <Sun  color="#111827" size={18} strokeWidth={2} />}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.menuLabel, { color: colors.text }]}>Appearance</Text>
@@ -93,7 +93,7 @@ export function SellerSettingsScreen({ navigation }: Props) {
                     {isDark ? 'Dark mode active' : 'Light mode active'}
                   </Text>
                 </View>
-                <View style={[styles.modeBadge, { backgroundColor: isDark ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}>
+                <View style={[styles.modeBadge, { backgroundColor: isDark ? 'rgba(0,0,0,0.08)' : '#f3f4f6' }]}>
                   <Text style={[styles.modeBadgeText, { color: colors.accent }]}>{isDark ? 'Dark' : 'Light'}</Text>
                 </View>
               </TouchableOpacity>
@@ -157,7 +157,7 @@ export function SellerSettingsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { backgroundColor: '#6366f1', paddingTop: 56, paddingBottom: 52, paddingHorizontal: 24 },
+  header: { backgroundColor: '#111827', paddingTop: 56, paddingBottom: 52, paddingHorizontal: 24 },
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   avatarCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)' },
   avatarLetter: { fontSize: 28, fontWeight: '900', color: '#ffffff' },

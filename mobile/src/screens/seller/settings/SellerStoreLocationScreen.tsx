@@ -58,7 +58,7 @@ export function SellerStoreLocationScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <View style={[styles.topBar, { 
         backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
         borderBottomColor: isDark ? '#3b3f5c' : colors.border 

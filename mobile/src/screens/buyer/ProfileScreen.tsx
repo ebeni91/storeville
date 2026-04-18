@@ -52,21 +52,21 @@ function ThemeToggle() {
           styles.togglePill,
           {
             transform: [{ translateX }],
-            backgroundColor: isDark ? '#6366f1' : '#ffffff',
-            shadowColor: isDark ? '#6366f1' : '#000',
+            backgroundColor: isDark ? '#111827' : '#ffffff',
+            shadowColor: isDark ? '#111827' : '#000',
           }
         ]} />
 
         {/* Left option — Light */}
         <View style={styles.toggleOption}>
-          <Sun size={14} color={!isDark ? '#6366f1' : '#9ca3af'} strokeWidth={2.5} />
-          <Text style={[styles.toggleLabel, { color: !isDark ? '#6366f1' : '#9ca3af' }]}>Light</Text>
+          <Sun size={14} color={!isDark ? '#111827' : '#9ca3af'} strokeWidth={2.5} />
+          <Text style={[styles.toggleLabel, { color: !isDark ? '#111827' : '#9ca3af' }]}>Light</Text>
         </View>
 
         {/* Right option — Dark */}
         <View style={styles.toggleOption}>
-          <Moon size={14} color={isDark ? '#818cf8' : '#9ca3af'} strokeWidth={2.5} />
-          <Text style={[styles.toggleLabel, { color: isDark ? '#818cf8' : '#9ca3af' }]}>Dark</Text>
+          <Moon size={14} color={isDark ? '#ffffff' : '#9ca3af'} strokeWidth={2.5} />
+          <Text style={[styles.toggleLabel, { color: isDark ? '#ffffff' : '#9ca3af' }]}>Dark</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -100,7 +100,7 @@ export function ProfileScreen({ navigation }: Props) {
   if (!isAuthenticated || isGuest) {
     return (
       <View style={[styles.root, { backgroundColor: colors.bg }]}>
-        <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+        <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
 
         {/* Guest header — always indigo */}
         <View style={styles.guestHeader}>
@@ -114,10 +114,10 @@ export function ProfileScreen({ navigation }: Props) {
             {/* <Text style={[styles.sectionTitle, { color: colors.textMuted, marginLeft: 4, marginBottom: 10 }]}>Appearance</Text> */}
             <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.menuRow, { borderBottomWidth: 0 }]}>
-                <View style={[styles.menuIconBox, { backgroundColor: mode === 'dark' ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}>
+                <View style={[styles.menuIconBox, { backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.08)' : '#f3f4f6' }]}>
                   {mode === 'dark'
-                    ? <Moon color="#818cf8" size={18} strokeWidth={2} />
-                    : <Sun color="#6366f1" size={18} strokeWidth={2} />}
+                    ? <Moon color="#ffffff" size={18} strokeWidth={2} />
+                    : <Sun color="#111827" size={18} strokeWidth={2} />}
                 </View>
                 <Text style={[styles.menuLabel, { color: colors.text }]}>Theme</Text>
                 <ThemeToggle />
@@ -155,7 +155,7 @@ export function ProfileScreen({ navigation }: Props) {
     {
       title: 'Account',
       items: [
-        { icon: User, color: '#6366f1', bg: colors.accentFaint, label: 'Profile Information', route: 'ProfileInfo' },
+        { icon: User, color: '#111827', bg: colors.accentFaint, label: 'Profile Information', route: 'ProfileInfo' },
         { icon: CreditCard, color: '#0ea5e9', bg: mode === 'dark' ? 'rgba(14,165,233,0.12)' : '#f0f9ff', label: 'Payment Methods', route: 'PaymentMethods' },
         { icon: Clock, color: '#f59e0b', bg: mode === 'dark' ? 'rgba(245,158,11,0.12)' : '#fffbeb', label: 'Transaction History', route: 'TransactionHistory' },
       ],
@@ -173,7 +173,7 @@ export function ProfileScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+      <StatusBar barStyle="light-content" backgroundColor="#111827"  backgroundColor="transparent" translucent={true} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
 
         {/* ── Indigo Header ────────────────────────────── */}
@@ -192,7 +192,7 @@ export function ProfileScreen({ navigation }: Props) {
         {/* ── Stat Cards ────────────────────────────────── */}
         <View style={styles.statsRow}>
           {[
-            { icon: ShoppingBag, color: '#6366f1', bg: colors.accentFaint, value: ordersCount, label: 'ORDERS' },
+            { icon: ShoppingBag, color: '#111827', bg: colors.accentFaint, value: ordersCount, label: 'ORDERS' },
             { icon: Heart, color: '#db2777', bg: mode === 'dark' ? 'rgba(219,39,119,0.12)' : '#fdf2f8', value: wishlistCount, label: 'WISHLIST' },
           ].map((s, i) => (
             <View key={i} style={[
@@ -225,10 +225,10 @@ export function ProfileScreen({ navigation }: Props) {
               }
             ]}>
               <View style={[styles.menuRow, { borderBottomWidth: 0 }]}>
-                <View style={[styles.menuIconBox, { backgroundColor: mode === 'dark' ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}>
+                <View style={[styles.menuIconBox, { backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.08)' : '#f3f4f6' }]}>
                   {mode === 'dark'
-                    ? <Moon color="#818cf8" size={18} strokeWidth={2} />
-                    : <Sun color="#6366f1" size={18} strokeWidth={2} />}
+                    ? <Moon color="#ffffff" size={18} strokeWidth={2} />
+                    : <Sun color="#111827" size={18} strokeWidth={2} />}
                 </View>
                 <Text style={[styles.menuLabel, { color: colors.text }]}>Theme</Text>
                 <ThemeToggle />
@@ -275,18 +275,18 @@ export function ProfileScreen({ navigation }: Props) {
               activeOpacity={0.85}
               style={{
                 flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                backgroundColor: 'rgba(99,102,241,0.1)',
-                borderWidth: 1.5, borderColor: 'rgba(99,102,241,0.25)',
+                backgroundColor: 'rgba(0,0,0,0.05)',
+                borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.15)',
                 borderRadius: 20, paddingVertical: 18, paddingHorizontal: 20,
                 marginBottom: 28,
               }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: '#6366f1', textTransform: 'uppercase', marginBottom: 4 }}>Become a Seller</Text>
+                <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: '#111827', textTransform: 'uppercase', marginBottom: 4 }}>Become a Seller</Text>
                 <Text style={{ fontSize: 17, fontWeight: '900', color: colors.text, letterSpacing: -0.3 }}>Launch Your Store →</Text>
                 <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', marginTop: 2 }}>Open your digital mall in minutes</Text>
               </View>
-              <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: '#6366f1', alignItems: 'center', justifyContent: 'center', marginLeft: 16 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center', marginLeft: 16 }}>
                 <Store color="#fff" size={20} strokeWidth={2} />
               </View>
             </TouchableOpacity>
@@ -321,16 +321,16 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
 
   // Guest
-  guestHeader: { backgroundColor: '#6366f1', paddingTop: 80, paddingBottom: 48, paddingHorizontal: 28, alignItems: 'center' },
+  guestHeader: { backgroundColor: '#111827', paddingTop: 80, paddingBottom: 48, paddingHorizontal: 28, alignItems: 'center' },
   guestAvatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   guestTitle: { fontSize: 24, fontWeight: '900', color: '#ffffff', marginBottom: 8 },
   guestSub: { fontSize: 14, color: 'rgba(255,255,255,0.65)', textAlign: 'center', fontWeight: '500' },
   guestBody: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  guestCta: { backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 16, paddingHorizontal: 32, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  guestCta: { backgroundColor: '#111827', borderRadius: 16, paddingVertical: 16, paddingHorizontal: 32, flexDirection: 'row', alignItems: 'center', gap: 12 },
   guestCtaText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
 
   // Header — always indigo regardless of theme
-  header: { backgroundColor: '#6366f1', paddingTop: 56, paddingBottom: 52, paddingHorizontal: 24 },
+  header: { backgroundColor: '#111827', paddingTop: 56, paddingBottom: 52, paddingHorizontal: 24 },
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   avatarCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)' },
   avatarLetter: { fontSize: 28, fontWeight: '900', color: '#ffffff' },

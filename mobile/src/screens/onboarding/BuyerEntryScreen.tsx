@@ -21,19 +21,19 @@ export function BuyerEntryScreen({ navigation }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000000' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <StatusBar barStyle="light-content" backgroundColor="#000000"  backgroundColor="transparent" translucent={true} />
 
       {/* Ambient glow */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
         <View style={{
           position: 'absolute', width: width, height: width,
           borderRadius: width * 0.5, top: -width * 0.25, right: -width * 0.25,
-          backgroundColor: '#6366f1', opacity: 0.1,
+          backgroundColor: '#111827', opacity: 0.1,
         }} />
         <View style={{
           position: 'absolute', width: width * 0.8, height: width * 0.8,
           borderRadius: width * 0.4, bottom: 0, left: -width * 0.2,
-          backgroundColor: '#6366f1', opacity: 0.07,
+          backgroundColor: '#111827', opacity: 0.07,
         }} />
       </View>
 
@@ -46,7 +46,7 @@ export function BuyerEntryScreen({ navigation }: Props) {
           </Text>
           <Text style={{ fontSize: 40, fontWeight: '900', color: '#ffffff', letterSpacing: -1.2, lineHeight: 44 }}>
             Welcome{'\n'}
-            <Text style={{ color: '#818cf8' }}>Back.</Text>
+            <Text style={{ color: '#ffffff' }}>Back.</Text>
           </Text>
           <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 15, fontWeight: '500', marginTop: 12, lineHeight: 22 }}>
             Sign in for your full experience or{'\n'}continue browsing as a guest.
@@ -61,7 +61,7 @@ export function BuyerEntryScreen({ navigation }: Props) {
             onPressOut={() => pressOut(loginScale)}
             onPress={() => navigation.navigate('OnboardingLogin', { intendedRole: 'CUSTOMER' })}
             style={{
-              backgroundColor: '#6366f1',
+              backgroundColor: '#111827',
               borderRadius: 22, padding: 22,
               flexDirection: 'row', alignItems: 'center',
             }}
@@ -101,7 +101,7 @@ export function BuyerEntryScreen({ navigation }: Props) {
               borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)',
               alignItems: 'center', justifyContent: 'center', marginRight: 16,
             }}>
-              <UserPlus color="#818cf8" size={22} />
+              <UserPlus color="#ffffff" size={22} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: '900', letterSpacing: -0.3 }}>Create Account</Text>

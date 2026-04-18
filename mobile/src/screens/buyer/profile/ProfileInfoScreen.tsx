@@ -62,14 +62,14 @@ export function ProfileInfoScreen({ navigation }: Props) {
   const displayName = user?.first_name ? `${user.first_name} ${user?.last_name || ''}`.trim() : 'Member';
 
   const infoRows = [
-    { icon: User, label: 'Full Name', field: 'first_name', value: displayName, color: '#6366f1', bg: colors.accentFaint },
+    { icon: User, label: 'Full Name', field: 'first_name', value: displayName, color: '#111827', bg: colors.accentFaint },
     { icon: Mail, label: 'Email Address', field: 'email', value: profile?.email || user?.email || '—', color: '#0ea5e9', bg: mode === 'dark' ? 'rgba(14,165,233,0.12)' : '#f0f9ff' },
     { icon: Phone, label: 'Phone Number', field: 'phone_number', value: profile?.phone_number || user?.phone_number || '—', color: '#10b981', bg: mode === 'dark' ? 'rgba(16,185,129,0.12)' : '#ecfdf5' },
   ];
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <View style={[styles.header, { 
         backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.98)' : colors.surface, 
         borderBottomColor: mode === 'dark' ? '#3b3f5c' : colors.border 

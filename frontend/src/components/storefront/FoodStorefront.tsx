@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-import { Loader2, ShoppingBag, MapPin, Search, Heart, User, ArrowRight, X, Check, Menu, Star, Clock, Bike, Lock, Flame, Leaf, Plus, LogOut, Chrome, CheckCircle2 } from 'lucide-react'
+import { Loader2, ShoppingBag, MapPin, Search, Heart, User, ArrowRight, X, Check, Menu, Star, Clock, Bike, Lock, Flame, Leaf, Plus, LogOut, Chrome, CheckCircle2, ArrowLeft } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
@@ -193,10 +193,72 @@ export default function FoodStorefront({ store }: { store: any }) {
   const textRgb = hexToRgb(store.secondary_color)
   const announceRgb = hexToRgb(store.announcement_color || store.primary_color)
   const cartTotal = cartItems.reduce((acc, curr) => acc + (parseFloat(curr.price) * curr.quantity), 0).toFixed(2)
+  const cartCount = cartItems.reduce((acc, curr) => acc + curr.quantity, 0)
 
   return (
     <main className="min-h-screen pb-32 font-sans transition-colors duration-700 relative" style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}>
       
+      {/* 🧭 UNIVERSAL STORE NAV (Mobile & Desktop) */}
+      <div className={`fixed top-0 inset-x-0 z-[150] px-4 py-3 md:py-6 transition-all duration-500 ${isScrolled ? 'backdrop-blur-2xl shadow-xl' : ''}`} style={{ backgroundColor: isScrolled ? `rgba(${bgRgb}, 0.8)` : 'transparent', borderBottom: isScrolled ? `1px solid rgba(${textRgb}, 0.05)` : 'none' }}>
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+           {/* Left: Store Branding */}
+           <div className="flex items-center gap-3">
+             <button onClick={() => router.push('/')} className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-105 transition-transform"><ArrowLeft size={20} /></button>
+             <div className="hidden sm:flex flex-col">
+               <span className="text-lg font-black tracking-tighter leading-none">{store.name}</span>
+               <span className="text-[10px] font-bold opacity-50 uppercase tracking-widest mt-1">Ethiopia</span>
+             </div>
+           </div>
+
+           {/* Center: Search (Desktop Only) */}
+           <div className="hidden lg:flex flex-1 max-w-xl relative group">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:opacity-100 transition-opacity" size={18} />
+             <input 
+               type="text" 
+               placeholder="Search menu..."
+               value={searchQuery}
+               onChange={e => setSearchQuery(e.target.value)}
+               className="w-full bg-white/5 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 outline-none font-bold text-sm focus:bg-white/10 transition-all focus:ring-4 focus:ring-white/5"
+             />
+           </div>
+
+           {/* Right: Actions */}
+           <div className="flex items-center gap-2 md:gap-4">
+             <div className="relative">
+               <button onClick={() => setIsCartOpen(true)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform relative">
+                 <ShoppingBag size={20} />
+                 {cartCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce" style={{ backgroundColor: store.primary_color }}>{cartCount}</span>}
+               </button>
+             </div>
+             
+             <div className="relative hidden md:block">
+               <button onClick={() => setIsFavOpen(!isFavOpen)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform">
+                 <Heart size={20} />
+               </button>
+               <FavoriteDropdown isOpen={isFavOpen} onClose={() => setIsFavOpen(false)} bgRgb={bgRgb} textRgb={textRgb} />
+             </div>
+
+             <div className="relative">
+               <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform">
+                 <User size={20} />
+               </button>
+               <ProfileDropdown isOpen={isUserMenuOpen} onClose={() => setIsUserMenuOpen(false)} onSignOut={handleSignOut} />
+             </div>
+           </div>
+        </div>
+
+        {/* 🔍 Mobile Search Field */}
+        <div className="lg:hidden mt-3 relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={16} />
+          <input 
+            type="text" 
+            placeholder="Search our menu..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full bg-black/5 rounded-[1.25rem] py-3 pl-11 pr-4 outline-none font-bold text-xs"
+          />
+        </div>
+      </div>
       {/* TOAST NOTIFICATION */}
       <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ${toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10 pointer-events-none'}`}>
         <div className="backdrop-blur-xl px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl border" style={{ backgroundColor: `rgba(${textRgb}, 0.9)`, color: store.background_color, borderColor: `rgba(${bgRgb}, 0.1)` }}>
@@ -226,7 +288,7 @@ export default function FoodStorefront({ store }: { store: any }) {
               disabled={authLoading}
               className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white border border-gray-200 shadow-sm font-bold text-gray-700 hover:bg-gray-50 transition-all font-sans"
             >
-              <Chrome size={20} className="text-indigo-500" />
+              <Chrome size={20} className="text-orange-500" />
               Continue with Google
             </button>
 
@@ -246,7 +308,7 @@ export default function FoodStorefront({ store }: { store: any }) {
                     value={authPhone} 
                     onChange={e => setAuthPhone(e.target.value)}
                     placeholder="911 234 567"
-                    className="w-full bg-black/5 border-none rounded-2xl py-4 pl-14 pr-4 outline-none font-bold text-base focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full bg-black/5 border-none rounded-2xl py-4 pl-14 pr-4 outline-none font-bold text-base focus:ring-2 focus:ring-orange-500/20"
                     style={{ color: store.secondary_color }}
                   />
                 </div>
@@ -267,7 +329,7 @@ export default function FoodStorefront({ store }: { store: any }) {
                   value={authOtp}
                   onChange={e => setAuthOtp(e.target.value)}
                   placeholder="······"
-                  className="w-full bg-black/5 border-none rounded-2xl py-5 text-center font-black text-3xl tracking-[1rem] outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full bg-black/5 border-none rounded-2xl py-5 text-center font-black text-3xl tracking-[1rem] outline-none focus:ring-2 focus:ring-orange-500/20"
                   style={{ color: store.secondary_color }}
                 />
                 <button 
@@ -285,117 +347,6 @@ export default function FoodStorefront({ store }: { store: any }) {
         </div>
       </div>
 
-      {/* STICKY GLASS NAVIGATION & MARQUEE */}
-      <motion.nav 
-        initial={false}
-        animate={{
-          backgroundColor: isScrolled ? `rgba(${bgRgb}, 0.95)` : `rgba(${bgRgb}, 0.75)`,
-          paddingTop: isScrolled ? '0.25rem' : '0rem',
-        }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="sticky top-0 z-50 w-full backdrop-blur-2xl border-b flex flex-col shadow-sm" 
-        style={{ borderColor: `rgba(${textRgb}, 0.1)` }}
-      >
-        {store.announcement_is_active && store.announcement_text && (
-          <div className="relative w-full overflow-hidden flex items-center shadow-sm" style={{ backgroundColor: store.announcement_color || store.primary_color, color: store.background_color }}>
-            <style dangerouslySetInnerHTML={{__html: `@keyframes premium-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .animate-premium-marquee { display: flex; width: max-content; animation: premium-marquee 25s linear infinite; }`}} />
-            <div className="absolute top-0 left-0 w-12 h-full z-10 pointer-events-none" style={{ background: `linear-gradient(to right, rgba(${announceRgb}, 1), rgba(${announceRgb}, 0))` }}></div>
-            <div className="absolute top-0 right-0 w-12 h-full z-10 pointer-events-none" style={{ background: `linear-gradient(to left, rgba(${announceRgb}, 1), rgba(${announceRgb}, 0))` }}></div>
-            <div className="animate-premium-marquee py-2.5 cursor-default">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="flex items-center shrink-0">
-                  <span className="text-[11px] font-black tracking-[0.25em] uppercase mx-6 drop-shadow-sm">{store.announcement_text}</span>
-                  <span className="opacity-40 text-[10px]">✦</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        <div className="max-w-[1600px] w-full mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Menu className="lg:hidden cursor-pointer" size={24} />
-            <div className="flex items-center gap-3 cursor-pointer">
-              {store.logo && <img src={store.logo} alt="Logo" className="w-8 h-8 rounded-full object-cover shadow-sm border border-white/20" />}
-              <span className="text-xl md:text-2xl font-black tracking-tighter" style={{ fontFamily: `"${store.heading_font || 'Inter'}", sans-serif` }}>{store.name}</span>
-            </div>
-          </div>
-
-          <div className="hidden lg:flex items-center bg-black/5 rounded-full px-5 py-2.5 w-[400px] border shadow-inner transition-all hover:shadow-md" style={{ borderColor: `rgba(${textRgb}, 0.1)`, backgroundColor: `rgba(${textRgb}, 0.03)` }}>
-            <Search size={16} style={{ opacity: 0.5 }} />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search for dishes..." className="bg-transparent border-none outline-none px-3 w-full text-sm font-medium" style={{ color: store.secondary_color }} />
-          </div>
-
-          <div className="flex items-center gap-6 md:gap-8">
-            <div className="relative">
-              <Heart 
-                size={22} 
-                className="cursor-pointer hover:scale-110 transition-transform hidden md:block"
-                onClick={() => {
-                  if (!session) return openAuthModal();
-                  setIsFavOpen(!isFavOpen);
-                }}
-              />
-              {favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold shadow-md" style={{ backgroundColor: store.primary_color, color: store.background_color }}>
-                  {favorites.length}
-                </span>
-              )}
-              {isFavOpen && <FavoriteDropdown isOpen={isFavOpen} onClose={() => setIsFavOpen(false)} bgRgb={bgRgb} textRgb={textRgb} />}
-            </div>
-
-            {/* 🌟 UNIVERSAL BUYER PROFILE DROPDOWN */}
-            <div className="relative">
-              <button 
-                onClick={() => {
-                  if (isMounted && session) {
-                    setIsUserMenuOpen(!isUserMenuOpen)
-                  } else {
-                    setIsCheckoutIntent(false)
-                    openAuthModal()
-                  }
-                }} 
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors cursor-pointer relative z-50"
-              >
-                <User size={22} className={(isMounted && session) ? "text-indigo-600" : ""} />
-              </button>
-              
-              {isMounted && session && (
-                <ProfileDropdown 
-                  isOpen={isUserMenuOpen} 
-                  onClose={() => setIsUserMenuOpen(false)} 
-                  onSignOut={handleSignOut} 
-                  bgRgb={bgRgb}
-                  textRgb={textRgb}
-                />
-              )}
-            </div>
-
-            <div className="relative cursor-pointer hover:scale-110 transition-transform" onClick={() => setIsCartOpen(true)}>
-              <ShoppingBag size={22} />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold shadow-md" style={{ backgroundColor: store.primary_color, color: store.background_color }}>
-                  {cartItems.reduce((acc, item) => acc + item.quantity, 0)}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Food Specific: Horizontal Category Bar inside Nav */}
-        <div className="w-full border-t flex overflow-x-auto hide-scrollbar" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
-           <div className="max-w-[1600px] w-full mx-auto px-4 md:px-8 py-3 flex gap-4">
-              <button onClick={() => setActiveCategory('ALL')} className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors`} style={{ backgroundColor: activeCategory === 'ALL' ? store.primary_color : 'transparent', color: activeCategory === 'ALL' ? store.background_color : store.secondary_color, border: `1px solid ${activeCategory === 'ALL' ? 'transparent' : `rgba(${textRgb}, 0.2)`}` }}>
-                Full Menu
-              </button>
-              {categories.map(cat => (
-                <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors`} style={{ backgroundColor: activeCategory === cat.id ? store.primary_color : 'transparent', color: activeCategory === cat.id ? store.background_color : store.secondary_color, border: `1px solid ${activeCategory === cat.id ? 'transparent' : `rgba(${textRgb}, 0.2)`}` }}>
-                  {cat.name}
-                </button>
-              ))}
-           </div>
-        </div>
-      </motion.nav>
 
       {/* HERO SECTION (Restaurant Format) */}
       <div className="p-4 md:p-8 max-w-[1600px] mx-auto">

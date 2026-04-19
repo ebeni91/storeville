@@ -75,9 +75,9 @@ export default function OrdersPage() {
       case 'ACCEPTED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-100 text-blue-700 flex items-center gap-1.5 w-max"><CheckCircle size={12}/> Accepted</span>
       case 'COOKING': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-orange-100 text-orange-700 flex items-center gap-1.5 w-max"><Flame size={12}/> In Kitchen</span>
       case 'PROCESSING': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-purple-100 text-purple-700 flex items-center gap-1.5 w-max"><Package size={12}/> Packing</span>
-      case 'READY': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-indigo-100 text-indigo-700 flex items-center gap-1.5 w-max"><ShoppingBag size={12}/> Ready for Pickup</span>
+      case 'READY': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-gray-100 text-gray-700 flex items-center gap-1.5 w-max"><ShoppingBag size={12}/> Ready for Pickup</span>
       case 'SHIPPED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-100 text-blue-700 flex items-center gap-1.5 w-max"><Truck size={12}/> Shipped</span>
-      case 'OUT_FOR_DELIVERY': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-indigo-100 text-indigo-700 flex items-center gap-1.5 w-max"><Truck size={12}/> On the Way</span>
+      case 'OUT_FOR_DELIVERY': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-gray-100 text-gray-700 flex items-center gap-1.5 w-max"><Truck size={12}/> On the Way</span>
       case 'DELIVERED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-100 text-emerald-700 flex items-center gap-1.5 w-max"><CheckCircle size={12}/> Delivered</span>
       case 'CANCELLED': return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-red-100 text-red-700 flex items-center gap-1.5 w-max"><X size={12}/> Cancelled</span>
       default: return <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-gray-100 text-gray-700">{status}</span>
@@ -104,7 +104,7 @@ export default function OrdersPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-gray-900 flex items-center gap-3">
-            {isFood ? <ChefHat size={32} className="text-orange-500"/> : <Package size={32} className="text-indigo-600"/>}
+            {isFood ? <ChefHat size={32} className="text-orange-500"/> : <Package size={32} className="text-gray-900"/>}
             {isFood ? 'Kitchen Orders' : 'Store Orders'}
           </h1>
           <p className="text-gray-500 font-medium mt-1 text-sm">Manage and fulfill your customer purchases.</p>
@@ -159,7 +159,7 @@ export default function OrdersPage() {
                     <td className="p-6 font-black text-gray-900 text-lg tracking-tight">Br {parseFloat(order.total_amount).toFixed(2)}</td>
                     <td className="p-6"><StatusBadge status={order.status} /></td>
                     <td className="p-6 text-right">
-                      <button onClick={() => setSelectedOrder(order)} className="p-3 bg-white border border-gray-100 shadow-sm text-indigo-600 hover:text-white hover:bg-indigo-600 rounded-2xl transition-all inline-flex items-center justify-center group/btn hover:scale-105 active:scale-95">
+                      <button onClick={() => setSelectedOrder(order)} className="p-3 bg-white border border-gray-100 shadow-sm text-gray-900 hover:text-white hover:bg-gray-900 rounded-2xl transition-all inline-flex items-center justify-center group/btn hover:scale-105 active:scale-95">
                         <Eye size={18} />
                       </button>
                     </td>
@@ -215,7 +215,7 @@ export default function OrdersPage() {
                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Location Details</h3>
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 h-full">
                   <p className="text-sm font-bold text-gray-900 flex items-start gap-2 leading-relaxed">
-                    <MapPin size={16} className="shrink-0 mt-0.5 text-indigo-500"/> 
+                    <MapPin size={16} className="shrink-0 mt-0.5 text-gray-900"/> 
                     {isFood ? selectedOrder.delivery_address : selectedOrder.shipping_address}
                   </p>
                   
@@ -228,7 +228,7 @@ export default function OrdersPage() {
 
                   {!isFood && selectedOrder.tracking_number && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 flex items-center gap-1"><Truck size={12}/> Tracking</p>
+                      <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-1 flex items-center gap-1"><Truck size={12}/> Tracking</p>
                       <p className="text-xs font-bold text-gray-900 font-mono">{selectedOrder.tracking_number}</p>
                     </div>
                   )}

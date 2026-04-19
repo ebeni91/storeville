@@ -40,17 +40,17 @@ export default function OrderDetailsModal({ isOpen, onClose, order }: any) {
           <div className="p-6 sm:p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-                <Package className="text-indigo-600" /> 
+                <Package className="text-gray-900" /> 
                 Order ORD-{order.id}
               </h2>
               <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"><X size={20} /></button>
             </div>
             
             <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
                 <div>
                   <p className="text-sm font-bold text-gray-500">Total Price</p>
-                  <p className="text-2xl font-black text-indigo-700">{order.total}</p>
+                  <p className="text-2xl font-black text-gray-900">{order.total}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-500">Current Status</p>
@@ -73,8 +73,8 @@ export default function OrderDetailsModal({ isOpen, onClose, order }: any) {
               <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
                 <h3 className="font-bold text-gray-900 mb-4">Tracking Progress</h3>
                 <div className="relative pt-2 pb-4">
-                  <div className="absolute left-4 top-2 bottom-4 w-1 bg-indigo-100 rounded-full"></div>
-                  <div className={`absolute left-4 top-2 w-1 bg-indigo-500 rounded-full transition-all duration-1000 ${
+                  <div className="absolute left-4 top-2 bottom-4 w-1 bg-gray-200 rounded-full"></div>
+                  <div className={`absolute left-4 top-2 w-1 bg-gray-900 rounded-full transition-all duration-1000 ${
                     order.status === 'delivered' ? 'bottom-4' : 
                     order.status === 'shipped' || order.status === 'dispatched' ? 'h-2/3' : 
                    'h-1/3'
@@ -82,13 +82,13 @@ export default function OrderDetailsModal({ isOpen, onClose, order }: any) {
                   
                   <div className="space-y-6 relative z-10">
                     <div className="flex items-center gap-4">
-                      <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shadow-md border-4 border-white flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center shadow-md border-4 border-white flex-shrink-0">
                         <CheckCircle size={14} className="text-white" />
                       </div>
                       <div><p className="font-bold text-gray-900 leading-tight">Order Placed</p><p className="text-xs font-semibold text-gray-500">{order.date}</p></div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm border-4 border-white flex-shrink-0 transition-colors ${order.status !== 'pending' && order.status !== 'cancelled' ? 'bg-indigo-500' : 'bg-gray-200'}`}>
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm border-4 border-white flex-shrink-0 transition-colors ${order.status !== 'pending' && order.status !== 'cancelled' ? 'bg-gray-900' : 'bg-gray-200'}`}>
                         <Truck size={14} className="text-white" />
                       </div>
                       <div><p className={`font-bold leading-tight ${order.status !== 'pending' && order.status !== 'cancelled' ? 'text-gray-900' : 'text-gray-400'}`}>On the way</p></div>

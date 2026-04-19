@@ -30,7 +30,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   if (isPending) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <Loader2 className="animate-spin text-indigo-600 mb-4" size={48} />
+        <Loader2 className="animate-spin text-gray-900 mb-4" size={48} />
         <p className="text-gray-500 font-bold animate-pulse">Verifying secure session...</p>
       </div>
     )

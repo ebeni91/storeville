@@ -12,8 +12,17 @@ const DJANGO_BACKEND = process.env.DJANGO_BACKEND_URL ?? 'http://backend:8000'
  * This API route EXPLICITLY forwards all cookies and headers, solving the hijacking bug.
  */
 async function handler(request: NextRequest, { params }: { params: { path: string[] } }) {
-  const path = params.path.join('/')
+  // Extract path accurately from nextUrl.pathname
+  let path = request.nextUrl.pathname.replace('/api/proxy/', '')
+  
+  // Django's APPEND_SLASH requires all API endpoints to end with a trailing slash.
+  // Next.js automatically strips them, causing infinite redirect loops if we don't fix it right here.
+  if (!path.endsWith('/') && !path.includes('.')) {
+    path += '/'
+  }
+
   const backendUrl = `${DJANGO_BACKEND}/api/${path}`
+  console.log(`[PROXY REWRITE] pathname: "${request.nextUrl.pathname}" -> path: "${path}" -> backendUrl: "${backendUrl}"`)
 
   // Preserve query string
   const url = new URL(backendUrl)
@@ -39,19 +48,36 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
   }
 
   try {
-    const response = await fetch(url.toString(), {
+    let response = await fetch(url.toString(), {
       method: request.method,
       headers: forwardedHeaders,
       body,
-      // Don't follow redirects automatically — pass them through
       redirect: 'manual',
     })
+
+    // Django's APPEND_SLASH sends a 301/308 redirect when the trailing slash is missing.
+    // Follow it internally so the browser never sees a redirect loop.
+    if ((response.status === 301 || response.status === 308) && response.headers.get('location')) {
+      const redirectLocation = response.headers.get('location')!
+      const redirectUrl = redirectLocation.startsWith('http')
+        ? new URL(redirectLocation)
+        : new URL(redirectLocation, DJANGO_BACKEND)
+      // Reattach query params
+      request.nextUrl.searchParams.forEach((value, key) => {
+        redirectUrl.searchParams.set(key, value)
+      })
+      response = await fetch(redirectUrl.toString(), {
+        method: request.method,
+        headers: forwardedHeaders,
+        body,
+        redirect: 'manual',
+      })
+    }
 
     const responseBody = await response.arrayBuffer()
     const responseHeaders = new Headers()
 
     response.headers.forEach((value, key) => {
-      // Forward response headers that are safe to pass through
       if (!['transfer-encoding', 'connection'].includes(key.toLowerCase())) {
         responseHeaders.set(key, value)
       }

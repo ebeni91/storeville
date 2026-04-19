@@ -1,66 +1,91 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useQuery } from '@tanstack/react-query'
-import { fetchNearbyStores, Store } from '@/lib/api'
-import { LocateFixed, Store as StoreIcon, Navigation, ArrowRight } from 'lucide-react'
-
-const DEFAULT_VIEWPORT = {
-  latitude: 8.9806,
-  longitude: 38.7578,
-  zoom: 14 
-}
+import { api, Store } from '@/lib/api'
+import { LocateFixed } from 'lucide-react'
 
 interface MapCoreProps {
   mode?: 'retail' | 'food'
+  onStoreClick?: (store: Store) => void
 }
 
-function MapController({ center }: { center: [number, number] }) {
+// Fits the map viewport to show all stores (+user dot if available)
+function MapController({ stores, userLoc }: { stores?: Store[], userLoc: [number, number] | null }) {
   const map = useMap()
   useEffect(() => {
-    map.flyTo(center, 15, { animate: true, duration: 1.5 })
-  }, [center, map])
+    const validCoords: [number, number][] = (stores || [])
+      .filter(s => s.latitude && s.longitude)
+      .map(s => [Number(s.latitude), Number(s.longitude)])
+
+    if (validCoords.length > 0) {
+      const bounds = L.latLngBounds(validCoords)
+      if (userLoc) bounds.extend(userLoc)
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14, animate: true, duration: 1.2 })
+    } else if (userLoc) {
+      map.flyTo(userLoc, 13, { animate: true, duration: 1.2 })
+    }
+  }, [stores, userLoc, map])
   return null
 }
 
-export default function MapCore({ mode = 'retail' }: MapCoreProps) {
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null)
-  const [userLoc, setUserLoc] = useState<[number, number]>([DEFAULT_VIEWPORT.latitude, DEFAULT_VIEWPORT.longitude])
+export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps) {
+  // null until geolocation resolves — never hardcoded
+  const [userLoc, setUserLoc] = useState<[number, number] | null>(null)
   const [isLocating, setIsLocating] = useState(false)
-  
-  const modeColorClass = mode === 'food' ? 'bg-orange-500' : 'bg-indigo-600'
-  const modeHoverClass = mode === 'food' ? 'hover:bg-orange-600' : 'hover:bg-indigo-700'
-  const spinnerColor = mode === 'food' ? 'border-orange-500' : 'border-indigo-600'
+
+  const isFood = mode === 'food'
+  const accentColor = isFood ? '#f97316' : '#111827'
+
+  // Auto-request live location once on mount
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLoc([pos.coords.latitude, pos.coords.longitude]),
+      () => setUserLoc(null), // Permission denied: fine, map will still show stores
+      { timeout: 8000 }
+    )
+  }, [])
+
+  // Fetch ALL active stores — no radius, no lat/lon dependency
+  const { data: stores, isLoading } = useQuery({
+    queryKey: ['all-stores', mode],
+    queryFn: async () => {
+      const storeType = isFood ? 'FOOD' : 'RETAIL'
+      const response = await api.get(`/stores/discovery/?type=${storeType}`)
+      return (response.data.results || response.data) as Store[]
+    },
+    staleTime: 30_000,
+  })
 
   const createCustomIcon = (isUser = false) => {
-    const iconHtml = isUser 
-      ? `<div class="bg-blue-500 text-white p-1.5 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)] ring-4 ring-blue-500/30 flex items-center justify-center w-6 h-6">
-          <div class="w-full h-full bg-white rounded-full animate-pulse"></div>
+    const iconHtml = isUser
+      ? `<div style="position:relative;width:22px;height:22px;">
+          <div style="position:absolute;width:22px;height:22px;background:rgba(17,24,39,0.2);border-radius:50%;top:0;left:0;animation:ripple 1.8s ease-out infinite;"></div>
+          <div style="position:absolute;width:14px;height:14px;background:#111827;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(17,24,39,0.4);"></div>
          </div>`
-      : `<div class="${modeColorClass} text-white p-2 rounded-full shadow-lg ring-2 ring-white flex items-center justify-center w-9 h-9 transform hover:scale-110 transition-transform">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
-            <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"></path>
-            <path d="M12 3v6"></path>
-          </svg>
+      : `<div style="position:relative;width:46px;height:54px;cursor:pointer;">
+          <div style="width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid ${accentColor};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);position:relative;z-index:1;">
+            <div style="width:32px;height:32px;border-radius:50%;background:${accentColor};display:flex;align-items:center;justify-content:center;">
+              ${isFood
+                ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`
+                : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`}
+            </div>
+          </div>
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:${accentColor};clip-path:polygon(50% 100%,0% 0%,100% 0%);"></div>
         </div>`
 
     return L.divIcon({
       html: iconHtml,
       className: 'custom-leaflet-icon bg-transparent border-none',
-      iconSize: isUser ? [24, 24] : [36, 36],
-      iconAnchor: isUser ? [12, 12] : [18, 36], 
-      popupAnchor: [0, -36] 
+      iconSize: isUser ? [22, 22] : [46, 54],
+      iconAnchor: isUser ? [11, 11] : [23, 54],
+      popupAnchor: [0, -54]
     })
   }
-
-  const { data: stores, isLoading } = useQuery({
-    queryKey: ['stores', userLoc[0], userLoc[1], mode],
-    queryFn: () => fetchNearbyStores(userLoc[0], userLoc[1], 15, mode),
-  })
 
   const locateUser = () => {
     setIsLocating(true)
@@ -70,96 +95,75 @@ export default function MapCore({ mode = 'retail' }: MapCoreProps) {
         setIsLocating(false)
       },
       (err) => {
-        console.error("GPS Error:", err)
-        alert("Could not find your location. Please ensure location services are enabled.")
+        console.error('GPS Error:', err)
         setIsLocating(false)
       }
     )
   }
 
+  // Use a safe fallback center for Leaflet's initial render before geolocation resolves
+  const mapCenter: [number, number] = userLoc || [9.0, 38.75]
+
   return (
-    <div className="w-full h-full relative bg-gray-100 z-0">
-      
-      <button 
-        onClick={locateUser} 
-        disabled={isLocating}
-        className="absolute bottom-6 right-6 z-[1000] bg-white p-3.5 rounded-2xl shadow-[0_10px_20px_rgba(0,0,0,0.1)] hover:scale-105 transition-all text-gray-700 hover:text-indigo-600 disabled:opacity-50 border border-gray-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/20"
-      >
-        <LocateFixed size={22} className={isLocating ? 'animate-spin text-indigo-600' : ''} />
-      </button>
+    <div className="w-full h-full relative z-0">
+      {/* Locate Me button */}
+      {!onStoreClick && (
+        <button
+          onClick={locateUser}
+          disabled={isLocating}
+          className="absolute bottom-6 right-6 z-[1000] bg-white p-3.5 rounded-2xl shadow-[0_10px_20px_rgba(0,0,0,0.1)] hover:scale-105 transition-all text-gray-700 hover:text-gray-900 disabled:opacity-50 border border-gray-100"
+        >
+          <LocateFixed size={22} className={isLocating ? 'animate-spin text-gray-900' : ''} />
+        </button>
+      )}
 
       <MapContainer
-        center={userLoc}
-        zoom={DEFAULT_VIEWPORT.zoom}
+        center={mapCenter}
+        zoom={5}
         scrollWheelZoom={true}
         style={{ width: '100%', height: '100%', zIndex: 10 }}
+        zoomControl={false}
+        attributionControl={false}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+          maxZoom={20}
         />
-        
-        <MapController center={userLoc} />
 
-        <Marker position={userLoc} icon={createCustomIcon(true)}>
-          <Popup className="rounded-2xl border-none shadow-xl">
-            <p className="font-bold text-xs text-center py-1">You are here</p>
-          </Popup>
-        </Marker>
+        {/* Auto-fit to all stores once data loads */}
+        <MapController stores={stores} userLoc={userLoc} />
 
-        {stores?.map((store) => (
-          <Marker
-            key={store.id}
-            position={[store.latitude, store.longitude]}
-            icon={createCustomIcon()}
-            eventHandlers={{ click: () => setSelectedStore(store) }}
-          >
-            <Popup className="rounded-[1.5rem] overflow-hidden border-none shadow-[0_20px_40px_-15px_rgba(0,0,0,0.2)] p-0 m-0 custom-popup">
-              <div className="p-3 text-center min-w-[200px] bg-white">
-                <div className="w-full h-28 bg-gray-50 rounded-xl mb-4 overflow-hidden border border-gray-100">
-                  {store.logo ? (
-                    <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                       <StoreIcon size={32} />
-                    </div>
-                  )}
-                </div>
-                
-                <h3 className="font-black text-xl text-gray-900 leading-tight mb-1 tracking-tight line-clamp-1">{store.name}</h3>
-                
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-md">{store.category || "General"}</p>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-md flex items-center gap-1">
-                    <Navigation size={10} /> {(store.distance || 0).toFixed(1)} km
-                  </p>
-                </div>
+        {/* User location marker — only when we have a real GPS fix */}
+        {userLoc && <Marker position={userLoc} icon={createCustomIcon(true)} />}
 
-                <a
-                  // 🌟 NEW: Standard relative path!
-                  href={`/store/${store.slug}`}
-                  className={`flex items-center justify-center gap-2 w-full ${modeColorClass} text-white text-[11px] font-black tracking-widest uppercase py-3.5 rounded-xl shadow-lg ${modeHoverClass} transition-all transform hover:-translate-y-0.5 focus:ring-4 focus:ring-indigo-500/30`}
-                >
-                  Visit Store <ArrowRight size={14} />
-                </a>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {/* Store markers */}
+        {stores?.map((store) =>
+          store.latitude && store.longitude ? (
+            <Marker
+              key={store.id}
+              position={[Number(store.latitude), Number(store.longitude)]}
+              icon={createCustomIcon()}
+              eventHandlers={{
+                click: () => {
+                  if (onStoreClick) onStoreClick(store)
+                }
+              }}
+            />
+          ) : null
+        )}
       </MapContainer>
 
       {isLoading && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-md px-6 py-2.5 rounded-full shadow-lg text-xs font-black uppercase tracking-widest text-gray-700 flex items-center gap-3 border border-white">
-          <div className={`w-4 h-4 border-[3px] ${spinnerColor} border-t-transparent rounded-full animate-spin`}></div>
-          Scanning Area...
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] bg-white/95 backdrop-blur-md px-6 py-3 rounded-full shadow-lg text-xs font-black uppercase tracking-widest text-gray-700 flex items-center gap-3 border border-white">
+          <div className="w-4 h-4 border-[3px] border-t-transparent rounded-full animate-spin" style={{ borderColor: accentColor, borderTopColor: 'transparent' }}></div>
+          Loading Stores...
         </div>
       )}
 
       <style dangerouslySetInnerHTML={{__html: `
-        .leaflet-popup-content-wrapper { padding: 0 !important; border-radius: 1.5rem !important; overflow: hidden; }
-        .leaflet-popup-content { margin: 0 !important; width: auto !important; }
-        .leaflet-popup-tip { box-shadow: 0 20px 40px -15px rgba(0,0,0,0.2); }
-        .custom-popup a { outline: none; }
+        @keyframes ripple { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.5); opacity: 0; } }
+        .leaflet-control-attribution { display: none !important; }
+        .leaflet-control-zoom { display: none !important; }
       `}} />
     </div>
   )

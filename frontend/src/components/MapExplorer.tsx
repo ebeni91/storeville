@@ -1,27 +1,27 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { Store } from '@/lib/api'
 
-// 🌟 THE FIX: Dynamically import your MapCore component with SSR disabled.
-// This completely stops the map from vibrating/shaking during zoom and scroll.
 const MapCoreDynamic = dynamic(() => import('@/components/MapCore'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-600 mb-4"></div>
-      <p className="text-indigo-900 font-bold tracking-widest uppercase text-xs">Booting Map Engine...</p>
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50">
+      <div className="w-12 h-12 rounded-full border-4 border-gray-900/20 border-t-gray-900 animate-spin mb-4"></div>
+      <p className="text-gray-500 font-bold tracking-widest uppercase text-xs">Loading Map…</p>
     </div>
   )
 })
 
 interface MapExplorerProps {
   mode?: 'retail' | 'food'
+  onStoreClick?: (store: Store) => void
 }
 
-export default function MapExplorer({ mode = 'retail' }: MapExplorerProps) {
+export default function MapExplorer({ mode = 'retail', onStoreClick }: MapExplorerProps) {
   return (
-    <div className="w-full h-full relative rounded-[2rem] overflow-hidden z-0">
-      <MapCoreDynamic mode={mode} />
+    <div className="w-full h-full relative z-0">
+      <MapCoreDynamic mode={mode} onStoreClick={onStoreClick} />
     </div>
   )
 }

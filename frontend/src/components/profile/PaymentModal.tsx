@@ -44,7 +44,7 @@ export default function PaymentModal({ isOpen, onClose, paymentToEdit }: any) {
           <div className="p-6 sm:p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-                <CreditCard className="text-indigo-600" /> 
+                <CreditCard className="text-gray-900" /> 
                 {paymentToEdit ? 'Edit Card' : 'Add New Card'}
               </h2>
               <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"><X size={20} /></button>
@@ -54,7 +54,7 @@ export default function PaymentModal({ isOpen, onClose, paymentToEdit }: any) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Card Brand</label>
-                  <select value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold">
+                  <select value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 transition-all font-semibold">
                     <option value="Visa">Visa</option>
                     <option value="Mastercard">Mastercard</option>
                     <option value="Amex">Amex</option>
@@ -62,23 +62,23 @@ export default function PaymentModal({ isOpen, onClose, paymentToEdit }: any) {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Last 4 Digits</label>
-                  <input required maxLength={4} pattern="\d{4}" type="text" value={formData.card_last4} onChange={e => setFormData({...formData, card_last4: e.target.value.replace(/\D/g,'')})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold tracking-widest text-center" placeholder="1234" />
+                  <input required maxLength={4} pattern="\d{4}" type="text" value={formData.card_last4} onChange={e => setFormData({...formData, card_last4: e.target.value.replace(/\D/g,'')})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 transition-all font-semibold tracking-widest text-center" placeholder="1234" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Exp. Month</label>
-                  <input required min={1} max={12} type="number" value={formData.exp_month} onChange={e => setFormData({...formData, exp_month: parseInt(e.target.value)})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold" placeholder="12" />
+                  <input required min={1} max={12} type="number" value={formData.exp_month} onChange={e => setFormData({...formData, exp_month: parseInt(e.target.value)})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 transition-all font-semibold" placeholder="12" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Exp. Year</label>
-                  <input required min={2024} type="number" value={formData.exp_year} onChange={e => setFormData({...formData, exp_year: parseInt(e.target.value)})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold" placeholder="2028" />
+                  <input required min={2024} type="number" value={formData.exp_year} onChange={e => setFormData({...formData, exp_year: parseInt(e.target.value)})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 transition-all font-semibold" placeholder="2028" />
                 </div>
               </div>
 
               <label className="flex items-center gap-3 cursor-pointer pt-2 group">
-                <div className={`w-6 h-6 rounded flex items-center justify-center border transition-colors ${formData.is_default ? 'bg-indigo-500 border-indigo-500' : 'bg-gray-50 border-gray-300 group-hover:border-indigo-400'}`}>
+                <div className={`w-6 h-6 rounded flex items-center justify-center border transition-colors ${formData.is_default ? 'bg-gray-900 border-gray-900' : 'bg-gray-50 border-gray-300 group-hover:border-gray-500'}`}>
                   {formData.is_default && <Check size={16} className="text-white" />}
                 </div>
                 <input type="checkbox" className="hidden" checked={formData.is_default} onChange={e => setFormData({...formData, is_default: e.target.checked})} />
@@ -88,7 +88,7 @@ export default function PaymentModal({ isOpen, onClose, paymentToEdit }: any) {
               <button 
                 type="submit" 
                 disabled={mutation.isPending}
-                className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg py-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+                className="w-full mt-6 bg-gray-900 hover:bg-black text-white font-black text-lg py-4 rounded-xl shadow-lg shadow-[0_8px_20px_rgba(17,24,39,0.2)] transition-all disabled:opacity-50"
               >
                 {mutation.isPending ? 'Saving...' : 'Save Payment'}
               </button>

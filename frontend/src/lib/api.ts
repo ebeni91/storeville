@@ -31,7 +31,7 @@ export interface Store {
   distance: number
 }
 
-export const fetchNearbyStores = async (lat: number, lon: number, radius = 10, mode = 'retail'): Promise<Store[]> => {
+export const fetchNearbyStores = async (lat: number, lon: number, radius = 50000, mode = 'retail'): Promise<Store[]> => {
   const storeType = mode === 'food' ? 'FOOD' : 'RETAIL';
   const response = await api.get(`/stores/discovery/nearby/?lat=${lat}&lon=${lon}&radius=${radius}&type=${storeType}`);
   return response.data;

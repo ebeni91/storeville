@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const DJANGO_BACKEND = process.env.DJANGO_BACKEND_URL ?? 'http://backend:8000'
+const DJANGO_BACKEND = process.env.DJANGO_INTERNAL_URL ?? process.env.DJANGO_BACKEND_URL ?? 'http://backend:8000'
+const BASE_URL = new URL(DJANGO_BACKEND)
 
 /**
  * 🌟 CRITICAL FIX: Proper Cookie-Forwarding Proxy
@@ -42,8 +43,8 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
     }
   })
 
-  // Ensure host is set to the backend
-  forwardedHeaders.set('host', 'backend:8000')
+  // Ensure host is set to the actual backend hostname (e.g. render.com domain or backend:8000 locally)
+  forwardedHeaders.set('host', BASE_URL.host)
 
   let body: string | undefined = undefined
   if (!['GET', 'HEAD'].includes(request.method)) {

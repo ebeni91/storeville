@@ -196,7 +196,7 @@ from django.templatetags.static import static
 UNFOLD = {
     "SITE_TITLE": "StoreVille Premium Admin",
     "SITE_HEADER": "StoreVille Command Center",
-    "SITE_URL": "http://localhost:3000",
+    "SITE_URL": os.environ.get('FRONTEND_URL', "http://localhost:3000"),
     "SITE_SYMBOL": "speed",  # Material icon 
     "SHOW_HISTORY": True, 
     "SHOW_VIEW_ON_SITE": True,

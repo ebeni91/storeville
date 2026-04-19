@@ -1,17 +1,21 @@
-import axios from 'axios';
-import { Platform } from 'react-native';
-import { authClient } from './auth-client';
+import Constants from 'expo-constants';
 
-const DEV_ANDROID_URL = 'http://172.26.144.123:8000/api';
-const DEV_IOS_URL     = 'http://172.26.144.123:8000/api';
-const PROD_URL        = 'https://api.storeville.app/api';
-
-const getBaseUrl = () => {
-  if (__DEV__) {
-    return Platform.OS === 'android' ? DEV_ANDROID_URL : DEV_IOS_URL;
+// ✅ FIX: Dynamically resolve the host IP from Expo's manifest so the app
+// works on any machine/network — no more hardcoding a specific LAN IP.
+const getDevHost = () => {
+  const expoHost = Constants.expoConfig?.hostUri;
+  if (expoHost) {
+    // expoHost is "192.168.x.x:8081" — extract the IP part only
+    return expoHost.split(':')[0];
   }
-  return PROD_URL;
+  // Fallback for bare React Native (non-Expo) or simulator edge cases
+  return Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
 };
+
+const DEV_URL  = `http://${getDevHost()}:8000/api`;
+const PROD_URL = 'https://api.storeville.app/api';
+
+const getBaseUrl = () => (__DEV__ ? DEV_URL : PROD_URL);
 
 export const API_URL = getBaseUrl();
 

@@ -77,8 +77,12 @@ class CartDetailView(APIView):
         if not store_id:
             return Response({"error": "store_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Find the cart for this specific user and store
-        cart = Cart.objects.filter(user=request.user, store_id=store_id).first()
+        # ✅ PERFORMANCE FIX (Issue #19): prefetch_related eliminates N+1 queries.
+        # Without this, each cart item triggers a separate DB query for the product.
+        cart = Cart.objects.filter(
+            user=request.user, store_id=store_id
+        ).prefetch_related('items__product').first()
+
         if not cart:
             return Response({"items": []}, status=status.HTTP_200_OK)
 

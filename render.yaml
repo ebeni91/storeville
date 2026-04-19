@@ -1,0 +1,68 @@
+databases:
+  - name: storeville-db
+    databaseName: storeville_prod
+    user: storeville
+    plan: starter
+
+services:
+  - type: redis
+    name: storeville-redis
+    plan: starter
+    ipAllowList: []
+
+  - type: web
+    name: storeville-api
+    runtime: python
+    rootDir: backend
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application --config gunicorn.conf.py"
+    plan: starter
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: storeville-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: storeville-redis
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: INTERNAL_SYNC_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false # Set this to your Vercel URL in the Render Dashboard
+
+  - type: worker
+    name: storeville-celery
+    runtime: python
+    rootDir: backend
+    buildCommand: "./build.sh"
+    startCommand: "celery -A config worker -l INFO"
+    plan: starter
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: storeville-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: storeville-redis
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          type: web
+          name: storeville-api
+          envVarKey: DJANGO_SECRET_KEY

@@ -1,15 +1,11 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 
-# Import your Food models
-from .models import FoodOrder, Cart, CartItem 
+from .models import FoodOrder, Cart, CartItem
 from .serializers import FoodOrderSerializer
-
-# External app imports for the merge logic
 from apps.food_menu.models import MenuItem
 from apps.stores.models import Store
 
@@ -79,8 +75,12 @@ class CartDetailView(APIView):
         if not store_id:
             return Response({"error": "store_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Find the cart for this specific user and store
-        cart = Cart.objects.filter(user=request.user, store_id=store_id).first()
+        # ✅ PERFORMANCE FIX (Issue #19): prefetch_related eliminates N+1 queries.
+        # Without this, each cart item triggers a separate DB query for menu_item.
+        cart = Cart.objects.filter(
+            user=request.user, store_id=store_id
+        ).prefetch_related('items__menu_item').first()
+
         if not cart:
             return Response({"items": []}, status=status.HTTP_200_OK)
 

@@ -13,6 +13,9 @@ class RetailCategory(models.Model):
 
     class Meta:
         verbose_name_plural = 'Retail Categories'
+        # ✅ FIX (Issue #27): Prevent duplicate slugs within the same store.
+        # Two categories in different stores can share a slug, but not within one store.
+        unique_together = ('store', 'slug')
 
     def __str__(self):
         return f"{self.store.name} - {self.name}"
@@ -35,6 +38,13 @@ class RetailProduct(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # ✅ FIX (Issue #26): Composite index for the most common query pattern:
+        # "get all active products for store X" (used in storefront & seller dashboard).
+        indexes = [
+            models.Index(fields=['store', 'is_active'], name='retail_prod_store_active_idx'),
+        ]
 
     def __str__(self):
         return self.name

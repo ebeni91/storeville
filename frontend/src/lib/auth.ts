@@ -3,13 +3,21 @@ import { expo } from '@better-auth/expo';
 import { phoneNumber } from 'better-auth/plugins';
 import { Pool } from 'pg';
 
-// Construct connection string — works both locally and inside Docker
-// Inside Docker: postgres service is reachable at hostname "postgres"
-// Locally: use DATABASE_URL from .env.local (points to localhost:5432)
+// ✅ SECURITY FIX: Never fall back to hardcoded credentials.
+// DATABASE_URL must always be set in .env / environment variables.
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    '[StoreVille] DATABASE_URL environment variable is required. ' +
+    'Set it in .env (e.g. postgresql://user:pass@postgres:5432/db)'
+  );
+}
+
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ??
-    'postgresql://storeville_user:super_secure_password@postgres:5432/storeville_db',
+  connectionString: process.env.DATABASE_URL,
+  // Limit connections so Gunicorn workers don't exhaust Postgres
+  max: 10,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
 });
 
 export const auth = betterAuth({
@@ -109,24 +117,21 @@ export const auth = betterAuth({
   },
 
   // ── Trusted Origins for CORS + deep links ─────────────────────────────────
+  // ✅ SECURITY FIX: No hardcoded IPs, ngrok URLs, or broad wildcards.
+  // All origins are driven by environment variables.
   trustedOrigins: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    // 🌟 LAN IP for mobile dev — phone on same network uses this to reach the server
-    'http://10.17.127.123:3000',
-    // 🌟 ngrok tunnel for Google OAuth (bypasses IP-address restriction)
-    'https://anthological-defectively-suzette.ngrok-free.dev',
+    process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
+    ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+    // Native mobile deep link scheme
     'storeville://',
-    'storeville://*',
-    // Expo development exp:// scheme
-    ...(process.env.NODE_ENV === 'development'
-      ? [
-          'exp://',
-          'exp://**',
-          'exp://192.168.*.*:*/**',
-          'exp://10.*.*.*:*/**',
-        ]
-      : []),
+    // Allow dev origins only in development
+    ...(process.env.NODE_ENV === 'development' ? [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      // Add your current ngrok URL as NGROK_URL env var during local dev
+      ...(process.env.NGROK_URL ? [process.env.NGROK_URL] : []),
+    ] : []),
   ],
 
   // ── Session ───────────────────────────────────────────────────────────────

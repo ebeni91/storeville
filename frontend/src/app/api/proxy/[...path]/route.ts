@@ -22,7 +22,10 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
   }
 
   const backendUrl = `${DJANGO_BACKEND}/api/${path}`
-  console.log(`[PROXY REWRITE] pathname: "${request.nextUrl.pathname}" -> path: "${path}" -> backendUrl: "${backendUrl}"`)
+  // Only log in development — avoids cluttering Render/Docker production logs
+  if (process.env.NODE_ENV === 'development') {
+    console.debug(`[PROXY] ${request.method} ${request.nextUrl.pathname} → ${backendUrl}`)
+  }
 
   // Preserve query string
   const url = new URL(backendUrl)

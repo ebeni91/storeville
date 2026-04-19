@@ -2,6 +2,7 @@ from django.db import connection
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -28,29 +29,28 @@ class BetterAuthMiddleware:
 
     def __call__(self, request):
         # 1. Only the Django Admin uses the standard Django session.
-        #    Everything else goes through Better Auth session resolution.
         if request.path.startswith('/admin/'):
             return self.get_response(request)
 
-        # 🌟 HYPER-IMPORTANT: By default, treat all platform requests as anonymous.
-        # This prevents "sticky sessions" where the Django Admin session (e.g. et3on)
-        # leaks into the customer storefront.
-        # 2. Extract and parse the session token cookie.
-        # It may be prefixed with __Secure- if running over HTTPS (like ngrok)
-        raw_cookie = request.COOKIES.get('better-auth.session_token') or request.COOKIES.get('__Secure-better-auth.session_token')
-        
+        # Treat all platform requests as anonymous until verified.
+        raw_cookie = (
+            request.COOKIES.get('better-auth.session_token') or
+            request.COOKIES.get('__Secure-better-auth.session_token')
+        )
+
         if not raw_cookie:
             return self.get_response(request)
 
-        # Better Auth signs cookies as "{token}.{url_encoded_hmac}".
-        # The DB session table only stores the raw token (before the dot).
-        session_token = raw_cookie.split('.')[0]
+        # 2. Verify HMAC signature and extract the raw token.
+        session_token = self._verify_and_extract_token(raw_cookie)
+        if not session_token:
+            # Invalid signature — treat as anonymous, don't hit the DB
+            return self.get_response(request)
 
         # 3. Direct DB query: validate session and fetch BA user data.
         auth_data = self._get_auth_data(session_token)
 
         if auth_data:
-            # 4. Sync/locate the corresponding Django User.
             user = self._sync_user(auth_data)
             if user:
                 user.backend = 'django.contrib.auth.backends.ModelBackend'
@@ -59,9 +59,48 @@ class BetterAuthMiddleware:
             else:
                 logger.error(f"[BetterAuth] _sync_user returned None for BA data: {auth_data.get('email')}")
         else:
-            logger.debug(f"[BetterAuth] No active session in DB for token prefix: {session_token[:8]}...")
+            logger.debug("[BetterAuth] No active session found in DB for provided token.")
 
         return self.get_response(request)
+
+    def _verify_and_extract_token(self, raw_cookie: str) -> str | None:
+        """
+        ✅ SECURITY FIX: Verify BetterAuth's HMAC cookie signature before DB lookup.
+        Better Auth signs cookies as '{token}.{url_encoded_hmac_signature}'.
+        We verify the signature to prevent forged session cookies.
+        """
+        import hmac as _hmac
+        import hashlib
+        import urllib.parse
+
+        if '.' not in raw_cookie:
+            # Unversioned token format — pass through (legacy support)
+            return raw_cookie
+
+        # Split only on the LAST dot to handle tokens that contain dots
+        last_dot = raw_cookie.rfind('.')
+        token = raw_cookie[:last_dot]
+        signature_encoded = raw_cookie[last_dot + 1:]
+
+        secret = os.environ.get('BETTER_AUTH_SECRET', '')
+        if not secret:
+            # ✅ SECURITY: If no secret configured, refuse all cookie-based auth
+            logger.error("[BetterAuth] BETTER_AUTH_SECRET is not set — rejecting all sessions")
+            return None
+
+        try:
+            signature = urllib.parse.unquote(signature_encoded)
+            expected_sig = _hmac.new(
+                secret.encode(), token.encode(), hashlib.sha256
+            ).hexdigest()
+            if _hmac.compare_digest(expected_sig, signature):
+                return token
+            else:
+                logger.warning("[BetterAuth] HMAC signature mismatch — possible cookie forgery attempt")
+                return None
+        except Exception as e:
+            logger.error(f"[BetterAuth] HMAC verification error: {e}")
+            return None
 
     def _get_auth_data(self, token: str) -> dict | None:
         """Query the better-auth 'session' and 'user' tables via raw SQL."""

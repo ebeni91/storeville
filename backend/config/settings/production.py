@@ -60,3 +60,6 @@ if FRONTEND_URL:
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://\w+\.storeville\.app$",
 ]
+
+# 🌟 CRITICAL: Django expects the exact origin to be explicitly trusted for POST requests
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()

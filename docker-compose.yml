@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -9,13 +7,29 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # ✅ SECURITY FIX: No external port binding. Postgres is only reachable
+    # by other Docker services (backend, frontend) via internal Docker networking.
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # ✅ SECURITY FIX: Password-protected and not publicly exposed.
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env
 
   backend:
     build:
@@ -28,13 +42,17 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - redis
-  
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./frontend
-    command: sh -c "npm run build && npm start"
+    # ✅ DEVOPS FIX: Build happens inside Dockerfile, not on every container start.
+    # This prevents the 2-minute downtime on every `docker compose restart`.
+    command: npm start
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -43,6 +61,8 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    env_file:
+      - .env
     depends_on:
       - backend
 

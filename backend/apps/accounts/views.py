@@ -19,14 +19,27 @@ class SyncUserView(APIView):
     Called by Better Auth's databaseHooks.user.create.after hook
     when a new user registers. This ensures every BA signup immediately
     creates a corresponding Django user in the Admin dashboard.
+
+    ✅ SECURITY: Protected by a shared secret (INTERNAL_SYNC_SECRET).
+    Never expose raw exception details in responses.
     """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        # Validate internal secret to prevent public access
+        # ✅ SECURITY FIX: Require a properly configured secret — no insecure defaults.
+        expected = os.environ.get('INTERNAL_SYNC_SECRET', '')
+        if not expected or expected == 'dev-sync-secret':
+            from django.core.exceptions import ImproperlyConfigured
+            raise ImproperlyConfigured(
+                "INTERNAL_SYNC_SECRET must be set to a strong, unique value. "
+                "Never use the default 'dev-sync-secret' in production."
+            )
+
         secret = request.headers.get('X-Internal-Secret', '')
-        expected = os.environ.get('INTERNAL_SYNC_SECRET', 'dev-sync-secret')
-        if secret != expected:
+        # ✅ Timing-safe comparison prevents timing-based secret leakage
+        import hmac as _hmac
+        if not _hmac.compare_digest(secret, expected):
+            logger.warning("[SyncUser] Rejected request with invalid X-Internal-Secret")
             return Response({'error': 'Forbidden'}, status=403)
 
         data = request.data
@@ -40,7 +53,6 @@ class SyncUserView(APIView):
         last_name = name_parts[1] if len(name_parts) > 1 else ''
 
         try:
-            # Use email as the canonical identifier; fallback to phone for phone-only users
             username = email if email else f'phone_{phone}'
 
             user, created = User.objects.get_or_create(
@@ -55,18 +67,19 @@ class SyncUserView(APIView):
             )
 
             if created:
-                # Set an unusable password so Django admin works correctly
                 user.set_unusable_password()
                 user.save()
-                logger.info(f'[SyncUser] Created Django user for BA signup: {username}')
+                logger.info(f'[SyncUser] Created Django user: {username}')
             else:
-                logger.info(f'[SyncUser] Django user already exists: {username}')
+                logger.info(f'[SyncUser] User already exists: {username}')
 
             return Response({'status': 'ok', 'created': created}, status=200)
 
         except Exception as e:
-            logger.error(f'[SyncUser] Failed to sync BA user: {e}')
-            return Response({'error': str(e)}, status=500)
+            # ✅ SECURITY FIX: Never expose raw exception strings to callers.
+            logger.error(f'[SyncUser] Failed to sync BA user: {e}', exc_info=True)
+            return Response({'error': 'Internal server error'}, status=500)
+
 
 
 class ProfileView(generics.RetrieveUpdateDestroyAPIView):

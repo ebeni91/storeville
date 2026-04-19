@@ -58,7 +58,10 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
       const response = await api.get(`/stores/discovery/?type=${storeType}`)
       return (response.data.results || response.data) as Store[]
     },
-    staleTime: 30_000,
+    // ✅ PERFORMANCE FIX (Issue #32): Store data rarely changes. 
+    // Increased staleTime to 5 minutes to prevent unnecessary network requests 
+    // when toggling between food/retail modes.
+    staleTime: 5 * 60 * 1000,
   })
 
   const createCustomIcon = (isUser = false) => {

@@ -8,8 +8,10 @@ bind = os.environ.get("GUNICORN_BIND", "0.0.0.0:8000")
 # ── Workers ──────────────────────────────────────────────────────────────────
 # Rule of thumb: (2 × CPU cores) + 1
 workers = int(os.environ.get("GUNICORN_WORKERS", multiprocessing.cpu_count() * 2 + 1))
-worker_class = "sync"          # Use "gevent" or "uvicorn.workers.UvicornWorker" for async
-threads = int(os.environ.get("GUNICORN_THREADS", 2))
+# ✅ gevent: non-blocking async I/O — one worker handles thousands of concurrent
+# requests while waiting on DB/Redis instead of blocking the whole process.
+worker_class = "gevent"
+threads = int(os.environ.get("GUNICORN_THREADS", 1))  # gevent doesn't need threads
 worker_connections = 1000
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", 120))
 keepalive = 5

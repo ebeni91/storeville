@@ -38,6 +38,13 @@ class MenuItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        # ✅ FIX (Issue #26): Composite index for the most common menu query:
+        # "get all available items for store X" (used in food storefront).
+        indexes = [
+            models.Index(fields=['store', 'is_available'], name='menu_item_store_available_idx'),
+        ]
+
     def __str__(self):
         return self.name
 

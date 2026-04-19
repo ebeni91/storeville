@@ -121,6 +121,51 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ── Redis Cache Backend ────────────────────────────────────────────────────────
+# Uses Redis DB 1 (separate from Celery which typically uses DB 0)
+# Cache timeout: 5 minutes for most data; overridden per-view where needed.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://redis:6379/1'),
+        'TIMEOUT': 300,  # 5 minutes global default
+        'KEY_PREFIX': 'storeville',
+    }
+}
+
+# ── Structured Logging ─────────────────────────────────────────────────────────
+# JSON-formatted logs so Docker / Render log aggregation can index them properly.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s',
+        },
+        'simple': {
+            'format': '[%(levelname)s] %(name)s: %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            # Use JSON in production (non-DEBUG), simple format in dev
+            'formatter': 'json' if not os.environ.get('DEBUG', 'True') == 'True' else 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': os.environ.get('LOG_LEVEL', 'INFO'),
+    },
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+        'apps': {'handlers': ['console'], 'level': 'DEBUG', 'propagate': False},
+        'core': {'handlers': ['console'], 'level': 'DEBUG', 'propagate': False},
+    },
+}
+
 # -----------------------------------------------------------------
 # REST FRAMEWORK & SECURITY CONFIGURATIONS
 # -----------------------------------------------------------------

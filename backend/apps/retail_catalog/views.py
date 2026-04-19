@@ -1,19 +1,22 @@
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 from .models import RetailCategory, RetailProduct, RetailFavorite
 from .serializers import RetailCategorySerializer, RetailProductSerializer, RetailFavoriteSerializer
 from apps.stores.models import Store
 
+
 class IsStoreOwnerOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS: 
+        if request.method in permissions.SAFE_METHODS:
             return True
         return request.user and request.user.is_authenticated
-        
+
     def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS: 
+        if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.store.owner == request.user # Fixed the request.request.user typo
+        return obj.store.owner == request.user
+
 
 class RetailCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = RetailCategorySerializer
@@ -21,19 +24,21 @@ class RetailCategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         store_id = self.request.query_params.get('store_id')
-        if store_id: 
-            # Added order_by to fix the UnorderedObjectListWarning
+        if store_id:
             return RetailCategory.objects.filter(store_id=store_id).order_by('name')
-        
-        if self.request.user.is_authenticated: 
+        if self.request.user.is_authenticated:
             return RetailCategory.objects.filter(store__owner=self.request.user).order_by('name')
-            
         return RetailCategory.objects.none()
 
     def perform_create(self, serializer):
         store_id = self.request.data.get('store_id')
-        store = Store.objects.filter(id=store_id, owner=self.request.user).first() if store_id else Store.objects.filter(owner=self.request.user).first()
+        # ✅ FIX (Issue #17): Require explicit store_id — never fall back to
+        # "the first store owned by the user" as that silently creates under the wrong store.
+        if not store_id:
+            raise ValidationError({'store_id': 'This field is required when creating a category.'})
+        store = get_object_or_404(Store, id=store_id, owner=self.request.user)
         serializer.save(store=store)
+
 
 class RetailProductViewSet(viewsets.ModelViewSet):
     serializer_class = RetailProductSerializer
@@ -41,20 +46,30 @@ class RetailProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         store_id = self.request.query_params.get('store_id')
-        if store_id: 
-            # Added order_by to fix the UnorderedObjectListWarning
-            return RetailProduct.objects.filter(store_id=store_id, is_active=True).order_by('-id')
-            
-        if self.request.user.is_authenticated: 
-            return RetailProduct.objects.filter(store__owner=self.request.user).order_by('-id')
-            
-        return RetailProduct.objects.none()
 
+        # ✅ FIX (Issue #7): IDOR prevention.
+        # Public/read requests: filter by store_id if provided (allows storefront browsing).
+        if store_id and self.request.method in permissions.SAFE_METHODS:
+            return RetailProduct.objects.filter(
+                store_id=store_id, is_active=True
+            ).select_related('store', 'category').order_by('-id')
+
+        # Seller write requests: MUST own the store — no cross-store reads.
+        if self.request.user.is_authenticated:
+            return RetailProduct.objects.filter(
+                store__owner=self.request.user
+            ).select_related('store', 'category').order_by('-id')
+
+        return RetailProduct.objects.none()
 
     def perform_create(self, serializer):
         store_id = self.request.data.get('store_id')
-        store = Store.objects.filter(id=store_id, owner=self.request.user).first() if store_id else Store.objects.filter(owner=self.request.user).first()
+        # ✅ FIX (Issue #17): Require explicit store_id — never fall back silently.
+        if not store_id:
+            raise ValidationError({'store_id': 'This field is required when creating a product.'})
+        store = get_object_or_404(Store, id=store_id, owner=self.request.user)
         serializer.save(store=store)
+
 
 class RetailFavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = RetailFavoriteSerializer

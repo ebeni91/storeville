@@ -26,6 +26,12 @@ COPY . /app/
 # Make entrypoint executable
 RUN chmod +x /app/entrypoint.sh
 
+# ✅ SECURITY FIX (Issue #10): Run as non-root user.
+# If the container is compromised, the attacker doesn't have root access.
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+RUN chown -R appuser:appgroup /app
+USER appuser
+
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default: dev server. Override in prod compose with gunicorn command.

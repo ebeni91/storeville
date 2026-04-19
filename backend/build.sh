@@ -11,3 +11,10 @@ python manage.py migrate --noinput
 
 echo "🎨 Collecting Static Files..."
 python manage.py collectstatic --noinput --clear
+
+echo "👤 Creating Superuser (if not exists)..."
+python manage.py createsuperuser \
+  --noinput \
+  --username "${DJANGO_SUPERUSER_USERNAME:-admin}" \
+  --email "${DJANGO_SUPERUSER_EMAIL:-admin@storeville.app}" \
+  2>/dev/null || echo "✅ Superuser already exists, skipping."

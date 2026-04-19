@@ -12,6 +12,10 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'storeville.app').split('
 if RENDER_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_HOSTNAME)
 
+# Always explicitly trust the custom API subdomain
+if 'api.storeville.app' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('api.storeville.app')
+
 BASE_DOMAIN = 'storeville.app'
 
 # Secure Cookies

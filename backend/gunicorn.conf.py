@@ -14,10 +14,12 @@ workers = int(
     or os.environ.get("GUNICORN_WORKERS")
     or multiprocessing.cpu_count() * 2 + 1
 )
-# ✅ gevent: non-blocking async I/O
-worker_class = "gevent"
-threads = int(os.environ.get("GUNICORN_THREADS", 1))  # gevent doesn't need threads
-worker_connections = 100  # Reduced from 1000 — free tier has 512MB RAM
+# ✅ sync: Simple, battle-tested, one request at a time per worker.
+# gevent causes Django ORM thread-sharing errors (DatabaseWrapper thread mismatch).
+# On the free tier with WEB_CONCURRENCY=1, there is zero performance difference.
+worker_class = "sync"
+threads = int(os.environ.get("GUNICORN_THREADS", 2))  # sync workers benefit from threads
+worker_connections = 10
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", 120))
 keepalive = 2
 

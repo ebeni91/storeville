@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const DJANGO_BACKEND = process.env.DJANGO_INTERNAL_URL ?? process.env.DJANGO_BACKEND_URL ?? 'http://backend:8000'
-const BASE_URL = new URL(DJANGO_BACKEND)
-
 /**
+ * 🌟 CRITICAL FIX: Proper Cookie-Forwarding Proxy
  * 🌟 CRITICAL FIX: Proper Cookie-Forwarding Proxy
  *
  * Next.js rewrites() strip the Cookie header when proxying to an external destination.
@@ -13,6 +11,9 @@ const BASE_URL = new URL(DJANGO_BACKEND)
  * This API route EXPLICITLY forwards all cookies and headers, solving the hijacking bug.
  */
 async function handler(request: NextRequest, { params }: { params: { path: string[] } }) {
+  const DJANGO_BACKEND = process.env.DJANGO_INTERNAL_URL ?? process.env.DJANGO_BACKEND_URL ?? 'http://backend:8000'
+  const BASE_URL = new URL(DJANGO_BACKEND)
+
   // Extract path accurately from nextUrl.pathname
   let path = request.nextUrl.pathname.replace('/api/proxy/', '')
   
@@ -57,6 +58,7 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
       headers: forwardedHeaders,
       body,
       redirect: 'manual',
+      cache: 'no-store', // 🌟 FIX: Never cache proxy responses (bypasses poisoned 301 redirect caches)
     })
 
     // Django's APPEND_SLASH sends a 301/308 redirect when the trailing slash is missing.
@@ -75,6 +77,7 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
         headers: forwardedHeaders,
         body,
         redirect: 'manual',
+        cache: 'no-store',
       })
     }
 

@@ -14,7 +14,9 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Limit connections so Gunicorn workers don't exhaust Postgres
+  // ✅ FIX: External databases (like Render) require SSL when connected from Vercel.
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Limit connections so Vercel edge functions don't exhaust Postgres
   max: 10,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,

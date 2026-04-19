@@ -68,7 +68,7 @@ export default function BuyerDashboard() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['foodFavorites'] })
   })
 
-  if (!isMounted || !session) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div></div>
+  if (!isMounted || !session) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div></div>
 
   const displayName = user?.name || 'Member'
 
@@ -100,7 +100,7 @@ export default function BuyerDashboard() {
   }
 
   return (
-    <main className="min-h-screen relative font-sans text-gray-900 overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-20">
+    <main className="min-h-screen relative font-sans text-gray-900 overflow-x-hidden selection:bg-gray-900 selection:text-white pb-20">
       
       <AddressModal isOpen={isAddressModalOpen} onClose={() => setAddressModalOpen(false)} addressToEdit={addressToEdit} />
       <ProfileModal isOpen={isProfileModalOpen} onClose={() => setProfileModalOpen(false)} />
@@ -108,15 +108,15 @@ export default function BuyerDashboard() {
       <OrderDetailsModal isOpen={isOrderModalOpen} onClose={() => setOrderModalOpen(false)} order={selectedOrder} />
 
       {/* Background Ambience */}
-      <div className="fixed inset-0 z-0 bg-[length:200%_200%] animate-[gradient_15s_ease_infinite] bg-gradient-to-br from-[#eef2ff] via-[#f3e8ff] to-[#cffafe]">
-        <div className="absolute inset-0 opacity-[0.25] mix-blend-overlay bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]"></div>
+      <div className="fixed inset-0 z-0 bg-gray-50">
+        <div className="absolute inset-0 opacity-[0.4] mix-blend-overlay bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         
         {/* Navigation / Back */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-          <Link href="/" className="inline-flex items-center text-sm font-black text-indigo-600 hover:text-indigo-800 transition-colors bg-white/50 backdrop-blur-xl px-4 py-2 rounded-full shadow-sm border border-white/60">
+          <Link href="/" className="inline-flex items-center text-sm font-black text-gray-900 hover:text-black transition-colors bg-white/50 backdrop-blur-xl px-4 py-2 rounded-full shadow-sm border border-white/60">
             ← Back to StoreVille Base
           </Link>
         </motion.div>
@@ -124,9 +124,9 @@ export default function BuyerDashboard() {
         {/* Header Section */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-indigo-600 p-[3px] shadow-[0_10px_40px_rgba(79,70,229,0.3)]">
+            <div className="w-20 h-20 rounded-full bg-gray-900 p-[3px] shadow-[0_10px_40px_rgba(17,24,39,0.3)]">
               <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                <span className="text-3xl font-black text-indigo-600">{displayName.charAt(0).toUpperCase()}</span>
+                <span className="text-3xl font-black text-gray-900">{displayName.charAt(0).toUpperCase()}</span>
               </div>
             </div>
             <div>
@@ -141,7 +141,7 @@ export default function BuyerDashboard() {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
-              { label: 'Total Orders', value: retailOrders.length + foodOrders.length, icon: ShoppingBag, color: 'text-indigo-600', bg: 'bg-indigo-100', hoverborder: 'hover:border-indigo-200' },
+              { label: 'Total Orders', value: retailOrders.length + foodOrders.length, icon: ShoppingBag, color: 'text-gray-900', bg: 'bg-gray-100', hoverborder: 'hover:border-gray-200' },
               { label: 'Saved Wishlist', value: allWishlist.length, icon: Heart, color: 'text-pink-600', bg: 'bg-pink-100', hoverborder: 'hover:border-pink-200' },
               { label: 'Addresses', value: addresses.length, icon: MapPin, color: 'text-emerald-600', bg: 'bg-emerald-100', hoverborder: 'hover:border-emerald-200' },
             ].map((stat, i) => (
@@ -168,8 +168,8 @@ export default function BuyerDashboard() {
               {/* Recent Orders */}
               <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-8">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900"><Package size={22} className="text-indigo-600" /> Recent Orders</h2>
-                  <button className="text-sm font-black tracking-wide uppercase text-indigo-600 hover:text-indigo-800 transition-colors">View All</button>
+                  <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900"><Package size={22} className="text-gray-900" /> Recent Orders</h2>
+                  <button className="text-sm font-black tracking-wide uppercase text-gray-900 hover:text-black transition-colors">View All</button>
                 </div>
                 
                 <div className="space-y-4">
@@ -186,12 +186,12 @@ export default function BuyerDashboard() {
                         <div className={`w-14 h-14 rounded-[1.25rem] flex items-center justify-center border shadow-sm ${
                           order.type === 'food' 
                             ? 'bg-orange-50 text-orange-600 border-orange-100' 
-                            : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                            : 'bg-gray-50 text-gray-900 border-gray-200'
                         }`}>
                           {order.type === 'food' ? <span className="font-black text-xl">F</span> : <span className="font-black text-xl">R</span>}
                         </div>
                         <div>
-                          <h4 className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">ORD-{order.id}</h4>
+                          <h4 className="text-base font-bold text-gray-900 group-hover:text-gray-600 transition-colors">ORD-{order.id}</h4>
                           <p className="text-xs font-semibold text-gray-500 mt-0.5">{order.date}</p>
                         </div>
                       </div>
@@ -213,7 +213,7 @@ export default function BuyerDashboard() {
                             {order.status}
                           </span>
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-gray-50 group-hover:bg-indigo-50 flex items-center justify-center transition-colors text-gray-400 group-hover:text-indigo-600 border border-gray-100 group-hover:border-indigo-100 shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-gray-50 group-hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-400 group-hover:text-gray-900 border border-gray-100 group-hover:border-gray-200 shadow-sm">
                           <ChevronRight size={20} />
                         </div>
                       </div>
@@ -274,20 +274,20 @@ export default function BuyerDashboard() {
               
               {/* Settings Snippet */}
               <motion.div variants={itemVariants} className="bg-white/80 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-[2.5rem] p-8 relative overflow-hidden">
-                <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900 mb-8 relative z-10"><Settings size={22} className="text-indigo-600" /> Account</h2>
+                <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900 mb-8 relative z-10"><Settings size={22} className="text-gray-900" /> Account</h2>
                 
                 <div className="space-y-4 relative z-10">
-                  <button onClick={() => setProfileModalOpen(true)} className="w-full flex items-center justify-between p-5 rounded-[1.5rem] bg-white/50 hover:bg-white shadow-sm transition-all border border-gray-100 hover:border-indigo-100 group">
-                    <div className="flex items-center gap-4 text-sm font-bold text-gray-900"><User size={20} className="text-indigo-500 group-hover:scale-110 transition-transform" /> Profile Information</div>
-                    <ChevronRight size={18} className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                  <button onClick={() => setProfileModalOpen(true)} className="w-full flex items-center justify-between p-5 rounded-[1.5rem] bg-white/50 hover:bg-white shadow-sm transition-all border border-gray-100 hover:border-gray-200 group">
+                    <div className="flex items-center gap-4 text-sm font-bold text-gray-900"><User size={20} className="text-gray-900 group-hover:scale-110 transition-transform" /> Profile Information</div>
+                    <ChevronRight size={18} className="text-gray-400 group-hover:text-gray-900 transition-colors" />
                   </button>
-                  <button onClick={() => { setPaymentToEdit(null); setPaymentModalOpen(true); }} className="w-full flex items-center justify-between p-5 rounded-[1.5rem] bg-white/50 hover:bg-white shadow-sm transition-all border border-gray-100 hover:border-indigo-100 group">
-                    <div className="flex items-center gap-4 text-sm font-bold text-gray-900"><CreditCard size={20} className="text-indigo-500 group-hover:scale-110 transition-transform" /> Payment Methods</div>
-                    <ChevronRight size={18} className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                  <button onClick={() => { setPaymentToEdit(null); setPaymentModalOpen(true); }} className="w-full flex items-center justify-between p-5 rounded-[1.5rem] bg-white/50 hover:bg-white shadow-sm transition-all border border-gray-100 hover:border-gray-200 group">
+                    <div className="flex items-center gap-4 text-sm font-bold text-gray-900"><CreditCard size={20} className="text-gray-900 group-hover:scale-110 transition-transform" /> Payment Methods</div>
+                    <ChevronRight size={18} className="text-gray-400 group-hover:text-gray-900 transition-colors" />
                   </button>
-                  <button className="w-full flex items-center justify-between p-5 rounded-[1.5rem] bg-white/50 hover:bg-white shadow-sm transition-all border border-gray-100 hover:border-indigo-100 group">
-                    <div className="flex items-center gap-4 text-sm font-bold text-gray-900"><Lock size={20} className="text-indigo-500 group-hover:scale-110 transition-transform" /> Security Settings</div>
-                    <ChevronRight size={18} className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                  <button className="w-full flex items-center justify-between p-5 rounded-[1.5rem] bg-white/50 hover:bg-white shadow-sm transition-all border border-gray-100 hover:border-gray-200 group">
+                    <div className="flex items-center gap-4 text-sm font-bold text-gray-900"><Lock size={20} className="text-gray-900 group-hover:scale-110 transition-transform" /> Security Settings</div>
+                    <ChevronRight size={18} className="text-gray-400 group-hover:text-gray-900 transition-colors" />
                   </button>
                 </div>
               </motion.div>
@@ -310,7 +310,7 @@ export default function BuyerDashboard() {
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-sm text-gray-900 truncate group-hover:text-pink-600 transition-colors cursor-pointer">{item.name}</h4>
                         {item.storeName && item.storeSlug && (
-                          <Link href={`/store/${item.storeSlug}`} className="text-[10px] font-semibold text-gray-400 hover:text-indigo-600 transition-colors flex items-center gap-1 mt-0.5 w-fit">
+                          <Link href={`/store/${item.storeSlug}`} className="text-[10px] font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1 mt-0.5 w-fit">
                             From: {item.storeName}
                           </Link>
                         )}

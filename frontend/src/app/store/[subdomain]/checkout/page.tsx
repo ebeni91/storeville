@@ -109,7 +109,7 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
   }
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-indigo-600" size={50} /></div>
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-gray-900" size={50} /></div>
   }
 
   if (cartItems.length === 0 && !orderComplete) {
@@ -170,7 +170,7 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
             {/* Delivery/Shipping Address Block */}
             <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border shadow-sm" style={{ borderColor: `rgba(0,0,0,0.05)` }}>
               <h2 className="text-xl font-black tracking-tight mb-6 flex items-center gap-2 text-gray-900">
-                <MapPin size={20} className="text-indigo-500" />
+                <MapPin size={20} className="text-gray-900" />
                 {store.store_type === 'FOOD' ? 'Delivery Location' : 'Shipping Address'}
               </h2>
               
@@ -180,7 +180,7 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
                   required 
                   value={address} 
                   onChange={e => setAddress(e.target.value)} 
-                  className="w-full bg-white border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none min-h-[100px] text-gray-900" 
+                  className="w-full bg-white border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all resize-none min-h-[100px] text-gray-900" 
                   placeholder={store.store_type === 'FOOD' ? "e.g., Bole Atlas, near Jupiter Hotel, House #123" : "e.g., 123 Main St, Apt 4B, Addis Ababa"} 
                 />
               </div>

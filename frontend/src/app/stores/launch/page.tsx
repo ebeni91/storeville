@@ -15,7 +15,7 @@ import { api } from '@/lib/api'
 const LocationPicker = dynamic(() => import('@/components/LocationPicker'), {
   ssr: false,
   loading: () => <div className="h-[350px] w-full bg-[#f8fafc] rounded-[2.5rem] animate-pulse flex flex-col items-center justify-center text-gray-400 font-bold gap-3 border-2 border-dashed border-gray-200">
-    <Loader2 className="animate-spin text-indigo-400" size={32} />
+    <Loader2 className="animate-spin text-gray-900" size={32} />
     <span>Initializing Interactive Map...</span>
   </div>
 })
@@ -119,48 +119,51 @@ export default function RegisterPage() {
     }
   }
 
-  const inputClass = "w-full bg-[#f8fafc] border border-gray-100 rounded-2xl py-4.5 px-6 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 transition-all font-bold text-base shadow-sm"
+  const inputClass = "w-full bg-[#f8fafc] border border-gray-100 rounded-2xl py-4.5 px-6 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900/20 transition-all font-bold text-base shadow-sm"
   const labelClass = "block text-xs font-black text-gray-400 uppercase tracking-[0.15em] mb-4 ml-1"
 
-  if (isPending) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-indigo-600" size={40} /></div>
+  if (isPending) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-gray-900" size={40} /></div>
 
   return (
-    <main className="flex min-h-screen w-full bg-white font-sans selection:bg-indigo-500 selection:text-white lg:h-screen lg:overflow-hidden">
+    <main className="flex min-h-screen w-full bg-white font-sans selection:bg-gray-900 selection:text-white lg:h-screen lg:overflow-hidden">
       
       {/* 🏙️ LEFT PANEL: BRAND & VALUE PROP (Synced with Login) */}
-      <div className="hidden lg:flex flex-col justify-between w-[40%] bg-gradient-to-br from-[#1e1b4b] to-[#312e81] p-16 relative overflow-hidden flex-shrink-0">
-        <div className="absolute inset-0 opacity-[0.1] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        <StoreIcon className="absolute -bottom-24 -left-20 w-[600px] h-[600px] text-indigo-400/10 -rotate-12" strokeWidth={1} />
+      <div className="hidden lg:flex flex-col justify-between w-[40%] bg-gray-900 p-16 relative overflow-hidden flex-shrink-0">
+        <div className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        <StoreIcon className="absolute -bottom-24 -left-20 w-[600px] h-[600px] text-white/5 -rotate-12" strokeWidth={1} />
         
         <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-3 mb-24 group scale-110 origin-left">
-            <div className="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-indigo-500/40 group-hover:scale-105 transition-transform"><StoreIcon size={26} /></div>
-            <span className="text-3xl font-black tracking-tight text-white">Store<span className="text-indigo-400">Ville</span></span>
+          <Link href="/" className="inline-flex items-center gap-1 mb-24 group hover:opacity-80 transition-opacity">
+            <div className="flex items-start">
+              <span className="text-4xl font-light tracking-[-1.5px] text-gray-400">Store</span>
+              <span className="text-4xl font-black tracking-[-1.5px] text-white">Ville</span>
+              <span className="text-sm font-black text-[#34d399] mt-[2px] ml-[2px]">™</span>
+            </div>
           </Link>
 
           <h1 className="text-[4.2rem] font-black text-white leading-[0.95] mb-8 tracking-tighter">
             Build your<br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-cyan-300">Digital Empire.</span>
+            <span className="text-white">Digital Empire.</span>
           </h1>
 
           <div className="space-y-10">
-            <div className="flex items-center gap-6 text-indigo-100/90">
-              <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 backdrop-blur-3xl flex items-center justify-center border border-white/10 shadow-2xl font-bold"><CheckCircle2 className="text-cyan-400" size={28} /></div>
+            <div className="flex items-center gap-6 text-gray-300/90">
+              <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 backdrop-blur-3xl flex items-center justify-center border border-white/10 shadow-2xl font-bold"><CheckCircle2 className="text-[#34d399]" size={28} /></div>
               <div>
-                <h4 className="font-black text-xl">Instant Payouts</h4>
-                <p className="text-base font-medium opacity-50">Get your earnings deposited daily.</p>
+                <h4 className="font-black text-xl text-white">Instant Payouts</h4>
+                <p className="text-base font-medium opacity-70">Get your earnings deposited daily.</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 text-indigo-100/90">
-              <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 backdrop-blur-3xl flex items-center justify-center border border-white/10 shadow-2xl font-bold"><TrendingUp className="text-indigo-400" size={28} /></div>
+            <div className="flex items-center gap-6 text-gray-300/90">
+              <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 backdrop-blur-3xl flex items-center justify-center border border-white/10 shadow-2xl font-bold"><TrendingUp className="text-[#34d399]" size={28} /></div>
               <div>
-                <h4 className="font-black text-xl">Powerful Analytics</h4>
-                <p className="text-base font-medium opacity-50">Track every sale with precision.</p>
+                <h4 className="font-black text-xl text-white">Powerful Analytics</h4>
+                <p className="text-base font-medium opacity-70">Track every sale with precision.</p>
               </div>
             </div>
           </div>
         </div>
-        <div className="relative z-10 text-indigo-300/30 font-black text-[10px] uppercase tracking-[0.4em]">© 2026 StoreVille Merchant Platform</div>
+        <div className="relative z-10 text-gray-300/30 font-black text-[10px] uppercase tracking-[0.4em]">© 2026 StoreVille Merchant Platform</div>
       </div>
 
       {/* 📋 RIGHT PANEL: DYNAMIC MERCHANT FORM */}
@@ -169,7 +172,7 @@ export default function RegisterPage() {
           
           {/* Header */}
           <div className="mb-12 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-50 text-indigo-700 font-black text-[10px] uppercase tracking-[0.2em] mb-8 border border-indigo-100/50 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-100 text-gray-900 font-black text-[10px] uppercase tracking-[0.2em] mb-8 border border-gray-200 shadow-sm">
               🚀 Merchant Onboarding
             </div>
             <h2 className="text-5xl md:text-[4rem] font-black text-gray-900 mb-4 tracking-tighter leading-[0.9] text-balance">
@@ -211,7 +214,7 @@ export default function RegisterPage() {
                         type="tel" 
                         value={phone} 
                         onChange={e => setPhone(e.target.value)} 
-                        className="w-full bg-[#f8fafc] border border-gray-100 rounded-2xl py-5 px-6 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 transition-all font-black text-xl shadow-sm"
+                        className="w-full bg-[#f8fafc] border border-gray-100 rounded-2xl py-5 px-6 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900/20 transition-all font-black text-xl shadow-sm"
                         placeholder="Mobile number" 
                       />
                     </div>
@@ -222,7 +225,7 @@ export default function RegisterPage() {
                     type="button" 
                     onClick={handleSendOtp} 
                     disabled={isSendingOtp || phone.length < 9}
-                    className="w-full bg-indigo-600 text-white py-5 rounded-full font-black text-xl shadow-[0_15px_30px_-10px_rgba(79,70,229,0.5)] hover:bg-indigo-700 hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                    className="w-full bg-gray-900 text-white py-5 rounded-full font-black text-xl shadow-[0_15px_30px_-10px_rgba(17,24,39,0.5)] hover:bg-black hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
                   >
                     {isSendingOtp ? <Loader2 size={24} className="animate-spin" /> : 'Continue'}
                   </button>
@@ -252,7 +255,7 @@ export default function RegisterPage() {
                 <form onSubmit={handleVerifyOtp} className="space-y-10 animate-in slide-in-from-bottom-8 duration-700">
                   <div className="text-center font-bold text-gray-400 mb-8 uppercase tracking-widest text-xs">
                     Verification code sent to <br/>
-                    <span className="text-indigo-600 text-2xl font-black tracking-tight block mt-2">+251 {phone}</span>
+                    <span className="text-gray-900 text-2xl font-black tracking-tight block mt-2">+251 {phone}</span>
                   </div>
                   
                   <input 
@@ -263,7 +266,7 @@ export default function RegisterPage() {
                     maxLength={6} 
                     value={otp} 
                     onChange={e => setOtp(e.target.value)}
-                    className="w-full bg-[#f8fafc] border border-gray-100 rounded-[2.5rem] py-10 px-8 text-gray-900 focus:outline-none focus:bg-white focus:ring-8 focus:ring-indigo-500/5 focus:border-indigo-500/10 font-black text-5xl text-center tracking-[1.5rem] transition-all shadow-inner"
+                    className="w-full bg-[#f8fafc] border border-gray-100 rounded-[2.5rem] py-10 px-8 text-gray-900 focus:outline-none focus:bg-white focus:ring-8 focus:ring-gray-900/5 focus:border-gray-900/10 font-black text-5xl text-center tracking-[1.5rem] transition-all shadow-inner"
                     placeholder="······" 
                   />
 
@@ -271,12 +274,12 @@ export default function RegisterPage() {
                     <button 
                       type="submit" 
                       disabled={isLoading || otp.length < 6}
-                      className="w-full bg-indigo-600 text-white py-6 rounded-full font-black text-2xl shadow-[0_20px_40px_-10px_rgba(79,70,229,0.5)] hover:bg-indigo-700 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                      className="w-full bg-gray-900 text-white py-6 rounded-full font-black text-2xl shadow-[0_20px_40px_-10px_rgba(17,24,39,0.5)] hover:bg-black transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                     >
                       {isLoading ? <Loader2 size={28} className="animate-spin" /> : <>Verify Identity <CheckCircle2 size={24}/></>}
                     </button>
                     
-                    <button type="button" onClick={() => setOtpSent(false)} className="w-full py-2 text-indigo-500 font-extrabold hover:underline text-sm uppercase tracking-widest">Back to Phone</button>
+                    <button type="button" onClick={() => setOtpSent(false)} className="w-full py-2 text-gray-900 font-extrabold hover:underline text-sm uppercase tracking-widest">Back to Phone</button>
                   </div>
                 </form>
               )}
@@ -289,7 +292,7 @@ export default function RegisterPage() {
               <div className="space-y-4">
                 <label className={labelClass}>Marketplace Vertical</label>
                 <div className="p-2 bg-[#f8fafc] rounded-[2rem] border border-gray-100 flex gap-2">
-                  <button type="button" onClick={() => { setGateway('retail'); setBusinessType('') }} className={`flex-1 flex items-center justify-center gap-3 py-5 rounded-[1.5rem] font-black text-sm tracking-wide transition-all ${gateway === 'retail' ? 'bg-white shadow-[0_8px_20px_rgba(79,70,229,0.15)] border border-indigo-100 text-indigo-700 scale-[1.02]' : 'text-gray-400 hover:text-gray-700'}`}>
+                  <button type="button" onClick={() => { setGateway('retail'); setBusinessType('') }} className={`flex-1 flex items-center justify-center gap-3 py-5 rounded-[1.5rem] font-black text-sm tracking-wide transition-all ${gateway === 'retail' ? 'bg-white shadow-[0_8px_20px_rgba(17,24,39,0.15)] border border-gray-900 text-gray-900 scale-[1.02]' : 'text-gray-400 hover:text-gray-700'}`}>
                     <ShoppingBag size={20} /> Retail Commerce
                   </button>
                   <button type="button" onClick={() => { setGateway('food'); setBusinessType('') }} className={`flex-1 flex items-center justify-center gap-3 py-5 rounded-[1.5rem] font-black text-sm tracking-wide transition-all ${gateway === 'food' ? 'bg-white shadow-[0_8px_20px_rgba(249,115,22,0.15)] border border-orange-100 text-orange-700 scale-[1.02]' : 'text-gray-400 hover:text-gray-700'}`}>
@@ -323,13 +326,13 @@ export default function RegisterPage() {
                 <div className="md:col-span-2">
                   <div className="flex items-center justify-between mb-4 px-1">
                     <label className={labelClass}>Physical Point of Sale</label>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full text-[10px] font-black text-indigo-600 uppercase tracking-widest border border-indigo-100/50">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-[10px] font-black text-gray-900 uppercase tracking-widest border border-gray-200">
                       <LayoutGrid size={12} /> Visual Precision Required
                     </div>
                   </div>
                   
                   <div className="group relative">
-                    <div className="h-[400px] w-full rounded-[2.5rem] overflow-hidden border-2 border-gray-100 shadow-2xl relative transition-all group-hover:shadow-indigo-500/10">
+                    <div className="h-[400px] w-full rounded-[2.5rem] overflow-hidden border-2 border-gray-100 shadow-2xl relative transition-all group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
                        <LocationPicker location={location} setLocation={setLocation} />
                     </div>
                     {/* Floating Map Tip */}
@@ -347,7 +350,7 @@ export default function RegisterPage() {
                 <button 
                   type="submit" 
                   disabled={isLoading} 
-                  className={`w-full text-white py-6 rounded-full font-black tracking-[0.25em] uppercase shadow-2xl transition-all flex items-center justify-center gap-5 transform hover:-translate-y-2 active:scale-[0.98] disabled:opacity-50 text-lg ${gateway === 'retail' ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/40' : 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/40'}`}
+                  className={`w-full text-white py-6 rounded-full font-black tracking-[0.25em] uppercase shadow-2xl transition-all flex items-center justify-center gap-5 transform hover:-translate-y-2 active:scale-[0.98] disabled:opacity-50 text-lg ${gateway === 'retail' ? 'bg-gray-900 hover:bg-black shadow-gray-900/40' : 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/40'}`}
                 >
                   {isLoading ? <Loader2 size={28} className="animate-spin" /> : <>Launch My Digital Mall <ArrowRight size={24} className="animate-pulse" /></>}
                 </button>
@@ -364,7 +367,7 @@ export default function RegisterPage() {
             <div className="mt-20 text-center border-t border-gray-100 pt-10">
               <p className="text-gray-400 font-bold text-sm">
                 Already part of the network?{' '}
-                <Link href="/login" className="text-indigo-600 font-black hover:underline underline-offset-4 ml-1">Merchant Sign In</Link>
+                <Link href="/login" className="text-gray-900 font-black hover:underline underline-offset-4 ml-1">Merchant Sign In</Link>
               </p>
             </div>
           )}

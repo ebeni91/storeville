@@ -98,7 +98,7 @@ export default function StoreSettingsPage() {
           <div>
             <div className="flex items-center gap-4 mb-3">
               <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-gray-900">Studio</h1>
-              <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm ${isFood ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-indigo-100 text-indigo-700 border border-indigo-200'}`}>
+              <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm ${isFood ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>
                 {isFood ? <ChefHat size={14}/> : <Package size={14}/>}
                 {store?.store_type}
               </span>
@@ -126,10 +126,10 @@ export default function StoreSettingsPage() {
         <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col md:flex-row flex-1 p-2">
           {/* TABS */}
           <div className="w-full md:w-64 bg-white/40 border-r border-gray-100 p-6 flex flex-col gap-3 rounded-l-[2rem]">
-            <button onClick={() => setActiveTab('theme')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'theme' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
+            <button onClick={() => setActiveTab('theme')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'theme' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-gray-900' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
                <Palette size={20} className={activeTab === 'theme' ? '' : 'group-hover:scale-110 transition-transform'} /> Palette
             </button>
-            <button onClick={() => setActiveTab('identity')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'identity' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
+            <button onClick={() => setActiveTab('identity')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'identity' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-gray-900' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
                <LayoutTemplate size={20} className={activeTab === 'identity' ? '' : 'group-hover:scale-110 transition-transform'} /> Identity
             </button>
           </div>

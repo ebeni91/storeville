@@ -41,3 +41,18 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+// ── Trailing slash interceptor ───────────────────────────────────────────────────────────────────────────
+api.interceptors.request.use((config) => {
+  // Django's APPEND_SLASH requires all API endpoints to end with a trailing slash.
+  // This interceptor ensures every request has one, so we don't need to add
+  // trailing slashes at every individual call site.
+  if (config.url) {
+    // Extract just the path portion (before any ?) and add slash if missing
+    const [path, query] = config.url.split('?');
+    if (!path.endsWith('/') && !path.includes('.')) {
+      config.url = query ? `${path}/?${query}` : `${path}/`;
+    }
+  }
+  return config;
+});

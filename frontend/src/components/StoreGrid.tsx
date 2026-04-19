@@ -12,10 +12,10 @@ export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food'
   })
 
   // Accent colors driven by mode toggle
-  const modeColor = mode === 'food' ? 'text-orange-500' : 'text-indigo-600'
-  const modeBg = mode === 'food' ? 'bg-orange-500' : 'bg-indigo-600'
-  const modeHover = mode === 'food' ? 'group-hover:text-orange-500' : 'group-hover:text-indigo-600'
-  const modeRing = mode === 'food' ? 'group-hover:ring-orange-500/50' : 'group-hover:ring-indigo-600/50'
+  const modeColor = mode === 'food' ? 'text-orange-500' : 'text-gray-900'
+  const modeBg = mode === 'food' ? 'bg-orange-500' : 'bg-gray-900'
+  const modeHover = mode === 'food' ? 'group-hover:text-orange-500' : 'group-hover:text-gray-900'
+  const modeRing = mode === 'food' ? 'group-hover:ring-orange-500/50' : 'group-hover:ring-gray-900/50'
 
   // 🦴 PREMIUM SKELETON LOADER
   if (isLoading) {

@@ -179,10 +179,10 @@ export default function ProductDetailPage() {
 
       {/* MAIN CONTENT */}
       <div className="max-w-[1200px] mx-auto p-4 md:p-8 lg:p-12">
-        <div className="flex flex-col md:flex-row gap-8 lg:gap-16 items-start">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
           
           {/* IMAGE */}
-          <div className="w-full md:w-1/2 sticky top-24">
+          <div className="w-full lg:w-1/2 lg:sticky lg:top-32 h-fit mb-4 lg:mb-0">
              <div className="aspect-[4/5] rounded-[2rem] overflow-hidden bg-black/5 shadow-inner border" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
                 {product.image ? (
                   <img src={product.image} className="w-full h-full object-cover" alt={product.name} />
@@ -193,7 +193,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* DETAILS */}
-          <div className="w-full md:w-1/2 pb-32">
+          <div className="w-full lg:w-1/2 pb-32">
              {product.category_name && (
                 <span className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 border rounded-md shadow-sm mb-4 inline-block" style={{ borderColor: `rgba(${textRgb}, 0.2)` }}>
                   {product.category_name}
@@ -259,8 +259,8 @@ export default function ProductDetailPage() {
                </div>
              )}
 
-             {/* ACTION BAR */}
-             <div className="mt-12 pt-8 border-t space-y-6" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
+             {/* ACTION BAR (Inline for Desktop) */}
+             <div className="mt-12 pt-8 border-t space-y-6 hidden lg:block" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
                 <div className="flex items-center justify-between">
                    <span className="font-black tracking-tight text-xl">Quantity</span>
                    <div className="flex items-center gap-4 border p-1 rounded-full shadow-inner" style={{ borderColor: `rgba(${textRgb}, 0.2)` }}>
@@ -279,8 +279,28 @@ export default function ProductDetailPage() {
                   <span>Br {finalPrice.toFixed(2)}</span>
                 </button>
              </div>
-
           </div>
+        </div>
+      </div>
+
+      {/* 📱 FIXED BOTTOM ACTION BAR (Mobile/Tablet) */}
+      <div className="lg:hidden fixed bottom-6 inset-x-4 z-50">
+        <div className="backdrop-blur-2xl p-4 md:p-6 rounded-[2rem] shadow-2xl border flex items-center justify-between gap-4" style={{ backgroundColor: `rgba(${bgRgb}, 0.9)`, borderColor: `rgba(${textRgb}, 0.1)` }}>
+           <div className="flex items-center gap-4 bg-black/5 p-1 rounded-full border border-black/5" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
+             <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-black/5 rounded-full transition-colors"><Minus size={16}/></button>
+             <span className="font-black w-4 text-center text-sm">{quantity}</span>
+             <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-black/5 rounded-full transition-colors"><Plus size={16}/></button>
+           </div>
+           
+           <button 
+             onClick={handleAddToCart}
+             className="flex-1 py-4.5 md:py-5 rounded-2xl text-xs md:text-sm font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-4"
+             style={{ backgroundColor: store.primary_color, color: store.background_color }}
+           >
+             <span>Add to order</span>
+             <span className="opacity-40">|</span>
+             <span>Br {finalPrice.toFixed(2)}</span>
+           </button>
         </div>
       </div>
     </main>

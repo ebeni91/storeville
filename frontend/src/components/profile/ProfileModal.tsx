@@ -76,7 +76,7 @@ export default function ProfileModal({ isOpen, onClose }: any) {
           <div className="p-6 sm:p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-                <User className="text-indigo-600" /> 
+                <User className="text-gray-900" /> 
                 Profile Info
               </h2>
               <button onClick={() => { setShowDeleteConfirm(false); onClose() }} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"><X size={20} /></button>
@@ -96,14 +96,14 @@ export default function ProfileModal({ isOpen, onClose }: any) {
               <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(formData) }} className="space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
-                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-semibold" placeholder="John Doe" />
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 transition-all font-semibold" placeholder="John Doe" />
                 </div>
 
                 <div className="pt-2">
                   <button 
                     type="submit" 
                     disabled={mutation.isPending}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg py-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+                    className="w-full bg-gray-900 hover:bg-black text-white font-black text-lg py-4 rounded-xl shadow-[0_8px_20px_rgba(17,24,39,0.2)] transition-all disabled:opacity-50"
                   >
                     {mutation.isPending ? 'Saving...' : 'Save Profile'}
                   </button>

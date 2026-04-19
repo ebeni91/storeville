@@ -180,7 +180,7 @@ export default function SmartProductsPage() {
     }
   }
 
-  if (isLoading) return <div className="p-10 flex justify-center w-full min-h-screen items-center"><Loader2 className="animate-spin text-indigo-600" size={40} /></div>
+  if (isLoading) return <div className="p-10 flex justify-center w-full min-h-screen items-center"><Loader2 className="animate-spin text-gray-900" size={40} /></div>
 
   const isFood = store?.store_type === 'FOOD'
 
@@ -243,7 +243,7 @@ export default function SmartProductsPage() {
                         {item.name} 
                         {!isActive && <EyeOff size={14} className="text-gray-400" />}
                      </span>
-                     {item.category_name && <span className="text-[10px] text-indigo-600 font-black uppercase tracking-widest">{item.category_name}</span>}
+                     {item.category_name && <span className="text-[10px] text-gray-900 font-black uppercase tracking-widest">{item.category_name}</span>}
                   </div>
                 </td>
                 <td className="p-4 font-black text-gray-600 text-lg">Br {item.price}</td>
@@ -269,13 +269,13 @@ export default function SmartProductsPage() {
                 )}
                 
                 <td className="p-4">
-                  <button onClick={() => toggleVisibility(item)} className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border shadow-sm transition-all hover:-translate-y-0.5 ${isActive ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                  <button onClick={() => toggleVisibility(item)} className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl border shadow-sm transition-all hover:-translate-y-0.5 ${isActive ? 'bg-gray-100 text-gray-900 border-gray-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
                     {isActive ? 'Active' : 'Hidden'}
                   </button>
                 </td>
                 <td className="p-4">
                   <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => handleOpenEdit(item)} className="p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-indigo-600 transition-colors"><Edit size={16} /></button>
+                    <button onClick={() => handleOpenEdit(item)} className="p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-gray-900 transition-colors"><Edit size={16} /></button>
                     <button onClick={() => handleDelete(item.id)} className="p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
                   </div>
                 </td>
@@ -306,21 +306,21 @@ export default function SmartProductsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Item Name</label>
-                  <input required type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" placeholder="e.g. Classic Burger" />
+                  <input required type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all" placeholder="e.g. Classic Burger" />
                 </div>
                 
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Description</label>
-                  <textarea value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none min-h-[100px]" placeholder="Brief description of the item..."></textarea>
+                  <textarea value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all resize-none min-h-[100px]" placeholder="Brief description of the item..."></textarea>
                 </div>
 
                 <div>
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Price (Br)</label>
-                  <input required type="number" step="0.01" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-black text-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-indigo-700" placeholder="0.00" />
+                  <input required type="number" step="0.01" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-black text-lg focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all text-gray-900" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Category</label>
-                  <select required value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer">
+                  <select required value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all appearance-none cursor-pointer">
                     <option value="">Select Category...</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
@@ -342,14 +342,14 @@ export default function SmartProductsPage() {
                         ...(isFood ? { is_available: e.target.checked } : { is_active: e.target.checked })
                       })} 
                     />
-                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600 shadow-inner"></div>
+                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gray-900 shadow-inner"></div>
                   </label>
                 </div>
 
                 {/* IMAGE UPLOAD */}
                 <div className="md:col-span-2 mb-4">
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Featured Image</label>
-                  <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:bg-gray-50 hover:border-indigo-400 transition-all overflow-hidden bg-gray-50/50">
+                  <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all overflow-hidden bg-gray-50/50">
                     {formData.image ? (
                         <div className="absolute inset-0 w-full h-full bg-gray-100">
                            <img src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)} className="w-full h-full object-contain opacity-80 group-hover:opacity-50 transition-opacity" />
@@ -358,7 +358,7 @@ export default function SmartProductsPage() {
                            </div>
                         </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-gray-400 group-hover:text-indigo-500 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-gray-400 group-hover:text-gray-900 transition-colors">
                         <UploadCloud className="w-10 h-10 mb-3" />
                         <p className="text-sm font-bold">Click to upload image</p>
                         <p className="text-xs font-medium opacity-70 mt-1">JPEG, PNG, WEBP (Max 5MB)</p>
@@ -411,17 +411,17 @@ export default function SmartProductsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4 bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100">
+                <div className="grid grid-cols-2 gap-4 bg-gray-50/50 p-6 rounded-2xl border border-gray-200">
                   <div className="col-span-2">
-                    <h4 className="text-sm font-black text-indigo-900 tracking-tight flex items-center gap-2 mb-4"><Package className="text-indigo-500" size={18}/> Inventory Details</h4>
+                    <h4 className="text-sm font-black text-gray-900 tracking-tight flex items-center gap-2 mb-4"><Package className="text-gray-900" size={18}/> Inventory Details</h4>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-indigo-900/60 tracking-widest uppercase mb-2 block">SKU</label>
-                    <input type="text" value={formData.sku || ''} onChange={e => setFormData({...formData, sku: e.target.value})} className="w-full bg-white border border-indigo-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900" placeholder="e.g. TSHIRT-01" />
+                    <label className="text-[10px] font-black text-gray-900/60 tracking-widest uppercase mb-2 block">SKU</label>
+                    <input type="text" value={formData.sku || ''} onChange={e => setFormData({...formData, sku: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-gray-900 font-bold text-gray-900" placeholder="e.g. TSHIRT-01" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-indigo-900/60 tracking-widest uppercase mb-2 block">Stock Limit</label>
-                    <input type="number" value={formData.stock_quantity || ''} onChange={e => setFormData({...formData, stock_quantity: e.target.value})} className="w-full bg-white border border-indigo-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900" />
+                    <label className="text-[10px] font-black text-gray-900/60 tracking-widest uppercase mb-2 block">Stock Limit</label>
+                    <input type="number" value={formData.stock_quantity || ''} onChange={e => setFormData({...formData, stock_quantity: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-gray-900 font-bold text-gray-900" />
                   </div>
                 </div>
               )}
@@ -439,7 +439,7 @@ export default function SmartProductsPage() {
                           <p className="text-sm font-black text-gray-900">{opt.name}</p>
                           {opt.required && <span className="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded uppercase font-bold tracking-widest">Required</span>}
                         </div>
-                        <p className="text-xs font-bold text-indigo-600">Choices: {opt.choices.join(', ')}</p>
+                        <p className="text-xs font-bold text-gray-900">Choices: {opt.choices.join(', ')}</p>
                       </div>
                       <button type="button" onClick={() => setPendingOptions(p => p.filter((_, i) => i !== idx))} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={16}/></button>
                     </div>
@@ -447,21 +447,21 @@ export default function SmartProductsPage() {
 
                  {/* Add New Option Area */}
                  <div className="bg-white border border-gray-200 p-4 rounded-xl space-y-3 mt-4">
-                    <input type="text" value={newOptionName} onChange={e => setNewOptionName(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Variant Name (e.g. Size, Color, Delivery Mode)"/>
-                    <input type="text" value={newOptionChoices} onChange={e => setNewOptionChoices(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Comma separated choices (e.g. Small, Medium, Large)"/>
+                    <input type="text" value={newOptionName} onChange={e => setNewOptionName(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-gray-900" placeholder="Variant Name (e.g. Size, Color, Delivery Mode)"/>
+                    <input type="text" value={newOptionChoices} onChange={e => setNewOptionChoices(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-gray-900" placeholder="Comma separated choices (e.g. Small, Medium, Large)"/>
                     <div className="flex items-center justify-between pt-2">
                        <label className="flex items-center gap-2 cursor-pointer">
-                         <input type="checkbox" checked={newOptionRequired} onChange={e => setNewOptionRequired(e.target.checked)} className="w-4 h-4 accent-indigo-600"/>
+                         <input type="checkbox" checked={newOptionRequired} onChange={e => setNewOptionRequired(e.target.checked)} className="w-4 h-4 accent-gray-900"/>
                          <span className="text-xs font-bold text-gray-700">Selection is Required</span>
                        </label>
-                       <button type="button" onClick={addPendingOption} className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16}/> Add Variant</button>
+                       <button type="button" onClick={addPendingOption} className="bg-gray-100 text-gray-900 hover:bg-gray-200 px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16}/> Add Variant</button>
                     </div>
                  </div>
               </div>
 
               <div className="flex gap-4 pt-6 border-t border-gray-100 mt-8">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-black tracking-widest uppercase text-xs hover:bg-gray-200 transition-colors">Cancel</button>
-                <button type="submit" disabled={isSubmitting} className="flex-[2] py-4 bg-indigo-600 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:scale-[1.02] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:hover:scale-100">
+                <button type="submit" disabled={isSubmitting} className="flex-[2] py-4 bg-gray-900 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-xl shadow-[0_8px_20px_rgba(17,24,39,0.2)] hover:bg-black hover:scale-[1.02] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:hover:scale-100">
                   {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : (editingItemId ? 'Update Item' : 'Save Item')}
                 </button>
               </div>

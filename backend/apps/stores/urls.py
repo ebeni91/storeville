@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import StoreManagementViewSet, StoreDiscoveryViewSet
 
-router = DefaultRouter(trailing_slash=False)
+router = DefaultRouter(trailing_slash=True)
 router.register(r'manage', StoreManagementViewSet, basename='store-manage')
 
 # CRITICAL FIX: You must register the Discovery ViewSet here!

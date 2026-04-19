@@ -64,9 +64,9 @@ export default function SellerDashboard() {
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="group relative bg-white/70 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-[2.5rem] p-8 overflow-hidden transition-all hover:bg-white cursor-pointer hover:border-indigo-200">
+        <motion.div variants={itemVariants} className="group relative bg-white/70 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-[2.5rem] p-8 overflow-hidden transition-all hover:bg-white cursor-pointer hover:border-gray-200">
           <div className="relative z-10 flex items-center gap-6">
-            <div className="w-16 h-16 rounded-[1.25rem] bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+            <div className="w-16 h-16 rounded-[1.25rem] bg-gray-100 text-gray-900 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
               <Package size={28} />
             </div>
             <div>
@@ -79,7 +79,7 @@ export default function SellerDashboard() {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }} className="bg-white/70 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] overflow-hidden relative z-10 w-full max-w-4xl">
         <div className="px-8 py-8 flex justify-between items-center relative z-10">
-          <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900"><ShoppingBag size={22} className="text-indigo-600" /> Recent Orders</h2>
+          <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900"><ShoppingBag size={22} className="text-gray-900" /> Recent Orders</h2>
         </div>
         
         <div className="px-12 pb-16 pt-8 text-center text-gray-500 font-medium flex flex-col items-center bg-white/40">

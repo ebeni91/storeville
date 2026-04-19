@@ -156,7 +156,7 @@ export default function CategoriesPage() {
               categories.map((cat) => (
                 <motion.tr variants={rowVariants} key={cat.id} className="hover:bg-white/60 transition-colors group">
                   <td className="p-5 font-black text-gray-900 flex items-center gap-4 text-lg">
-                    <div className="w-12 h-12 bg-white text-indigo-600 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform"><Tags size={20} /></div>
+                    <div className="w-12 h-12 bg-white text-gray-900 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform"><Tags size={20} /></div>
                     {cat.name}
                   </td>
                   <td className="p-5 text-gray-500 font-mono font-bold text-sm">
@@ -168,7 +168,7 @@ export default function CategoriesPage() {
                   </td>
                   <td className="p-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(cat)} className="p-2.5 bg-white border border-gray-100 shadow-sm text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gray-50 transition-colors"><Edit size={18} /></button>
+                      <button onClick={() => openEdit(cat)} className="p-2.5 bg-white border border-gray-100 shadow-sm text-gray-400 hover:text-gray-900 rounded-xl hover:bg-gray-50 transition-colors"><Edit size={18} /></button>
                       <button onClick={() => handleDelete(cat.id)} className="p-2.5 bg-white border border-gray-100 shadow-sm text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors"><Trash2 size={18} /></button>
                     </div>
                   </td>
@@ -191,21 +191,21 @@ export default function CategoriesPage() {
               <form id="cat-form" onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Category Name</label>
-                  <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Hot Drinks, Electronics" />
+                  <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-gray-900 outline-none" placeholder="e.g. Hot Drinks, Electronics" />
                   {!isFood && <p className="text-xs text-gray-500 mt-2">The URL slug will be auto-generated.</p>}
                 </div>
 
                 {isFood && (
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Sort Order</label>
-                    <input type="number" value={order} onChange={e => setOrder(parseInt(e.target.value) || 0)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                    <input type="number" value={order} onChange={e => setOrder(parseInt(e.target.value) || 0)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-gray-900 outline-none" />
                     <p className="text-xs text-gray-500 mt-2">Lower numbers appear first on the menu.</p>
                   </div>
                 )}
               </form>
             </div>
             <div className="p-6 border-t border-gray-100 bg-gray-50/50">
-              <button type="submit" form="cat-form" disabled={isLoading} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-all flex justify-center disabled:opacity-70">
+              <button type="submit" form="cat-form" disabled={isLoading} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold shadow-md hover:bg-black transition-all flex justify-center disabled:opacity-70">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Save Category'}
               </button>
             </div>

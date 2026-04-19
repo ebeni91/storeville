@@ -69,36 +69,35 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full bg-white font-sans selection:bg-indigo-500 selection:text-white lg:h-screen lg:overflow-hidden">
+    <main className="flex min-h-screen w-full bg-white font-sans selection:bg-gray-900 selection:text-white lg:h-screen lg:overflow-hidden">
 
       {/* LEFT PANEL: BRAND & VALUE PROP (Unchanged as requested) */}
-      <div className="hidden lg:flex flex-col justify-between w-[40%] bg-gradient-to-br from-[#eef2ff] via-[#f3e8ff] to-[#cffafe] border-r border-indigo-100 p-14 relative overflow-hidden flex-shrink-0">
+      <div className="hidden lg:flex flex-col justify-between w-[40%] bg-gray-50 border-r border-gray-200 p-14 relative overflow-hidden flex-shrink-0">
         <div className="absolute inset-0 opacity-[0.2] mix-blend-overlay bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]" />
-        <StoreIcon className="absolute -bottom-24 -left-20 w-[600px] h-[600px] text-indigo-200/40 -rotate-12" strokeWidth={1} />
+        <StoreIcon className="absolute -bottom-24 -left-20 w-[600px] h-[600px] text-gray-200/40 -rotate-12" strokeWidth={1} />
 
         <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center gap-3 mb-20 group">
-            <div className="w-11 h-11 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-              <StoreIcon size={24} />
+          <Link href="/" className="inline-flex items-center gap-1 mb-20 group hover:opacity-80 transition-opacity">
+            <div className="flex items-start">
+              <span className="text-3xl font-light tracking-[-1px] text-gray-400">Store</span>
+              <span className="text-3xl font-black tracking-[-1px] text-gray-900">Ville</span>
+              <span className="text-sm font-black text-[#34d399] mt-1 ml-[2px]">™</span>
             </div>
-            <span className="text-2xl font-black tracking-tight text-gray-900 group-hover:text-indigo-600 transition-colors">
-              Store<span className="text-indigo-600">Ville</span>
-            </span>
           </Link>
           <h1 className="text-[3.5rem] font-black text-gray-900 leading-[1.1] mb-6 tracking-tighter text-balance">
             The Digital Heart of<br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500">Local Commerce.</span>
+            <span className="text-gray-900">Local Commerce.</span>
           </h1>
           <div className="space-y-6">
             <div className="flex items-center gap-4 text-gray-700">
-              <div className="w-12 h-12 rounded-[1rem] bg-indigo-100/80 flex items-center justify-center border border-indigo-200 shadow-sm">
-                <ShieldCheck size={22} className="text-indigo-600" />
+              <div className="w-12 h-12 rounded-[1rem] bg-gray-100 flex items-center justify-center border border-gray-200 shadow-sm">
+                <ShieldCheck size={22} className="text-gray-900" />
               </div>
               <span className="font-bold text-lg">Bank-grade Security</span>
             </div>
             <div className="flex items-center gap-4 text-gray-700">
-              <div className="w-12 h-12 rounded-[1rem] bg-indigo-100/80 flex items-center justify-center border border-indigo-200 shadow-sm">
-                <TrendingUp size={22} className="text-indigo-600" />
+              <div className="w-12 h-12 rounded-[1rem] bg-gray-100 flex items-center justify-center border border-gray-200 shadow-sm">
+                <TrendingUp size={22} className="text-gray-900" />
               </div>
               <span className="font-bold text-lg">Real-time Order Tracking</span>
             </div>
@@ -113,11 +112,12 @@ export default function LoginPage() {
 
           {/* Logo for mobile only */}
           <div className="lg:hidden flex justify-center mb-10">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                <StoreIcon size={20} />
+            <Link href="/" className="inline-flex items-center gap-1 group hover:opacity-80 transition-opacity">
+              <div className="flex items-start">
+                <span className="text-3xl font-light tracking-[-1px] text-gray-400">Store</span>
+                <span className="text-3xl font-black tracking-[-1px] text-gray-900">Ville</span>
+                <span className="text-sm font-black text-[#34d399] mt-1 ml-[2px]">™</span>
               </div>
-              <span className="text-xl font-black tracking-tight text-gray-900">StoreVille</span>
             </Link>
           </div>
 
@@ -153,7 +153,7 @@ export default function LoginPage() {
                     type="tel" 
                     value={identifier} 
                     onChange={e => setIdentifier(e.target.value)} 
-                    className="w-full bg-[#F6F8F9] border border-gray-100 rounded-2xl py-4 px-5 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 transition-all font-bold text-lg"
+                    className="w-full bg-[#F6F8F9] border border-gray-100 rounded-2xl py-4 px-5 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-gray-900/10 focus:border-gray-900/30 transition-all font-bold text-lg"
                     placeholder="Mobile number" 
                   />
                 </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
                 type="button" 
                 onClick={handleSendOtp} 
                 disabled={isSendingOtp || identifier.length < 9}
-                className="w-full bg-indigo-600 text-white py-4.5 rounded-full font-black text-lg shadow-[0_12px_24px_-8px_rgba(79,70,229,0.4)] hover:bg-indigo-700 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 mt-4"
+                className="w-full bg-gray-900 text-white py-4.5 rounded-full font-black text-lg shadow-[0_12px_24px_-8px_rgba(17,24,39,0.4)] hover:bg-black hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 mt-4"
               >
                 {isSendingOtp ? <Loader2 size={24} className="animate-spin" /> : 'Sign In'}
               </button>
@@ -204,7 +204,7 @@ export default function LoginPage() {
             <form onSubmit={handleVerifyOtp} className="space-y-8 animate-in slide-in-from-bottom-6 duration-700">
                <div className="text-center font-bold text-gray-600 mb-6">
                  Enter the 6-digit code sent to <br/>
-                 <span className="text-indigo-600 text-xl font-black tracking-tight">+251 {identifier}</span>
+                 <span className="text-gray-900 text-xl font-black tracking-tight">+251 {identifier}</span>
                </div>
                
                <input 
@@ -215,7 +215,7 @@ export default function LoginPage() {
                  maxLength={6} 
                  value={otp} 
                  onChange={e => setOtp(e.target.value)}
-                 className="w-full bg-[#F6F8F9] border border-gray-100 rounded-[2rem] py-8 px-6 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 font-black text-4xl text-center tracking-[1rem] transition-all shadow-inner"
+                 className="w-full bg-[#F6F8F9] border border-gray-100 rounded-[2rem] py-8 px-6 text-gray-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-gray-900/10 focus:border-gray-900/30 font-black text-4xl text-center tracking-[1rem] transition-all shadow-inner"
                  placeholder="······" 
                />
 
@@ -223,7 +223,7 @@ export default function LoginPage() {
                  <button 
                    type="submit" 
                    disabled={isLoading || otp.length < 6}
-                   className="w-full bg-indigo-600 text-white py-5 rounded-full font-black text-xl shadow-[0_15px_30px_-10px_rgba(79,70,229,0.5)] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                   className="w-full bg-gray-900 text-white py-5 rounded-full font-black text-xl shadow-[0_15px_30px_-10px_rgba(17,24,39,0.5)] hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                  >
                    {isLoading ? <Loader2 size={24} className="animate-spin" /> : <>Verify & Access <ArrowRight size={22} /></>}
                  </button>
@@ -231,7 +231,7 @@ export default function LoginPage() {
                  <button 
                    type="button" 
                    onClick={() => setOtpSent(false)} 
-                   className="w-full py-2 text-indigo-600 font-bold hover:underline text-sm uppercase tracking-widest"
+                   className="w-full py-2 text-gray-900 font-bold hover:underline text-sm uppercase tracking-widest"
                  >
                    Change phone number?
                  </button>
@@ -241,7 +241,7 @@ export default function LoginPage() {
 
           <div className="mt-20 text-center text-gray-500 font-medium text-sm">
             Don't have an account? {' '}
-            <Link href="/register" className="text-indigo-600 font-black hover:underline underline-offset-4">Sign Up</Link>
+            <Link href="/register" className="text-gray-900 font-black hover:underline underline-offset-4">Sign Up</Link>
           </div>
         </div>
       </div>

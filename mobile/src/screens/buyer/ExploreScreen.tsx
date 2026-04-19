@@ -70,11 +70,10 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   const { data: stores } = useQuery({
     queryKey: ['stores', activeGateway],
     queryFn: async () => {
-      // Use a bare axios instance (no Authorization header) so the backend
-      // serves AllowAny discovery results even for unauthenticated guests.
-      const res = await axios.get(`${API_URL}/stores/discovery`, {
+      // Use the shared api client which hits the correct backend URL.
+      // /stores/discovery/ (trailing slash required by Django's APPEND_SLASH)
+      const res = await api.get('/stores/discovery/', {
         params: { type: activeGateway },
-        headers: { 'Content-Type': 'application/json' },
       });
       return res.data.results || res.data;
     },
@@ -126,6 +125,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     'window.userMarker = L.marker([' + lat + ',' + lng + '],{icon:L.divIcon({html:ud,className:"",iconSize:[22,22],iconAnchor:[11,11]})}).addTo(window.map);',
     // Store pins
     'var stores=' + storesJson + ';',
+    'var bounds = L.latLngBounds([[' + lat + ',' + lng + ']]);',
     'stores.forEach(function(s){',
     '  if(!s.latitude||!s.longitude) return;',
     '  var isF=s.store_type==="FOOD";',
@@ -140,10 +140,13 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     '    +\'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:\'+col+\';clip-path:polygon(50% 100%,0% 0%,100% 0%);"></div>\'',
     '    +\'</div>\';',
     '  var ic=L.divIcon({className:"",html:h,iconSize:[46,54],iconAnchor:[23,54]});',
-    '  L.marker([parseFloat(s.latitude),parseFloat(s.longitude)],{icon:ic})',
+    '  var storeCoord = [parseFloat(s.latitude), parseFloat(s.longitude)];',
+    '  bounds.extend(storeCoord);',
+    '  L.marker(storeCoord,{icon:ic})',
     '    .addTo(window.map)',
     '    .on("click",function(){window.ReactNativeWebView.postMessage(JSON.stringify({type:"STORE_CLICK",storeId:s.id}));});',
     '});',
+    'if (stores.length > 0) { window.map.fitBounds(bounds, { padding: [50,50], maxZoom: 15, animate: true, duration: 1.5 }); }',
     '</script></body></html>'
   ].join('\n');
 

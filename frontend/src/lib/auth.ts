@@ -15,7 +15,7 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   // ✅ FIX: External databases (like Render) require SSL when connected from Vercel.
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false },
   // Limit connections so Vercel edge functions don't exhaust Postgres
   max: 10,
   idleTimeoutMillis: 30_000,

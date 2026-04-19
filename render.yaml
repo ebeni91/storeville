@@ -2,12 +2,12 @@ databases:
   - name: storeville-db
     databaseName: storeville_prod
     user: storeville
-    plan: starter
+    plan: free
 
 services:
   - type: redis
     name: storeville-redis
-    plan: starter
+    plan: free
     ipAllowList: []
 
   - type: web
@@ -16,7 +16,7 @@ services:
     rootDir: backend
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application --config gunicorn.conf.py"
-    plan: starter
+    plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -46,7 +46,7 @@ services:
     rootDir: backend
     buildCommand: "./build.sh"
     startCommand: "celery -A config worker -l INFO"
-    plan: starter
+    plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0

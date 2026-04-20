@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx @better-auth/cli migrate --yes && next build",
+    "build": "next build",
+    "vercel-build": "npx @better-auth/cli migrate --yes && next build",
     "start": "next start",
     "lint": "next lint"
   },

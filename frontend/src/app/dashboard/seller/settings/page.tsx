@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Loader2, Save, LayoutTemplate, Palette, Megaphone, CheckCircle2, ShoppingBag, MapPin, ChefHat, ExternalLink, Package } from 'lucide-react'
+import { Loader2, Save, LayoutTemplate, Palette, Megaphone, CheckCircle2, ShoppingBag, MapPin, ChefHat, ExternalLink, Package, Clock } from 'lucide-react'
 import { api } from '@/lib/api'
 import { motion } from 'framer-motion'
 
@@ -21,12 +21,13 @@ export default function StoreSettingsPage() {
   const [store, setStore] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
-  const [activeTab, setActiveTab] = useState<'theme' | 'identity'>('theme')
+  const [activeTab, setActiveTab] = useState<'theme' | 'identity' | 'hours'>('theme')
 
   const [formData, setFormData] = useState({
     name: '', description: '', city: 'Addis Ababa',
     primary_color: '#000000', secondary_color: '#000000', background_color: '#FFFFFF',
     heading_font: 'Inter', announcement_is_active: false, announcement_text: '', announcement_color: '#000000',
+    working_days: [] as string[], opening_time: '', closing_time: '', delivery_hours: '',
   })
 
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -50,6 +51,9 @@ export default function StoreSettingsPage() {
             primary_color: s.primary_color || '#000000', secondary_color: s.secondary_color || '#000000', background_color: s.background_color || '#FFFFFF',
             heading_font: s.heading_font || 'Inter', announcement_is_active: s.announcement_is_active || false,
             announcement_text: s.announcement_text || '', announcement_color: s.announcement_color || '#000000',
+            working_days: Array.isArray(s.working_days) ? s.working_days : [],
+            opening_time: s.opening_time || '', closing_time: s.closing_time || '',
+            delivery_hours: s.delivery_hours || '',
           })
           setLogoPreview(s.logo)
           setBannerPreview(s.banner_image)
@@ -70,7 +74,13 @@ export default function StoreSettingsPage() {
     
     try {
       const data = new FormData()
-      Object.entries(formData).forEach(([k, v]) => data.append(k, v.toString()))
+      Object.entries(formData).forEach(([k, v]) => {
+        if (k === 'working_days') {
+          data.append(k, JSON.stringify(v))
+        } else {
+          data.append(k, v.toString())
+        }
+      })
       if (logoFile) data.append('logo', logoFile)
       if (bannerFile) data.append('banner_image', bannerFile)
       
@@ -131,6 +141,9 @@ export default function StoreSettingsPage() {
             </button>
             <button onClick={() => setActiveTab('identity')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'identity' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-gray-900' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
                <LayoutTemplate size={20} className={activeTab === 'identity' ? '' : 'group-hover:scale-110 transition-transform'} /> Identity
+            </button>
+            <button onClick={() => setActiveTab('hours')} className={`flex items-center gap-3 w-full p-4 rounded-2xl font-black tracking-wide transition-all text-sm group ${activeTab === 'hours' ? 'bg-white shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 text-gray-900' : 'text-gray-500 hover:bg-white/50 hover:text-gray-900'}`}>
+               <Clock size={20} className={activeTab === 'hours' ? '' : 'group-hover:scale-110 transition-transform'} /> Hours
             </button>
           </div>
 
@@ -203,9 +216,84 @@ export default function StoreSettingsPage() {
                 </div>
               </motion.div>
             )}
+
+            {activeTab === 'hours' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="duration-300 space-y-8">
+                <div>
+                  <h2 className="text-xl font-black mb-1 flex items-center gap-2"><Clock size={20} className="text-gray-400" /> Working Hours</h2>
+                  <p className="text-sm text-gray-500 font-medium mb-6">Set your open days and trading hours. The storefront will show "Open" or "Closed" automatically.</p>
+
+                  <label className="block text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Open Days</label>
+                  <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-6">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+                      const isChecked = formData.working_days.includes(day)
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            working_days: isChecked
+                              ? prev.working_days.filter(d => d !== day)
+                              : [...prev.working_days, day]
+                          }))}
+                          className={`py-3 rounded-2xl font-black text-xs tracking-widest uppercase transition-all border ${isChecked ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400'}`}
+                        >
+                          {day}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Opening Time</label>
+                      <input
+                        type="time"
+                        value={formData.opening_time}
+                        onChange={e => setFormData({...formData, opening_time: e.target.value})}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-5 outline-none font-black text-gray-900 focus:border-black focus:ring-1 focus:ring-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Closing Time</label>
+                      <input
+                        type="time"
+                        value={formData.closing_time}
+                        onChange={e => setFormData({...formData, closing_time: e.target.value})}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-5 outline-none font-black text-gray-900 focus:border-black focus:ring-1 focus:ring-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Display Label (optional)</label>
+                    <input
+                      type="text"
+                      value={formData.delivery_hours}
+                      onChange={e => setFormData({...formData, delivery_hours: e.target.value})}
+                      placeholder="e.g. 09:00 AM – 10:00 PM"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-5 outline-none font-bold text-sm text-gray-900 focus:border-black focus:ring-1 focus:ring-black"
+                    />
+                    <p className="text-xs text-gray-400 mt-2">Overrides the auto-computed time display in the storefront if set.</p>
+                  </div>
+
+                  {formData.working_days.length > 0 && (
+                    <div className="mt-6 p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                      <div className={`w-2.5 h-2.5 rounded-full ${formData.opening_time && formData.closing_time ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <div>
+                        <p className="font-black text-sm text-gray-900">{formData.working_days.join(' · ')}</p>
+                        {formData.opening_time && formData.closing_time && <p className="text-xs text-gray-500 font-medium">{formData.delivery_hours || `${formData.opening_time} – ${formData.closing_time}`}</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </motion.div>
+
 
       {/* RIGHT COLUMN: LIVE GLASSMORPHISM PREVIEW */}
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }} className="w-full lg:w-[420px] shrink-0">
@@ -238,7 +326,13 @@ export default function StoreSettingsPage() {
                  <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center mb-2 overflow-hidden shadow-xl border border-white/20">
                    {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" /> : (isFood ? <ChefHat size={20} className="text-white" /> : <ShoppingBag size={20} className="text-white" />)}
                  </div>
-                 <h3 className="text-white font-black text-2xl tracking-tight shadow-black/50 drop-shadow-md">{formData.name || "Store Name"}</h3>
+                 <h3 className="text-white font-black text-2xl tracking-tight shadow-black/50 drop-shadow-md">{formData.name || 'Store Name'}</h3>
+                 {/* Open/Closed badge preview */}
+                 {formData.working_days.length > 0 && (
+                   <span className={`mt-2 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${formData.opening_time && formData.closing_time ? 'bg-green-500/30 text-green-300' : 'bg-red-500/30 text-red-300'}`}>
+                     {formData.opening_time && formData.closing_time ? '● Open Now' : '● Closed'}
+                   </span>
+                 )}
                </div>
             </div>
 

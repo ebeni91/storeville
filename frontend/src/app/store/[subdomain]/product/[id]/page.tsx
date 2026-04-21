@@ -1,306 +1,376 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { api } from '@/lib/api'
-import { Loader2, ArrowLeft, Heart, Search, ShoppingBag, Plus, Minus, Check, Chrome, Lock, User, X } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { useAuthStore } from '@/store/authStore'
-import { authClient } from '@/lib/auth-client'
+import {
+  Loader2, ShoppingBag, ArrowLeft, Heart, Star, Clock,
+  Flame, Leaf, Plus, Minus, Check, X, ChevronRight, Package
+} from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { useFavoriteStore } from '@/store/favoriteStore'
+import { useAuthStore } from '@/store/authStore'
+import { authClient } from '@/lib/auth-client'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function ProductDetailPage() {
-  const params = useParams()
   const router = useRouter()
+  const params = useParams()
   const subdomain = params.subdomain as string
   const productId = params.id as string
 
-  // Global States
-  const { data: session } = authClient.useSession()
-  const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuthStore()
-  const { carts, addItem } = useCartStore()
-  const { favorites, toggleFavorite, fetchFavorites } = useFavoriteStore()
-
-  // Local States
   const [store, setStore] = useState<any>(null)
   const [product, setProduct] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+  const [addedToCart, setAddedToCart] = useState(false)
 
-  // Options & Selections
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
-  const [selectedExtras, setSelectedExtras] = useState<any[]>([])
-  const [quantity, setQuantity] = useState(1)
+  // Option & Extra selections
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({}) // optionName → choice
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]) // extra IDs
+
+  const { data: session } = authClient.useSession()
+  const { addItem } = useCartStore()
+  const { favorites, toggleFavorite } = useFavoriteStore()
+  const { openAuthModal } = useAuthStore()
+
+  useEffect(() => { setIsMounted(true) }, [])
 
   useEffect(() => {
-    if (session) fetchFavorites()
-  }, [session, fetchFavorites])
-
-  useEffect(() => {
-    const fetchPageData = async () => {
+    const fetchData = async () => {
       try {
-        setIsLoading(true)
-        // 1. Get Store Theme/Info
-        const storeRes = await api.get(`/stores/discovery/by_slug/?slug=${subdomain}`)
-        const storeData = storeRes.data
-        setStore(storeData)
+        // Fetch store info first to identify type
+        const storeRes = await api.get(`/stores/discover/?slug=${subdomain}`)
+        const storeList = storeRes.data?.results || storeRes.data || []
+        if (!storeList.length) { setIsLoading(false); return }
+        const s = storeList[0]
+        setStore(s)
 
-        // 2. Get Product Info
-        const endpoint = storeData.store_type === 'FOOD' ? `/food/items/${productId}/` : `/retail/products/${productId}/`
+        // Fetch product based on store type
+        const endpoint = s.store_type === 'FOOD'
+          ? `/food/items/${productId}/`
+          : `/retail/products/${productId}/`
         const prodRes = await api.get(endpoint)
-        
-        // Ensure options and extras are parsed if they come as string
-        let prod = prodRes.data
-        if (typeof prod.options === 'string') {
-          try { prod.options = JSON.parse(prod.options) } catch (e) { prod.options = [] }
-        }
-        if (typeof prod.extras === 'string') {
-          try { prod.extras = JSON.parse(prod.extras) } catch (e) { prod.extras = [] }
-        }
-        
-        setProduct(prod)
-
-        // Initialize required options
-        const initialOpts: Record<string, string> = {}
-        if (prod.options && Array.isArray(prod.options)) {
-          prod.options.forEach((opt: any) => {
-             if (opt.required && opt.choices && opt.choices.length > 0) {
-               initialOpts[opt.name] = opt.choices[0] // default to first
-             }
-          })
-        }
-        setSelectedOptions(initialOpts)
-        
+        setProduct(prodRes.data)
       } catch (err) {
-        console.error("Product Error:", err)
+        console.error(err)
       } finally {
         setIsLoading(false)
       }
     }
-    
-    if (subdomain && productId) fetchPageData()
+    if (subdomain && productId) fetchData()
   }, [subdomain, productId])
 
-  if (isLoading || !store) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" size={40}/></div>
-  if (!product) return <div className="min-h-screen flex items-center justify-center font-bold">Product not found.</div>
-
   const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#ffffff')
-    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255'
+    const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#ffffff')
+    return r ? `${parseInt(r[1], 16)}, ${parseInt(r[2], 16)}, ${parseInt(r[3], 16)}` : '255,255,255'
   }
 
-  const bgRgb = hexToRgb(store.background_color)
-  const textRgb = hexToRgb(store.secondary_color)
-  
-  const optionsList = Array.isArray(product.options) ? product.options : []
-  const extrasList = Array.isArray(product.extras) ? product.extras : []
+  const bgRgb = store ? hexToRgb(store.background_color) : '255,255,255'
+  const textRgb = store ? hexToRgb(store.secondary_color) : '0,0,0'
 
-  const toggleExtra = (extra: any) => {
-    if (selectedExtras.find(e => e.id === extra.id)) {
-      setSelectedExtras(selectedExtras.filter(e => e.id !== extra.id))
-    } else {
-      setSelectedExtras([...selectedExtras, extra])
-    }
-  }
+  // Parse options & extras safely
+  const parsedOptions: any[] = (() => {
+    if (!product?.options) return []
+    try { return typeof product.options === 'string' ? JSON.parse(product.options) : (product.options || []) }
+    catch { return [] }
+  })()
 
-  const basePrice = parseFloat(product.price) || 0
-  const extrasTotal = selectedExtras.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0)
-  const unitPrice = basePrice + extrasTotal
-  const finalPrice = unitPrice * quantity
+  const parsedExtras: any[] = (() => {
+    if (!product?.extras) return []
+    try { return typeof product.extras === 'string' ? JSON.parse(product.extras) : (product.extras || []) }
+    catch { return [] }
+  })()
 
-  const areRequiredOptionsSelected = () => {
-    return optionsList.every((opt: any) => {
-      if (opt.required && !selectedOptions[opt.name]) return false
-      return true
-    })
-  }
+  // Dynamic total price
+  const basePrice = parseFloat(product?.price || '0')
+  const extrasTotal = selectedExtras.reduce((sum, extraId) => {
+    const extra = parsedExtras.find((e: any) => e.id === extraId)
+    return sum + parseFloat(extra?.price || '0')
+  }, 0)
+  const totalPrice = basePrice + extrasTotal
+
+  const isFav = store && product ? favorites.some(f => f.productId === product.id && f.type === store.store_type) : false
+  const isFood = store?.store_type === 'FOOD'
+
+  // Check all required options are selected
+  const missingRequired = parsedOptions
+    .filter((opt: any) => opt.required && !selectedOptions[opt.name])
+    .map((opt: any) => opt.name)
 
   const handleAddToCart = () => {
-    if (!areRequiredOptionsSelected()) {
-      alert("Please select all required options.")
+    if (!session) { openAuthModal(); return }
+    if (missingRequired.length > 0) {
+      alert(`Please select: ${missingRequired.join(', ')}`)
       return
     }
 
-    // Build special requests string strictly for UI/Checkout readability
-    const optsString = Object.entries(selectedOptions).map(([k, v]) => `${k}: ${v}`).join(', ')
-    const extsString = selectedExtras.map(e => `+${e.name}`).join(', ')
-    const combinedRequests = [optsString, extsString].filter(Boolean).join(' | ')
+    const selectedOption = Object.keys(selectedOptions).length > 0
+      ? { name: Object.keys(selectedOptions)[0], choice: Object.values(selectedOptions)[0] }
+      : null
 
-    addItem(store.id, { 
-      ...product, 
-      price: unitPrice.toString(), // The cart handles quantity multiplier
-      quantity,
-      special_requests: combinedRequests 
+    const selectedExtrasDetails = selectedExtras.map(id => {
+      const extra = parsedExtras.find((e: any) => e.id === id)
+      return { id, name: extra?.name || '', price: extra?.price || '0' }
     })
 
-    setToastMessage(`Added to order!`)
-    setTimeout(() => {
-      setToastMessage(null)
-      router.push(`/store/${subdomain}`)
-    }, 1500)
+    addItem(store.id, {
+      id: product.id,
+      name: product.name,
+      price: totalPrice.toFixed(2), // Include extras in price
+      quantity: 1,
+      image: product.image || null,
+      selectedOption,
+      selectedExtras: selectedExtrasDetails,
+    })
+
+    setAddedToCart(true)
+    setTimeout(() => setAddedToCart(false), 2500)
   }
 
-  const isFav = favorites.some(f => f.productId === product.id)
+  if (isLoading || !product || !store) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-gray-300" size={48} />
+      </div>
+    )
+  }
 
   return (
-    <main className="min-h-screen font-sans" style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}>
-      
-      {/* TOAST */}
-      <div className={`fixed top-12 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 pointer-events-none ${toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
-        <div className="backdrop-blur-xl px-8 py-4 rounded-full flex items-center gap-3 shadow-2xl border" style={{ backgroundColor: store.primary_color, color: store.background_color, borderColor: `rgba(${textRgb}, 0.1)` }}>
-          <Check size={20} />
-          <span className="text-sm font-black tracking-wide uppercase">{toastMessage}</span>
-        </div>
+    <main
+      className="min-h-screen font-sans pb-36"
+      style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111' }}
+    >
+      {/* ── HEADER ── */}
+      <div
+        className="sticky top-0 z-50 px-4 py-4 backdrop-blur-2xl border-b flex items-center justify-between"
+        style={{ backgroundColor: `rgba(${bgRgb}, 0.9)`, borderColor: `rgba(${textRgb}, 0.08)` }}
+      >
+        <button
+          onClick={() => router.back()}
+          className="p-2.5 rounded-2xl bg-white/10 border border-white/20 hover:scale-105 transition-transform"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <span className="font-black text-sm tracking-tight opacity-70 line-clamp-1 max-w-[200px]">{product.name}</span>
+        <button
+          onClick={() => {
+            if (!session) { openAuthModal(); return }
+            toggleFavorite(product, isFood ? 'FOOD' : 'RETAIL')
+          }}
+          className="p-2.5 rounded-2xl bg-white/10 border border-white/20 hover:scale-105 transition-transform"
+          style={{ color: isFav ? '#ef4444' : 'inherit' }}
+        >
+          <Heart size={20} fill={isFav ? 'currentColor' : 'none'} />
+        </button>
       </div>
 
-      {/* TOP NAV */}
-      <nav className="sticky top-0 z-50 backdrop-blur-2xl border-b p-4 shadow-sm" style={{ borderColor: `rgba(${textRgb}, 0.1)`, backgroundColor: `rgba(${bgRgb}, 0.85)` }}>
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-          <button onClick={() => router.push(`/store/${subdomain}`)} className="flex items-center gap-2 font-bold text-sm hover:opacity-70 transition-opacity p-2">
-            <ArrowLeft size={20} /> <span className="hidden md:inline">Back</span>
-          </button>
-          <div className="font-black text-lg tracking-tight">{store.name}</div>
-          <div className="flex items-center gap-4">
-            <button onClick={() => { if(!session) return openAuthModal(); toggleFavorite(product, store.store_type); }} className="hover:scale-110 transition-transform p-2">
-              <Heart size={20} className={isFav ? "fill-red-500 text-red-500" : ""} />
-            </button>
-            <div className="relative cursor-pointer" onClick={() => router.push(`/store/${subdomain}`)}>
-              <ShoppingBag size={20} />
-              {(carts[store.id] || []).length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold" style={{ backgroundColor: store.primary_color, color: store.background_color }}>
-                  {(carts[store.id] || []).reduce((acc: number, curr: any) => acc + curr.quantity, 0)}
-                </span>
-              )}
+      {/* ── PRODUCT IMAGE ── */}
+      <div
+        className="relative w-full aspect-[4/3] md:aspect-[16/7] bg-black/5 overflow-hidden"
+      >
+        {product.image ? (
+          <img src={product.image} className="w-full h-full object-cover" alt={product.name} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center opacity-10">
+            {isFood ? <ShoppingBag size={64} /> : <Package size={64} />}
+          </div>
+        )}
+        {/* Gradient overlay at bottom */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-32"
+          style={{ background: `linear-gradient(to top, ${store.background_color || '#fafafa'}, transparent)` }}
+        />
+      </div>
+
+      {/* ── PRODUCT INFO ── */}
+      <div className="max-w-2xl mx-auto px-4 pt-4 pb-32">
+
+        {/* Category + dietary tags */}
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          {product.category_name && (
+            <span
+              className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border"
+              style={{ borderColor: `rgba(${textRgb}, 0.15)`, color: store.secondary_color }}
+            >
+              {product.category_name}
+            </span>
+          )}
+          {isFood && product.is_vegan && (
+            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-green-100 text-green-700">
+              <Leaf size={10} /> Vegan
+            </span>
+          )}
+          {isFood && product.is_spicy && (
+            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-red-100 text-red-700">
+              <Flame size={10} /> Spicy
+            </span>
+          )}
+          {!isFood && product.stock_quantity === 0 && (
+            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-red-100 text-red-700">Out of Stock</span>
+          )}
+          {!isFood && product.stock_quantity > 0 && product.stock_quantity <= 5 && (
+            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-amber-100 text-amber-700">Only {product.stock_quantity} left</span>
+          )}
+        </div>
+
+        <h1
+          className="text-3xl md:text-4xl font-black tracking-tighter mb-3 leading-tight"
+          style={{ fontFamily: `"${store.heading_font || 'Inter'}", sans-serif` }}
+        >
+          {product.name}
+        </h1>
+
+        {/* Meta row */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-1 opacity-60">
+            <Star size={13} className="fill-current" />
+            <span className="text-xs font-bold">4.8</span>
+          </div>
+          {isFood && product.preparation_time_minutes > 0 && (
+            <div className="flex items-center gap-1.5 opacity-60">
+              <Clock size={13} />
+              <span className="text-xs font-bold">{product.preparation_time_minutes} min</span>
+            </div>
+          )}
+          {!isFood && product.sku && (
+            <span className="text-xs font-mono font-bold opacity-40">SKU: {product.sku}</span>
+          )}
+        </div>
+
+        {product.description && (
+          <p className="text-sm md:text-base opacity-70 font-medium leading-relaxed mb-6">{product.description}</p>
+        )}
+
+        {/* ── OPTIONS (Food & Retail) ── */}
+        {parsedOptions.length > 0 && (
+          <div className="mb-6">
+            {parsedOptions.map((opt: any) => (
+              <div key={opt.name} className="mb-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="font-black text-sm tracking-tight">{opt.name}</h3>
+                  {opt.required
+                    ? <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-red-100 text-red-600">Required</span>
+                    : <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded opacity-40" style={{ backgroundColor: `rgba(${textRgb}, 0.06)` }}>Optional</span>
+                  }
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {opt.choices.map((choice: string) => {
+                    const isSelected = selectedOptions[opt.name] === choice
+                    return (
+                      <button
+                        key={choice}
+                        onClick={() => setSelectedOptions(prev => ({ ...prev, [opt.name]: choice }))}
+                        className="px-5 py-2.5 rounded-full font-black text-sm tracking-wide transition-all hover:scale-105"
+                        style={{
+                          backgroundColor: isSelected ? store.primary_color : `rgba(${textRgb}, 0.06)`,
+                          color: isSelected ? store.background_color : store.secondary_color,
+                          border: `2px solid ${isSelected ? store.primary_color : 'transparent'}`
+                        }}
+                      >
+                        {choice}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── EXTRAS (Food only, but shown for retail if present) ── */}
+        {parsedExtras.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-black text-sm tracking-tight mb-3">
+              {isFood ? 'Add-ons & Extras' : 'Extras'}
+              <span className="ml-2 text-[9px] font-bold uppercase tracking-widest opacity-40">Optional</span>
+            </h3>
+            <div className="flex flex-col gap-2">
+              {parsedExtras.map((extra: any) => {
+                const isChecked = selectedExtras.includes(extra.id)
+                return (
+                  <button
+                    key={extra.id}
+                    onClick={() => setSelectedExtras(prev =>
+                      isChecked ? prev.filter(id => id !== extra.id) : [...prev, extra.id]
+                    )}
+                    className="flex items-center justify-between p-4 rounded-2xl border text-left transition-all"
+                    style={{
+                      borderColor: isChecked ? store.primary_color : `rgba(${textRgb}, 0.08)`,
+                      backgroundColor: isChecked ? `rgba(${hexToRgb(store.primary_color)}, 0.06)` : `rgba(${textRgb}, 0.02)`
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-5 h-5 rounded-md flex items-center justify-center transition-all"
+                        style={{
+                          backgroundColor: isChecked ? store.primary_color : 'transparent',
+                          border: `2px solid ${isChecked ? store.primary_color : `rgba(${textRgb}, 0.2)`}`
+                        }}
+                      >
+                        {isChecked && <Check size={12} color={store.background_color} />}
+                      </div>
+                      <span className="font-bold text-sm">{extra.name}</span>
+                    </div>
+                    <span className="font-black text-sm" style={{ color: store.primary_color }}>
+                      +Br {parseFloat(extra.price).toFixed(2)}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
-        </div>
-      </nav>
-
-      {/* MAIN CONTENT */}
-      <div className="max-w-[1200px] mx-auto p-4 md:p-8 lg:p-12">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
-          
-          {/* IMAGE */}
-          <div className="w-full lg:w-1/2 lg:sticky lg:top-32 h-fit mb-4 lg:mb-0">
-             <div className="aspect-[4/5] rounded-[2rem] overflow-hidden bg-black/5 shadow-inner border" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
-                {product.image ? (
-                  <img src={product.image} className="w-full h-full object-cover" alt={product.name} />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center opacity-10"><ShoppingBag size={80}/></div>
-                )}
-             </div>
-          </div>
-
-          {/* DETAILS */}
-          <div className="w-full lg:w-1/2 pb-32">
-             {product.category_name && (
-                <span className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 border rounded-md shadow-sm mb-4 inline-block" style={{ borderColor: `rgba(${textRgb}, 0.2)` }}>
-                  {product.category_name}
-                </span>
-             )}
-             <h1 className="text-4xl lg:text-5xl font-black mb-4 tracking-tighter leading-none" style={{ fontFamily: `"${store.heading_font || 'Inter'}", sans-serif` }}>{product.name}</h1>
-             <p className="text-3xl font-black mb-6" style={{ color: store.primary_color }}>Br {basePrice.toFixed(2)}</p>
-             <p className="text-sm font-medium opacity-70 mb-10 leading-relaxed max-w-lg">{product.description}</p>
-
-             {/* VARIANTS & OPTIONS */}
-             {optionsList.length > 0 && (
-               <div className="space-y-8 mb-10">
-                 {optionsList.map((opt: any) => (
-                   <div key={opt.id}>
-                     <h3 className="font-black text-sm mb-3 flex items-center gap-2">
-                       {opt.name}
-                       {opt.required && <span className="text-[10px] bg-black/10 px-2 py-0.5 rounded tracking-widest uppercase border" style={{ borderColor: `rgba(${textRgb}, 0.2)` }}>Required</span>}
-                     </h3>
-                     <div className="flex flex-wrap gap-3">
-                       {opt.choices.map((choice: string) => {
-                         const isSelected = selectedOptions[opt.name] === choice
-                         return (
-                           <button 
-                             key={choice} 
-                             onClick={() => setSelectedOptions({...selectedOptions, [opt.name]: choice})}
-                             className="px-5 py-3 rounded-xl text-sm font-bold border transition-all hover:-translate-y-0.5 shadow-sm"
-                             style={{ 
-                               backgroundColor: isSelected ? store.primary_color : 'transparent',
-                               color: isSelected ? store.background_color : store.secondary_color,
-                               borderColor: isSelected ? store.primary_color : `rgba(${textRgb}, 0.2)`
-                             }}
-                           >
-                             {choice}
-                           </button>
-                         )
-                       })}
-                     </div>
-                   </div>
-                 ))}
-               </div>
-             )}
-
-             {/* EXTRAS */}
-             {extrasList.length > 0 && (
-               <div className="space-y-4 mb-10 pt-8 border-t" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
-                 <h3 className="font-black text-sm mb-4">Add-ons</h3>
-                 <div className="space-y-3">
-                   {extrasList.map((extra: any) => {
-                     const isSelected = selectedExtras.find(e => e.id === extra.id)
-                     return (
-                       <div key={extra.id} onClick={() => toggleExtra(extra)} className="flex items-center justify-between p-4 border rounded-xl cursor-pointer hover:bg-black/5 transition-colors shadow-sm" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
-                         <div className="flex items-center gap-4">
-                           <div className="w-5 h-5 rounded border flex items-center justify-center transition-colors" style={{ backgroundColor: isSelected ? store.primary_color : 'transparent', borderColor: isSelected ? store.primary_color : `rgba(${textRgb}, 0.3)` }}>
-                             {isSelected && <Check size={14} color={store.background_color} />}
-                           </div>
-                           <span className="text-sm font-bold">{extra.name}</span>
-                         </div>
-                         <span className="text-sm font-black" style={{ color: store.primary_color }}>+Br {parseFloat(extra.price).toFixed(2)}</span>
-                       </div>
-                     )
-                   })}
-                 </div>
-               </div>
-             )}
-
-             {/* ACTION BAR (Inline for Desktop) */}
-             <div className="mt-12 pt-8 border-t space-y-6 hidden lg:block" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
-                <div className="flex items-center justify-between">
-                   <span className="font-black tracking-tight text-xl">Quantity</span>
-                   <div className="flex items-center gap-4 border p-1 rounded-full shadow-inner" style={{ borderColor: `rgba(${textRgb}, 0.2)` }}>
-                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 hover:bg-black/10 rounded-full transition-colors"><Minus size={18}/></button>
-                     <span className="font-black w-6 text-center">{quantity}</span>
-                     <button onClick={() => setQuantity(quantity + 1)} className="p-2 hover:bg-black/10 rounded-full transition-colors"><Plus size={18}/></button>
-                   </div>
-                </div>
-
-                <button 
-                  onClick={handleAddToCart}
-                  className="w-full py-5 rounded-[1.5rem] text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 flex justify-between px-8"
-                  style={{ backgroundColor: store.primary_color, color: store.background_color }}
-                >
-                  <span>Add To Order</span>
-                  <span>Br {finalPrice.toFixed(2)}</span>
-                </button>
-             </div>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* 📱 FIXED BOTTOM ACTION BAR (Mobile/Tablet) */}
-      <div className="lg:hidden fixed bottom-6 inset-x-4 z-50">
-        <div className="backdrop-blur-2xl p-4 md:p-6 rounded-[2rem] shadow-2xl border flex items-center justify-between gap-4" style={{ backgroundColor: `rgba(${bgRgb}, 0.9)`, borderColor: `rgba(${textRgb}, 0.1)` }}>
-           <div className="flex items-center gap-4 bg-black/5 p-1 rounded-full border border-black/5" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
-             <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-black/5 rounded-full transition-colors"><Minus size={16}/></button>
-             <span className="font-black w-4 text-center text-sm">{quantity}</span>
-             <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-black/5 rounded-full transition-colors"><Plus size={16}/></button>
-           </div>
-           
-           <button 
-             onClick={handleAddToCart}
-             className="flex-1 py-4.5 md:py-5 rounded-2xl text-xs md:text-sm font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-4"
-             style={{ backgroundColor: store.primary_color, color: store.background_color }}
-           >
-             <span>Add to order</span>
-             <span className="opacity-40">|</span>
-             <span>Br {finalPrice.toFixed(2)}</span>
-           </button>
+      {/* ── STICKY BOTTOM BAR ── */}
+      <div
+        className="fixed bottom-0 inset-x-0 z-50 px-4 py-4 backdrop-blur-2xl border-t"
+        style={{ backgroundColor: `rgba(${bgRgb}, 0.95)`, borderColor: `rgba(${textRgb}, 0.08)` }}
+      >
+        <div className="max-w-2xl mx-auto flex items-center gap-4">
+          {/* Price */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">Total</span>
+            <span className="text-2xl font-black tracking-tighter" style={{ color: store.primary_color }}>
+              Br {totalPrice.toFixed(2)}
+            </span>
+          </div>
+
+          {/* Add to Cart */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleAddToCart}
+            disabled={!isFood && product.stock_quantity === 0}
+            className="flex-1 py-4 rounded-2xl font-black tracking-widest uppercase text-sm shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50"
+            style={{ backgroundColor: addedToCart ? '#22c55e' : store.primary_color, color: store.background_color }}
+          >
+            <AnimatePresence mode="wait">
+              {addedToCart ? (
+                <motion.span key="done" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="flex items-center gap-2">
+                  <Check size={18} /> Added to Cart!
+                </motion.span>
+              ) : (
+                <motion.span key="add" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="flex items-center gap-2">
+                  <ShoppingBag size={18} />
+                  {(!isFood && product.stock_quantity === 0) ? 'Out of Stock' : 'Add to Cart'}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+
+          {/* Go to cart shortcut if added */}
+          {addedToCart && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={() => router.push(`/store/${subdomain}/cart`)}
+              className="p-4 rounded-2xl border font-black text-sm transition-all hover:scale-105"
+              style={{ borderColor: `rgba(${textRgb}, 0.15)` }}
+            >
+              <ChevronRight size={20} />
+            </motion.button>
+          )}
         </div>
       </div>
     </main>

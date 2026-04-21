@@ -131,7 +131,8 @@ export const auth = betterAuth({
     ...(process.env.NODE_ENV === 'development' ? [
       'http://localhost:3000',
       'http://127.0.0.1:3000',
-      // Add your current ngrok URL as NGROK_URL env var during local dev
+      // NGROK_URL is set in .env to the static ngrok domain (willette-conclusive-robby.ngrok-free.dev)
+      // It gives Google OAuth a real HTTPS domain without hardcoding anything here.
       ...(process.env.NGROK_URL ? [process.env.NGROK_URL] : []),
     ] : []),
   ],
@@ -148,11 +149,12 @@ export const auth = betterAuth({
 
   // ── Advanced ──────────────────────────────────────────────────────────────
   advanced: {
-    // 🌟 THE FIX: Force secure cookies.
-    // Ngrok provides HTTPS to the browser, but terminates it before hitting 
-    // our Docker container. This forces Better Auth to keep the 'Secure' 
-    // attribute so the browser actually saves and returns the cookies.
-    useSecureCookies: true,
+    // ✅ FIX: Use Secure cookies whenever the auth URL is served over HTTPS.
+    // This covers both production (https://storeville.app) AND local dev via
+    // ngrok (https://willette-conclusive-robby.ngrok-free.dev).
+    // On plain http://localhost, Secure cookies are NOT set — browsers would
+    // silently discard them causing an instant logout loop after OAuth.
+    useSecureCookies: (process.env.BETTER_AUTH_URL ?? '').startsWith('https://'),
   }
 });
 

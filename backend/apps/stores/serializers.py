@@ -16,8 +16,14 @@ class StoreThemeMixin(serializers.Serializer):
     header_layout = serializers.CharField(source='theme_config.header_layout', required=False, allow_blank=True)
     card_style = serializers.CharField(source='theme_config.card_style', required=False, allow_blank=True)
     
-    working_days = serializers.CharField(source='theme_config.working_days', required=False, allow_blank=True)
+    working_days = serializers.JSONField(source='theme_config.working_days', required=False)
+    opening_time = serializers.TimeField(source='theme_config.opening_time', required=False, allow_null=True)
+    closing_time = serializers.TimeField(source='theme_config.closing_time', required=False, allow_null=True)
     delivery_hours = serializers.CharField(source='theme_config.delivery_hours', required=False, allow_blank=True)
+    is_open = serializers.SerializerMethodField()
+
+    def get_is_open(self, obj):
+        return obj.is_open
     
     announcement_is_active = serializers.BooleanField(source='theme_config.announcement_is_active', required=False)
     announcement_text = serializers.CharField(source='theme_config.announcement_text', required=False, allow_blank=True)
@@ -71,7 +77,7 @@ class StoreDiscoverySerializer(StoreThemeMixin, serializers.ModelSerializer):
             # Storefront features
             'announcement_is_active', 'announcement_text', 'announcement_color',
             'social_instagram', 'social_tiktok', 'social_facebook', 'social_twitter',
-            'working_days', 'delivery_hours',
+            'working_days', 'opening_time', 'closing_time', 'delivery_hours', 'is_open',
         ]
 
 
@@ -93,11 +99,13 @@ class StoreManagementSerializer(StoreThemeMixin, serializers.ModelSerializer):
             'theme', 'primary_color', 'secondary_color', 'background_color',
             'heading_font', 'body_font', 'header_layout', 'card_style',
             # Business info
-            'working_days', 'delivery_hours',
+            'working_days', 'opening_time', 'closing_time', 'delivery_hours',
             'announcement_is_active', 'announcement_text', 'announcement_color',
             # Social
             'social_instagram', 'social_tiktok', 'social_facebook', 'social_twitter',
             # Timestamps
             'created_at', 'updated_at',
+            # Computed
+            'is_open',
         ]
-        read_only_fields = ['id', 'owner', 'slug', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'slug', 'created_at', 'updated_at', 'is_open']

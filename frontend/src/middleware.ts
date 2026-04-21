@@ -16,11 +16,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // 1. Resolve Session from Better Auth
-  // We perform an internal fetch to check role-based access at the edge
+  // We perform an internal fetch to check role-based access at the edge.
+  // CRITICAL: Use INTERNAL_APP_URL, NOT BETTER_AUTH_URL.
+  // BETTER_AUTH_URL may point to ngrok/production — unreachable inside Docker.
+  // INTERNAL_APP_URL is always the container-local address (http://localhost:3000).
   let session = null
   try {
-    const baseURL = process.env.BETTER_AUTH_URL || request.nextUrl.origin
-    const sessionRes = await fetch(`${baseURL}/api/auth/get-session`, {
+    const internalBaseURL = process.env.INTERNAL_APP_URL || 'http://localhost:3000'
+    const sessionRes = await fetch(`${internalBaseURL}/api/auth/get-session`, {
       headers: {
         cookie: request.headers.get('cookie') || ''
       }

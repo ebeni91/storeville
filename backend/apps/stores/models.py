@@ -83,6 +83,27 @@ class Store(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def is_open(self) -> bool:
+        """Compute open/closed from the StoreTheme opening/closing time fields."""
+        try:
+            theme = self.theme_config
+            if not theme.opening_time or not theme.closing_time or not theme.working_days:
+                return False
+            from django.utils import timezone
+            now = timezone.localtime(timezone.now())
+            day_abbr = now.strftime('%a')  # 'Mon', 'Tue', ...
+            if day_abbr not in theme.working_days:
+                return False
+            t = now.time()
+            if theme.closing_time < theme.opening_time:  # overnight
+                return t >= theme.opening_time or t <= theme.closing_time
+            return theme.opening_time <= t <= theme.closing_time
+        except Exception:
+            return False
+
+
+
     def save(self, *args, **kwargs):
         if not self.slug:
             # ✅ FIX (Issue #11): Replaced the race-condition while-loop with a
@@ -131,7 +152,11 @@ class StoreTheme(models.Model):
     card_style = models.CharField(max_length=50, default='rounded-shadow') # sharp, rounded, rounded-shadow
     
     # Business Hours
-    working_days = models.CharField(max_length=100, blank=True, default='', help_text="e.g. Monday – Saturday")
+    # working_days: JSON list of 3-letter day abbreviations e.g. ["Mon","Tue","Fri"]
+    working_days = models.JSONField(default=list, blank=True)
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
+    # Human-readable summary for display in the storefront hero
     delivery_hours = models.CharField(max_length=100, blank=True, default='', help_text="e.g. 09:00 – 22:00")
 
     # Marketing: Announcement Bar

@@ -10,7 +10,6 @@ import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
 import ProfileDropdown from '@/components/ProfileDropdown'
 import { useFavoriteStore } from '@/store/favoriteStore'
-import FavoriteDropdown from '@/components/FavoriteDropdown'
 
 interface RetailCategory { id: string; name: string; slug: string }
 interface RetailProduct { id: string; category: string; category_name: string; name: string; description: string; price: string; image: string | null; stock_quantity: number; options?: string | any[]; extras?: string | any[] }
@@ -26,7 +25,6 @@ export default function RetailStorefront({ store }: { store: any }) {
   
   const [isMounted, setIsMounted] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const [isFavOpen, setIsFavOpen] = useState(false)
 
   // Grab the specific cart for this store safely to avoid hydration errors
   const cartItems = isMounted ? (carts[store.id] || []) : []
@@ -38,7 +36,6 @@ export default function RetailStorefront({ store }: { store: any }) {
   const [searchQuery, setSearchQuery] = useState('')
   
   // UI States
-  const [isCartOpen, setIsCartOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   // Auth Modal States
@@ -47,7 +44,6 @@ export default function RetailStorefront({ store }: { store: any }) {
   const [otpSent, setOtpSent] = useState(false)
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
-  const [isCheckoutIntent, setIsCheckoutIntent] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { scrollY } = useScroll()
 
@@ -88,29 +84,11 @@ export default function RetailStorefront({ store }: { store: any }) {
     return matchesCategory && matchesSearch
   })
 
-  // 🛒 USING ZUSTAND CART
+  // 🛒 Add to cart → navigate to cart page
   const handleAddToCart = (product: any) => {
     addItem(store.id, { ...product, quantity: 1 })
     setToastMessage(`Added ${product.name} to your cart.`)
     setTimeout(() => setToastMessage(null), 3000)
-  }
-
-  const removeFromCart = (productId: string) => removeItem(store.id, productId)
-
-  // 🛡️ THE CHECKOUT INTERCEPTOR
-  const handleProceedToCheckout = async () => {
-    setIsCheckoutIntent(true)
-    if (session) {
-      try {
-        if (cartItems.length > 0) {
-          await mergeCartWithBackend(store.id, 'RETAIL')
-        }
-      } catch (err) {
-        console.error("Cart sync failed before checkout", err)
-      }
-      router.push(`/store/${store.slug}/checkout`)
-    }
-    else openAuthModal() // Opens the global modal if they are a guest!
   }
 
   // 🤝 THE SILENT MERGE HANDSHAKE
@@ -158,10 +136,7 @@ export default function RetailStorefront({ store }: { store: any }) {
       await mergeCartWithBackend(store.id, 'RETAIL')
       
       closeAuthModal()
-      if (isCheckoutIntent) {
-        router.push(`/store/${store.slug}/checkout`)
-        setIsCheckoutIntent(false)
-      }
+      router.push(`/store/${store.slug}/cart`)
     } catch (err: any) {
       setAuthError(err.message || 'Invalid OTP.')
     } finally {
@@ -193,8 +168,19 @@ export default function RetailStorefront({ store }: { store: any }) {
   const bgRgb = hexToRgb(store.background_color)
   const textRgb = hexToRgb(store.secondary_color)
   const announceRgb = hexToRgb(store.announcement_color || store.primary_color)
-  const cartTotal = cartItems.reduce((acc, curr) => acc + (parseFloat(curr.price) * curr.quantity), 0).toFixed(2)
   const cartCount = cartItems.reduce((acc, curr) => acc + curr.quantity, 0)
+
+  // Working hours helpers
+  const getHoursDisplay = () => {
+    if (store.delivery_hours) return store.delivery_hours
+    if (!store.opening_time || !store.closing_time) return null
+    const fmt = (t: string) => { const [h, m] = t.split(':'); const hour = parseInt(h); return `${hour > 12 ? hour - 12 : hour || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}` }
+    return `${fmt(store.opening_time)} – ${fmt(store.closing_time)}`
+  }
+  const hoursDisplay = getHoursDisplay()
+  const daysDisplay = Array.isArray(store.working_days) && store.working_days.length > 0
+    ? store.working_days.join(' · ')
+    : typeof store.working_days === 'string' && store.working_days ? store.working_days : null
 
   return (
     <main className="min-h-screen pb-32 font-sans transition-colors duration-700 relative" style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}>
@@ -226,18 +212,15 @@ export default function RetailStorefront({ store }: { store: any }) {
            {/* Right: Actions */}
            <div className="flex items-center gap-2 md:gap-4">
              <div className="relative">
-               <button onClick={() => setIsCartOpen(true)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform relative">
+               <button onClick={() => router.push(`/store/${store.slug}/cart`)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform relative">
                  <ShoppingBag size={20} />
                  {cartCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce" style={{ backgroundColor: store.primary_color }}>{cartCount}</span>}
                </button>
              </div>
-             
-             <div className="relative hidden md:block">
-               <button onClick={() => setIsFavOpen(!isFavOpen)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform">
-                 <Heart size={20} />
-               </button>
-               <FavoriteDropdown isOpen={isFavOpen} onClose={() => setIsFavOpen(false)} bgRgb={bgRgb} textRgb={textRgb} />
-             </div>
+
+             <button onClick={() => router.push(`/store/${store.slug}/wishlist`)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform">
+               <Heart size={20} />
+             </button>
 
              <div className="relative">
                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform">
@@ -360,12 +343,20 @@ export default function RetailStorefront({ store }: { store: any }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/40"></div>
 
           <div className="relative z-10 flex flex-col items-center text-center px-4 mt-8">
-            <div className="flex items-center gap-3 mb-6 backdrop-blur-md bg-white/10 px-5 py-2.5 rounded-full border border-white/20 text-white shadow-lg">
+            <div className="flex items-center gap-3 mb-6 backdrop-blur-md bg-white/10 px-5 py-2.5 rounded-full border border-white/20 text-white shadow-lg flex-wrap justify-center">
+              {/* Open/Closed badge */}
+              <span className={`flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-full ${store.is_open ? 'bg-green-500/30 text-green-300' : 'bg-red-500/30 text-red-300'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${store.is_open ? 'bg-green-400' : 'bg-red-400'}`} />
+                {store.is_open ? 'Open Now' : 'Closed'}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
               <span className="flex items-center gap-1 text-sm font-bold"><Star size={14} className="fill-yellow-400 text-yellow-400" /> 4.9 Rating</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
               <span className="flex items-center gap-1.5 text-sm font-bold"><CheckCircle size={14} className="text-blue-400" /> Verified Seller</span>
-              {store.city && <><span className="w-1.5 h-1.5 rounded-full bg-white/50 hidden md:block"></span><span className="hidden md:flex items-center gap-1.5 text-sm font-bold"><MapPin size={14} className="text-white/80" /> {store.city}</span></>}
+              {store.city && <><span className="w-1.5 h-1.5 rounded-full bg-white/50 hidden md:block" /><span className="hidden md:flex items-center gap-1.5 text-sm font-bold"><MapPin size={14} className="text-white/80" /> {store.city}</span></>}
+              {hoursDisplay && <><span className="w-1.5 h-1.5 rounded-full bg-white/50 hidden md:block" /><span className="hidden md:flex items-center gap-1.5 text-sm font-bold opacity-80">{hoursDisplay}</span></>}
             </div>
+
 
             <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white drop-shadow-xl mb-4 leading-none max-w-5xl" style={{ fontFamily: `"${store.heading_font || 'Inter'}", sans-serif` }}>
               {store.name}
@@ -485,8 +476,8 @@ export default function RetailStorefront({ store }: { store: any }) {
                           if (hasConfig) {
                             router.push(`/store/${store.slug}/product/${p.id}`)
                           } else {
-                            handleAddToCart(p); 
-                            setIsCartOpen(true); 
+                            handleAddToCart(p)
+                            router.push(`/store/${store.slug}/cart`)
                           }
                         }}
                         disabled={p.stock_quantity === 0}
@@ -513,54 +504,6 @@ export default function RetailStorefront({ store }: { store: any }) {
             </div>
           )}
         </section>
-      </div>
-
-      {/* CART DRAWER */}
-      <div className={`fixed inset-0 z-[200] transition-opacity duration-300 ${isCartOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
-        <div className={`absolute top-0 right-0 h-full w-full sm:w-[400px] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{ backgroundColor: store.background_color, color: store.secondary_color }}>
-          
-          <div className="p-5 border-b flex items-center justify-between backdrop-blur-xl" style={{ borderColor: `rgba(${textRgb}, 0.1)`, backgroundColor: `rgba(${bgRgb}, 0.9)` }}>
-            <h2 className="text-xl font-black tracking-tight">Your Cart</h2>
-            <button onClick={() => setIsCartOpen(false)} className="p-2 rounded-full hover:bg-black/5 transition-colors"><X size={20} /></button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-            {cartItems.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center opacity-50">
-                <ShoppingBag size={48} className="mb-4" />
-                <p className="text-lg font-bold">Your cart is empty.</p>
-              </div>
-            ) : (
-              cartItems.map((item, idx) => (
-                <div key={idx} className="flex gap-4 items-center bg-white/5 p-3 rounded-xl border shadow-sm" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
-                  <div className="w-16 h-20 rounded-lg bg-black/5 overflow-hidden shadow-inner shrink-0">
-                    {item.image && <img src={item.image} className="w-full h-full object-cover" />}
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <h4 className="text-sm font-bold tracking-tight line-clamp-1">{item.name}</h4>
-                    <p className="text-xs opacity-60 mt-0.5">Qty: {item.quantity}</p>
-                    {item.special_requests && <p className="text-[10px] opacity-70 mt-1 line-clamp-2">{item.special_requests}</p>}
-                    <p className="text-sm font-black mt-2" style={{ color: store.primary_color }}>Br {parseFloat(item.price).toFixed(2)}</p>
-                  </div>
-                  <button onClick={() => removeFromCart(item.id)} className="p-2 opacity-50 hover:opacity-100 hover:text-red-500 transition-colors shrink-0"><X size={16}/></button>
-                </div>
-              ))
-            )}
-          </div>
-
-          {cartItems.length > 0 && (
-            <div className="p-5 border-t backdrop-blur-xl shadow-2xl shrink-0" style={{ borderColor: `rgba(${textRgb}, 0.1)`, backgroundColor: `rgba(${bgRgb}, 0.95)` }}>
-              <div className="flex justify-between items-center mb-5 font-black text-lg">
-                <span>Total</span>
-                <span style={{ color: store.primary_color }}>Br {cartTotal}</span>
-              </div>
-              <button onClick={handleProceedToCheckout} className="w-full py-3.5 rounded-xl text-sm font-black tracking-widest uppercase shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2" style={{ backgroundColor: store.primary_color, color: store.background_color }}>
-                {(!isMounted || !session) && <Lock size={16} />} Secure Checkout
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
     </main>

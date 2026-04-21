@@ -19,23 +19,24 @@ ALLOWED_HOSTS = [
     '*',
     '127.0.0.1',
     'localhost',
+    'willette-conclusive-robby.ngrok-free.dev',
 ]
 
 # 1. ALLOW THE BROWSER TO SEND COOKIES (CRITICAL)
-CORS_ALLOW_CREDENTIALS = True 
+CORS_ALLOW_CREDENTIALS = True
 
 # 2. SIMPLE, EXPLICIT TRUSTED ORIGINS
-# No more complex regexes. We just trust the exact frontend URLs.
+# Local browser + ngrok tunnel (for Google OAuth & mobile device testing)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    # "http://storeville.test:3000",
+    "https://willette-conclusive-robby.ngrok-free.dev",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    # "http://storeville.test:3000",
+    "https://willette-conclusive-robby.ngrok-free.dev",
 ]
 
 # NOTE: We have completely removed SESSION_COOKIE_DOMAIN and CSRF_COOKIE_DOMAIN.

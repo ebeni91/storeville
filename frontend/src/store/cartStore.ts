@@ -9,18 +9,19 @@ export interface CartItem {
   quantity: number
   image?: string | null
   special_requests?: string
+  // For food: selected option (e.g. {name: 'Size', choice: 'Large'})
+  selectedOption?: { name: string; choice: string } | null
+  // For food: selected extras (e.g. [{name: 'Extra Cheese', price: '15.00'}])
+  selectedExtras?: { id: string; name: string; price: string }[]
 }
 
 interface CartState {
-  // A dictionary isolating carts by store ID: { "store_id_1": [items], "store_id_2": [items] }
-  carts: Record<string, CartItem[]> 
-  
+  carts: Record<string, CartItem[]>
+
   addItem: (store_id: string, item: CartItem) => void
   removeItem: (store_id: string, product_id: string) => void
+  updateQuantity: (store_id: string, product_id: string, quantity: number) => void
   clearCart: (store_id: string) => void
-  
-  // THE HANDSHAKE
-  // mergeCartWithBackend: (store_id: string) => Promise<void>
   mergeCartWithBackend: (store_id: string, storeType: 'RETAIL' | 'FOOD') => Promise<void>
 }
 
@@ -49,8 +50,18 @@ export const useCartStore = create<CartState>()(
 
       removeItem: (store_id, product_id) => set((state) => {
         const storeCart = state.carts[store_id] || []
-        return { 
-          carts: { ...state.carts, [store_id]: storeCart.filter(i => i.id !== product_id) } 
+        return {
+          carts: { ...state.carts, [store_id]: storeCart.filter(i => i.id !== product_id) }
+        }
+      }),
+
+      updateQuantity: (store_id, product_id, quantity) => set((state) => {
+        const storeCart = state.carts[store_id] || []
+        if (quantity <= 0) {
+          return { carts: { ...state.carts, [store_id]: storeCart.filter(i => i.id !== product_id) } }
+        }
+        return {
+          carts: { ...state.carts, [store_id]: storeCart.map(i => i.id === product_id ? { ...i, quantity } : i) }
         }
       }),
 

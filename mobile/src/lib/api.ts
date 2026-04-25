@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Constants from 'expo-constants';
 
 // ✅ FIX: Dynamically resolve the host IP from Expo's manifest so the app

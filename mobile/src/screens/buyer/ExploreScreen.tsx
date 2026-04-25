@@ -7,9 +7,7 @@ import { BlurView } from 'expo-blur';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../lib/api';
-import { API_URL } from '../../lib/api';
-import axios from 'axios';
+import { api, API_URL } from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import {

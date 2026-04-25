@@ -11,33 +11,33 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 // ── All 14 premium themes (synced with mobile app) ──────────────────────────
 const THEMES = [
-  { id: 'apple-dark',      name: 'Cupertino Dark',   desc: "Apple's signature obsidian",     bg: '#000000', text: '#F5F5F7', primary: '#2997FF'  },
-  { id: 'apple-light',     name: 'Cupertino Light',  desc: 'Clean daylight silicon',          bg: '#F5F5F7', text: '#1D1D1F', primary: '#0066CC'  },
-  { id: 'stripe',          name: 'Fintech Slate',    desc: 'Bold financial confidence',       bg: '#0A2540', text: '#FFFFFF',  primary: '#635BFF'  },
-  { id: 'luxury-gold',     name: 'Maison Gold',      desc: 'Parisian haute couture',          bg: '#0A0A0A', text: '#FAFAFA',  primary: '#D4AF37'  },
-  { id: 'minimal-mono',    name: 'Pure Minimal',     desc: 'Zen typographic clarity',         bg: '#FFFFFF', text: '#000000',  primary: '#000000'  },
-  { id: 'emerald',         name: 'Emerald Isle',     desc: 'Lush botanical luxury',           bg: '#022C22', text: '#ECFDF5',  primary: '#10B981'  },
-  { id: 'rose-glass',      name: 'Blush Velvet',     desc: 'Romantic soft couture',           bg: '#FFF1F2', text: '#4C0519',  primary: '#E11D48'  },
-  { id: 'oceanic',         name: 'Deep Oceanic',     desc: 'Pacific horizon depth',           bg: '#082F49', text: '#F0F9FF',  primary: '#0EA5E9'  },
-  { id: 'terracotta',      name: 'Terra Cotta',      desc: 'Warm artisan earthenware',        bg: '#2C1810', text: '#FDF4EE',  primary: '#E2714A'  },
-  { id: 'midnight-cherry', name: 'Midnight Cherry',  desc: 'Sultry after-hours allure',       bg: '#1A0010', text: '#FFE4EF',  primary: '#D1006C'  },
-  { id: 'forest-sage',     name: 'Forest Sage',      desc: 'Scandinavian wellness calm',      bg: '#1C2B1E', text: '#E8F5E9',  primary: '#6DA86F'  },
-  { id: 'cosmic-purple',   name: 'Cosmic Purple',    desc: 'Deep space futurism',             bg: '#0D0719', text: '#EDE0FF',  primary: '#A855F7'  },
-  { id: 'warm-sand',       name: 'Warm Sand',        desc: 'Mediterranean coastal ease',      bg: '#FDF7F0', text: '#3D2B1F',  primary: '#C97B2E'  },
-  { id: 'neon-cyber',      name: 'Neon Cyber',       desc: 'Tokyo streetwear digital edge',   bg: '#0A0A14', text: '#E4E4F7',  primary: '#39FF14'  },
+  { id: 'apple-dark', name: 'Cupertino Dark', desc: "Apple's signature obsidian", bg: '#000000', text: '#F5F5F7', primary: '#2997FF' },
+  { id: 'apple-light', name: 'Cupertino Light', desc: 'Clean daylight silicon', bg: '#F5F5F7', text: '#1D1D1F', primary: '#0066CC' },
+  { id: 'stripe', name: 'Fintech Slate', desc: 'Bold financial confidence', bg: '#0A2540', text: '#FFFFFF', primary: '#635BFF' },
+  { id: 'luxury-gold', name: 'Maison Gold', desc: 'Parisian haute couture', bg: '#0A0A0A', text: '#FAFAFA', primary: '#D4AF37' },
+  { id: 'minimal-mono', name: 'Pure Minimal', desc: 'Zen typographic clarity', bg: '#FFFFFF', text: '#000000', primary: '#000000' },
+  { id: 'emerald', name: 'Emerald Isle', desc: 'Lush botanical luxury', bg: '#022C22', text: '#ECFDF5', primary: '#10B981' },
+  { id: 'rose-glass', name: 'Blush Velvet', desc: 'Romantic soft couture', bg: '#FFF1F2', text: '#4C0519', primary: '#E11D48' },
+  { id: 'oceanic', name: 'Deep Oceanic', desc: 'Pacific horizon depth', bg: '#082F49', text: '#F0F9FF', primary: '#0EA5E9' },
+  { id: 'terracotta', name: 'Terra Cotta', desc: 'Warm artisan earthenware', bg: '#2C1810', text: '#FDF4EE', primary: '#E2714A' },
+  { id: 'midnight-cherry', name: 'Midnight Cherry', desc: 'Sultry after-hours allure', bg: '#1A0010', text: '#FFE4EF', primary: '#D1006C' },
+  { id: 'forest-sage', name: 'Forest Sage', desc: 'Scandinavian wellness calm', bg: '#1C2B1E', text: '#E8F5E9', primary: '#6DA86F' },
+  { id: 'cosmic-purple', name: 'Cosmic Purple', desc: 'Deep space futurism', bg: '#0D0719', text: '#EDE0FF', primary: '#A855F7' },
+  { id: 'warm-sand', name: 'Warm Sand', desc: 'Mediterranean coastal ease', bg: '#FDF7F0', text: '#3D2B1F', primary: '#C97B2E' },
+  { id: 'neon-cyber', name: 'Neon Cyber', desc: 'Tokyo streetwear digital edge', bg: '#0A0A14', text: '#E4E4F7', primary: '#39FF14' },
 ]
 
 const TABS = [
-  { key: 'theme',    label: 'Palette',  icon: <Palette    size={18} /> },
+  { key: 'theme', label: 'Palette', icon: <Palette size={18} /> },
   { key: 'identity', label: 'Identity', icon: <LayoutTemplate size={18} /> },
-  { key: 'hours',    label: 'Hours',    icon: <Clock      size={18} /> },
+  { key: 'hours', label: 'Hours', icon: <Clock size={18} /> },
 ]
 
 export default function StoreSettingsPage() {
-  const [store,     setStore]      = useState<any>(null)
-  const [isLoading, setIsLoading]  = useState(false)
-  const [isFetching,setIsFetching] = useState(true)
-  const [activeTab, setActiveTab]  = useState<'theme' | 'identity' | 'hours'>('theme')
+  const [store, setStore] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
+  const [activeTab, setActiveTab] = useState<'theme' | 'identity' | 'hours'>('theme')
   const [showMobilePreview, setShowMobilePreview] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -47,15 +47,15 @@ export default function StoreSettingsPage() {
     working_days: [] as string[], opening_time: '', closing_time: '', delivery_hours: '',
   })
 
-  const [logoFile,      setLogoFile]      = useState<File | null>(null)
-  const [bannerFile,    setBannerFile]    = useState<File | null>(null)
-  const [logoPreview,   setLogoPreview]   = useState<string | null>(null)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res   = await api.get('/stores/manage/')
+        const res = await api.get('/stores/manage/')
         const stores = Array.isArray(res.data) ? res.data : res.data.results || []
         if (stores.length > 0) {
           const s = stores[0]
@@ -91,7 +91,7 @@ export default function StoreSettingsPage() {
         if (k === 'working_days') data.append(k, JSON.stringify(v))
         else data.append(k, v.toString())
       })
-      if (logoFile)   data.append('logo', logoFile)
+      if (logoFile) data.append('logo', logoFile)
       if (bannerFile) data.append('banner_image', bannerFile)
       await api.patch(`/stores/manage/${store.id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } })
       alert('Premium Storefront Updated!')
@@ -157,7 +157,7 @@ export default function StoreSettingsPage() {
           </div>
           <div className="px-3 mt-4 pb-6">
             <div className="grid grid-cols-2 gap-2">
-              {[1,2,3,4].map(i => (
+              {[1, 2, 3, 4].map(i => (
                 <div key={i} className="rounded-2xl overflow-hidden border shadow-sm"
                   style={{ borderColor: `${formData.secondary_color}10`, backgroundColor: `${formData.secondary_color}05` }}>
                   <div className="aspect-square bg-black/5 relative">
@@ -182,7 +182,7 @@ export default function StoreSettingsPage() {
     <AnimatePresence mode="wait">
       {activeTab === 'theme' && (
         <motion.div key="theme" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-8">
-          
+
           <div>
             <h2 className="text-base font-black text-gray-900 mb-4 flex items-center gap-2">
               <Palette size={16} className="text-gray-400" /> Designer Palette
@@ -304,7 +304,7 @@ export default function StoreSettingsPage() {
             <p className="text-sm text-gray-500 font-medium mb-5">Set your open days and trading hours.</p>
             <label className="block text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Open Days</label>
             <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-5">
-              {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(day => {
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
                 const checked = formData.working_days.includes(day)
                 return (
                   <button key={day} type="button"

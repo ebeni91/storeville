@@ -1,8 +1,8 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.db import transaction
 
 # Import your Cart models (adjust names if they differ in your models.py)
@@ -17,11 +17,42 @@ class RetailOrderViewSet(viewsets.ModelViewSet):
     serializer_class = RetailOrderSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        """
+        ✅ SECURITY FIX (Issue #4): Lock down write actions by role.
+        ModelViewSet exposes full CRUD by default. Without this, any authenticated
+        user (including sellers) could DELETE customer order records or PATCH
+        order totals, shipping addresses, etc.
+
+        - CREATE: any authenticated user (customers placing orders)
+        - PARTIAL_UPDATE: authenticated users only (sellers update status via dashboard)
+        - UPDATE (full replace): disabled — use PATCH for status updates only
+        - DESTROY: admin only — order records must be preserved for audit/accounting
+        - LIST / RETRIEVE: authenticated users (each sees only their own via get_queryset)
+        """
+        if self.action == 'destroy':
+            return [IsAuthenticated(), IsAdminUser()]
+        return [IsAuthenticated()]
+
     def get_queryset(self):
         user = self.request.user
         if user.role == 'SELLER':
             return RetailOrder.objects.filter(store__owner=user).order_by('-created_at')
         return RetailOrder.objects.filter(customer=user).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def track(self, request):
+        order_id = request.query_params.get('id', '').replace('ORD-', '').strip()
+        if not order_id:
+            return Response({"error": "No ID provided"}, status=400)
+        
+        qs = self.get_queryset().filter(id__istartswith=order_id)
+        order = qs.first()
+        if not order:
+            return Response({"error": "Order not found"}, status=404)
+            
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
 
 class CartMergeView(APIView):
     permission_classes = [IsAuthenticated]

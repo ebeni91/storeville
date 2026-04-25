@@ -1,6 +1,9 @@
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.utils.text import slugify
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from .models import RetailCategory, RetailProduct, RetailFavorite
 from .serializers import RetailCategorySerializer, RetailProductSerializer, RetailFavoriteSerializer
 from apps.stores.models import Store
@@ -37,9 +40,27 @@ class RetailCategoryViewSet(viewsets.ModelViewSet):
         if not store_id:
             raise ValidationError({'store_id': 'This field is required when creating a category.'})
         store = get_object_or_404(Store, id=store_id, owner=self.request.user)
-        serializer.save(store=store)
+
+        # ✅ FIX: Auto-generate slug from name. Handle unique_together conflicts
+        # by appending a counter (e.g. 'drinks', 'drinks-2', 'drinks-3').
+        name = self.request.data.get('name', '')
+        base_slug = slugify(name) or 'category'
+        slug = base_slug
+        counter = 2
+        while RetailCategory.objects.filter(store=store, slug=slug).exists():
+            slug = f'{base_slug}-{counter}'
+            counter += 1
+
+        serializer.save(store=store, slug=slug)
 
 
+@method_decorator(
+    # ✅ PERFORMANCE: Cache product list for 10 minutes. Products change rarely.
+    # Cache is keyed by URL so ?store_id= still returns store-specific results.
+    # Invalidate manually via Django cache API when a product is updated.
+    cache_page(60 * 10),
+    name='list'
+)
 class RetailProductViewSet(viewsets.ModelViewSet):
     serializer_class = RetailProductSerializer
     permission_classes = [IsStoreOwnerOrReadOnly]

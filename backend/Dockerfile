@@ -3,22 +3,21 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-# Default to production settings; override with DJANGO_SETTINGS_MODULE env var
-ENV DJANGO_SETTINGS_MODULE=config.settings.local
+# Default to production settings. Override with DJANGO_SETTINGS_MODULE=config.settings.local
+# in docker-compose.yml for local development — this prevents accidental prod deployment
+# with DEBUG=True or ALLOWED_HOSTS=['*'] if the env var is missing.
+ENV DJANGO_SETTINGS_MODULE=config.settings.production
 
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies (needed for psycopg2 / postgres)
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# NOTE: No apt-get step needed — we use psycopg2-binary which is pre-compiled
+# and bundles its own libpq. gcc/libpq-dev are only required for psycopg2 (source build).
 
-# Install python dependencies
+# Install python dependencies (with retries for flaky network)
 COPY requirements.txt /app/
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip --timeout 120 --retries 5 \
+    && pip install -r requirements.txt --timeout 120 --retries 5
 
 # Copy project
 COPY . /app/

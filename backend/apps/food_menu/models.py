@@ -28,7 +28,6 @@ class MenuItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='food_menu/images/', null=True, blank=True)
     
-    # Food-Specific Fields
     preparation_time_minutes = models.PositiveIntegerField(default=15, help_text="Estimated prep time")
     is_vegetarian = models.BooleanField(default=False)
     is_vegan = models.BooleanField(default=False)
@@ -39,8 +38,7 @@ class MenuItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        # ✅ FIX (Issue #26): Composite index for the most common menu query:
-        # "get all available items for store X" (used in food storefront).
+      
         indexes = [
             models.Index(fields=['store', 'is_available'], name='menu_item_store_available_idx'),
         ]

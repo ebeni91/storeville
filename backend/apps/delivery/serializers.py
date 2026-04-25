@@ -8,7 +8,7 @@ class DriverLocationSerializer(serializers.ModelSerializer):
         fields = ['current_latitude', 'current_longitude', 'is_available']
 
 class DeliverySerializer(serializers.ModelSerializer):
-    # We embed the order details so the driver knows what they are picking up
+
     order_detail = OrderSerializer(source='order', read_only=True)
     driver_name = serializers.CharField(source='driver.user.get_full_name', read_only=True)
     driver_phone = serializers.CharField(source='driver.user.phone_number', read_only=True)

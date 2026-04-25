@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.db import transaction
+from django.db.models import F
 from .models import RetailOrder, RetailOrderItem
 from apps.retail_catalog.models import RetailProduct
 
@@ -19,34 +21,53 @@ class RetailOrderSerializer(serializers.ModelSerializer):
         fields = ['id', 'store', 'status', 'total_amount', 'shipping_address', 'tracking_number', 'shipping_fee', 'created_at', 'items']
         read_only_fields = ['status', 'total_amount', 'tracking_number', 'shipping_fee']
 
+    @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         customer = self.context['request'].user
-        
+
+        # ✅ SECURITY FIX: Resolve and lock all products BEFORE creating the order.
+        # Using select_for_update() acquires a row-level lock in Postgres, preventing
+        # two concurrent transactions from both passing the stock check for the same unit.
+        product_ids = [item['product_id'] for item in items_data]
+        products = {
+            p.id: p
+            for p in RetailProduct.objects.select_for_update().filter(id__in=product_ids)
+        }
+
+        # ✅ DATA INTEGRITY FIX: Compute the total before creating the order record.
+        # This prevents an order from ever existing in the DB with total_amount=0.
         total = 0
-        order = RetailOrder.objects.create(customer=customer, **validated_data)
-        
+        resolved_items = []
         for item_data in items_data:
-            product = RetailProduct.objects.get(id=item_data['product_id'])
+            product = products.get(item_data['product_id'])
+            if not product:
+                raise serializers.ValidationError(f"Product {item_data['product_id']} not found.")
             quantity = item_data['quantity']
-            price = product.price
-            total += price * quantity
-            
-            # Create the order line item
+            if product.stock_quantity < quantity:
+                raise serializers.ValidationError(f"Not enough stock for '{product.name}'.")
+            total += product.price * quantity
+            resolved_items.append((product, quantity))
+
+        # Now create the order with the correct total in a single write.
+        order = RetailOrder.objects.create(
+            customer=customer,
+            total_amount=total,
+            **validated_data
+        )
+
+        # Create order items and deduct stock atomically using F() expressions.
+        # F() generates a SQL UPDATE that runs on the DB server — no Python read needed.
+        for product, quantity in resolved_items:
             RetailOrderItem.objects.create(
                 order=order,
                 product=product,
                 quantity=quantity,
-                price_at_time=price
+                price_at_time=product.price
             )
-            
-            # 🌟 Deduct from inventory stock
-            if product.stock_quantity >= quantity:
-                product.stock_quantity -= quantity
-                product.save()
-            else:
-                raise serializers.ValidationError(f"Not enough stock for {product.name}")
-        
-        order.total_amount = total
-        order.save()
+            # ✅ RACE CONDITION FIX: DB-level atomic decrement — immune to concurrent orders.
+            RetailProduct.objects.filter(pk=product.pk).update(
+                stock_quantity=F('stock_quantity') - quantity
+            )
+
         return order

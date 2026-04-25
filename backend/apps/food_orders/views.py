@@ -1,7 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.db import transaction
 
 from .models import FoodOrder, Cart, CartItem
@@ -13,11 +14,35 @@ class FoodOrderViewSet(viewsets.ModelViewSet):
     serializer_class = FoodOrderSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        """
+        ✅ SECURITY FIX (Issue #4): Lock down write actions by role.
+        Mirrors RetailOrderViewSet.get_permissions().
+        Sellers can update order status; only admins can delete order records.
+        """
+        if self.action == 'destroy':
+            return [IsAuthenticated(), IsAdminUser()]
+        return [IsAuthenticated()]
+
     def get_queryset(self):
         user = self.request.user
         if user.role == 'SELLER':
             return FoodOrder.objects.filter(store__owner=user).order_by('-created_at')
         return FoodOrder.objects.filter(customer=user).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def track(self, request):
+        order_id = request.query_params.get('id', '').replace('ORD-', '').strip()
+        if not order_id:
+            return Response({"error": "No ID provided"}, status=400)
+        
+        qs = self.get_queryset().filter(id__istartswith=order_id)
+        order = qs.first()
+        if not order:
+            return Response({"error": "Order not found"}, status=404)
+            
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
 
 class CartMergeView(APIView):
     permission_classes = [IsAuthenticated]

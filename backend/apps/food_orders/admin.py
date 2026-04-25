@@ -31,3 +31,16 @@ class FoodOrderAdmin(ModelAdmin):
     @display(description="ASAP", boolean=True)
     def show_asap(self, obj):
         return obj.is_asap
+
+from .models import Cart, CartItem
+
+class FoodCartItemInline(TabularInline):
+    model = CartItem
+    extra = 0
+
+@admin.register(Cart)
+class FoodCartAdmin(ModelAdmin):
+    list_display = ('id', 'user', 'store', 'updated_at')
+    list_filter = ('store',)
+    search_fields = ('user__username', 'store__name')
+    inlines = [FoodCartItemInline]

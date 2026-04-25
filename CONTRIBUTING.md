@@ -2,10 +2,10 @@
 
 ## Branch Strategy
 
-| Branch | Purpose | Auto-Deploys? |
-|--------|---------|---------------|
-| `main` | Production-ready code | ✅ Yes → Vercel + Render |
-| `dev`  | Active development & local testing | ❌ No |
+| Branch |          Purpose 
+|--------|------------------------|
+| `main` | Production-ready code 
+| `dev`  | Active development & local testing
 
 > **Rule:** Never commit directly to `main`. Always work on `dev` (or a feature branch), test locally, then merge to `main` when ready.
 

@@ -10,7 +10,7 @@ class User(AbstractUser):
         CUSTOMER = 'CUSTOMER', 'Customer'
         DRIVER = 'DRIVER', 'Driver'
     
-    # Security: UUIDs prevent ID enumeration (attackers guessing user IDs)
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
     # RBAC Core
@@ -29,15 +29,27 @@ class User(AbstractUser):
 class CustomerAddress(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
-    title = models.CharField(max_length=50, help_text="e.g., Home, Work")
-    address_text = models.TextField()
+    title = models.CharField(max_length=50, help_text="e.g., Home, Work", null=True, blank=True)
+    
+    # Extended Address Fields
+    contact_name = models.CharField(max_length=150, null=True, blank=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    address_line1 = models.CharField(max_length=255, null=True, blank=True)
+    address_line2 = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    zip_code = models.CharField(max_length=20, null=True, blank=True)
+    
+    # Legacy field
+    address_text = models.TextField(null=True, blank=True)
+    
     is_primary = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        # If this is set as primary, unset others for this user
+        
         if self.is_primary:
             CustomerAddress.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
         super().save(*args, **kwargs)

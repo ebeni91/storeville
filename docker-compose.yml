@@ -38,7 +38,15 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "8000:8000"
+      # ✅ SECURITY FIX: Bind to 127.0.0.1 only — prevents accidental public exposure
+      # on cloud VMs where docker-compose is used for staging. Nginx/proxy handles 
+      # external traffic; the Django dev server should never be directly reachable.
+      - "127.0.0.1:8000:8000"
+    environment:
+      # ✅ SECURITY FIX: Explicitly set local settings in dev compose.
+      # The Dockerfile now defaults to 'production'. We override here so dev
+      # containers still get DEBUG=True and relaxed CORS/ALLOWED_HOSTS.
+      - DJANGO_SETTINGS_MODULE=config.settings.local
     env_file:
       - .env
     depends_on:
@@ -46,6 +54,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    dns:
+      - 172.26.144.180
+      - 8.8.8.8
 
   frontend:
     build:
@@ -61,14 +72,16 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NODE_OPTIONS=--dns-result-order=ipv4first
     env_file:
       - .env
-    # ✅ FIX: Alpine Linux (used by node:22-alpine) drops external DNS packets
-    # locally. Explicitly set Google DNS so it can resolve oauth2.googleapis.com
-    # without EAI_AGAIN timeouts.
+    # ✅ FIX: Docker's embedded DNS forwards to 172.26.144.180 (the host's
+    # working DNS — confirmed via /etc/resolv.conf on the host machine).
+    # Previously used 8.8.8.8 which is blocked on this network, causing
+    # EAI_AGAIN / ESERVFAIL when Better Auth tries to reach oauth2.googleapis.com.
     dns:
+      - 172.26.144.180
       - 8.8.8.8
-      - 8.8.4.4
     depends_on:
       - backend
 

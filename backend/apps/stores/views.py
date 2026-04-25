@@ -19,8 +19,13 @@ logger = logging.getLogger(__name__)
 @method_decorator(
     # ✅ PERFORMANCE: Cache the discovery list for 5 minutes.
     # Store data changes rarely — no need to hit Postgres on every map load.
-    # Cache is keyed by URL (including ?type= query param) automatically.
     cache_page(60 * 5),
+    name='list'
+)
+@method_decorator(
+    # ✅ SECURITY FIX: Vary the cache key by Cookie header so authenticated users
+    # never receive a cached response intended for an anonymous user (or vice versa).
+    vary_on_headers('Cookie'),
     name='list'
 )
 class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -29,9 +34,17 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        # ✅ FIX: Explicit ordering and select_related for the new theme config
-        # to prevent N+1 queries while maintaining the flattened API response.
-        queryset = Store.objects.filter(is_active=True).select_related('theme_config').order_by('created_at')
+        # ✅ PERFORMANCE FIX (Issue #8): Removed select_related('theme_config') from the
+        # list queryset. The map discovery endpoint only needs store location, name, and slug —
+        # not the full theme config (colors, fonts, working hours, social links).
+        # select_related is kept on by_slug (single store detail) and StoreManagement
+        # where the theme data is actually rendered.
+        # Using .only() with verified concrete Store fields (is_open and primary_color
+        # live on StoreTheme, not Store — they were removed to fix FieldDoesNotExist).
+        queryset = Store.objects.filter(is_active=True).only(
+            'id', 'name', 'slug', 'store_type', 'latitude', 'longitude',
+            'city', 'logo', 'is_active', 'created_at', 'category', 'description',
+        ).order_by('created_at')
         store_type = self.request.query_params.get('type')
         if store_type:
             queryset = queryset.filter(store_type=store_type.upper())
@@ -88,12 +101,24 @@ class StoreManagementViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         # JIT Role Upgrade: Promote CUSTOMER → SELLER when they open their first store.
-        # ✅ FIX (Issue #21): Removed the fragile cross-schema raw SQL that updated
-        # BetterAuth's "user" table directly. The BetterAuthMiddleware already syncs
-        # roles on the next request via JIT user sync. This is the safe pattern.
         if user.role == 'CUSTOMER':
             user.role = 'SELLER'
             user.save(update_fields=['role'])
             logger.info(f"[StoreManagement] Promoted user {user.id} to SELLER on first store creation.")
+
+            # ✅ CRITICAL: Also update the Better Auth 'user' table.
+            # The frontend session reads role directly from Better Auth's Postgres table.
+            # If we only update the Django user, the BA session cookie still says CUSTOMER
+            # and the frontend will route them as a buyer even after promotion.
+            try:
+                from django.db import connection
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        'UPDATE "user" SET role = %s WHERE email = %s',
+                        ['SELLER', user.email]
+                    )
+                    logger.info(f"[StoreManagement] Synced SELLER role to Better Auth table for {user.email}.")
+            except Exception as e:
+                logger.error(f"[StoreManagement] Failed to sync role to Better Auth table: {e}")
 
         serializer.save(owner=user)

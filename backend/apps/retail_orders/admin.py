@@ -27,3 +27,16 @@ class RetailOrderAdmin(ModelAdmin):
     })
     def show_status(self, obj):
         return obj.status
+
+from .models import Cart, CartItem
+
+class RetailCartItemInline(TabularInline):
+    model = CartItem
+    extra = 0
+
+@admin.register(Cart)
+class RetailCartAdmin(ModelAdmin):
+    list_display = ('id', 'user', 'store', 'updated_at')
+    list_filter = ('store',)
+    search_fields = ('user__username', 'store__name')
+    inlines = [RetailCartItemInline]

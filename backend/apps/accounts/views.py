@@ -26,7 +26,7 @@ class SyncUserView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        # ✅ SECURITY FIX: Require a properly configured secret — no insecure defaults.
+    
         expected = os.environ.get('INTERNAL_SYNC_SECRET', '')
         if not expected or expected == 'dev-sync-secret':
             from django.core.exceptions import ImproperlyConfigured
@@ -36,7 +36,6 @@ class SyncUserView(APIView):
             )
 
         secret = request.headers.get('X-Internal-Secret', '')
-        # ✅ Timing-safe comparison prevents timing-based secret leakage
         import hmac as _hmac
         if not _hmac.compare_digest(secret, expected):
             logger.warning("[SyncUser] Rejected request with invalid X-Internal-Secret")
@@ -45,8 +44,16 @@ class SyncUserView(APIView):
         data = request.data
         email = data.get('email', '')
         name = data.get('name', '') or ''
-        role = data.get('role', 'CUSTOMER')
         phone = data.get('phone_number') or None
+
+        # 🔒 SECURITY FIX: Enforce a role allowlist for user registration.
+        # The Better Auth hook can send any role string. We must never allow
+        # a registration webhook to create a SUPER_ADMIN or STAFF account.
+        # New users from registration are always CUSTOMER — role is promoted
+        # later via the JIT upgrade flow in the middleware.
+        _REGISTRATION_ROLE_ALLOWLIST = {'CUSTOMER'}
+        requested_role = data.get('role', 'CUSTOMER')
+        role = requested_role if requested_role in _REGISTRATION_ROLE_ALLOWLIST else 'CUSTOMER'
 
         name_parts = name.split(' ', 1)
         first_name = name_parts[0] if len(name_parts) > 0 else ''
@@ -76,7 +83,7 @@ class SyncUserView(APIView):
             return Response({'status': 'ok', 'created': created}, status=200)
 
         except Exception as e:
-            # ✅ SECURITY FIX: Never expose raw exception strings to callers.
+            
             logger.error(f'[SyncUser] Failed to sync BA user: {e}', exc_info=True)
             return Response({'error': 'Internal server error'}, status=500)
 

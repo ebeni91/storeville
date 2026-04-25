@@ -172,13 +172,3 @@ class StoreTheme(models.Model):
 
     def __str__(self):
         return f"{self.store.name} Theme"
-
-
-# ── Signals ─────────────────────────────────────────────────────────
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-@receiver(post_save, sender=Store)
-def create_store_theme(sender, instance, created, **kwargs):
-    if created:
-        StoreTheme.objects.create(store=instance)

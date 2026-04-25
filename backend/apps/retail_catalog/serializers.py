@@ -5,6 +5,7 @@ class RetailCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = RetailCategory
         fields = ['id', 'name', 'slug']
+        read_only_fields = ['id', 'slug']
 
 class RetailProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)

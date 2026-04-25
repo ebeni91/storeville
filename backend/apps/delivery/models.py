@@ -16,7 +16,7 @@ class Delivery(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
-    # 🌟 The Split Architecture Keys
+ 
     retail_order = models.ForeignKey(RetailOrder, on_delete=models.CASCADE, related_name='deliveries', null=True, blank=True)
     food_order = models.ForeignKey(FoodOrder, on_delete=models.CASCADE, related_name='deliveries', null=True, blank=True)
     
@@ -28,7 +28,7 @@ class Delivery(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Smart property to fetch whichever order is active
+
     @property
     def order(self):
         return self.retail_order or self.food_order

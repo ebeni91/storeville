@@ -10,8 +10,15 @@ load_dotenv()
 # Since this file is in config/settings/, BASE_DIR points to the 'backend' folder
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fallback-insecure-key-for-dev')
+# SECURITY: SECRET_KEY must be set via environment. A fallback value would allow
+# anyone who reads this file to forge session cookies, CSRF tokens, and password
+# reset links. We fail immediately rather than silently run insecure.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError(
+        "CRITICAL: The DJANGO_SECRET_KEY environment variable is not set. "
+        "Set it to a long random string (e.g. `openssl rand -hex 64`) and try again."
+    )
 
 # Application definition
 INSTALLED_APPS = [
@@ -60,6 +67,9 @@ MIDDLEWARE = [
 from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-auth-zone',
+    # 🔒 CSRF GUARD: Allow the custom header our Next.js proxy injects.
+    # This must be listed here or the browser's CORS preflight will reject it.
+    'x-requested-from',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -176,7 +186,7 @@ LOGGING = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 🌟 THE BRIDGE: Trust the user resolved by BetterAuthMiddleware and skip CSRF checks
+        # 🌟 THE BRIDGE: Trust the user resolved by BetterAuthMiddleware
         'core.authentication.BetterAuthAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -185,6 +195,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'EXCEPTION_HANDLER': 'core.exceptions.enterprise_exception_handler',
+    # 🔒 RATE LIMITING: Protect every endpoint from brute force, scraping, and DoS.
+    # Anon rate covers unauthenticated users (map loads, store discovery).
+    # User rate covers authenticated users (order creation, cart operations).
+    # Override per-view with @throttle_classes([...]) for stricter limits on auth endpoints.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '120/minute',   # 2 req/sec for anonymous (storefront browsing)
+        'user': '600/minute',   # 10 req/sec for authenticated users
+    },
 }
 
 # better-auth server URL (the Next.js frontend)

@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 from .models import MenuCategory, MenuItem, MenuItemOption, MenuItemExtra, FoodFavorite
 from .serializers import MenuCategorySerializer, MenuItemSerializer, MenuItemOptionSerializer, MenuItemExtraSerializer, FoodFavoriteSerializer
 from apps.stores.models import Store
@@ -35,8 +36,12 @@ class MenuCategoryViewSet(viewsets.ModelViewSet):
         return MenuCategory.objects.none()
 
     def perform_create(self, serializer):
+        # ✅ SECURITY FIX (Issue #5): Require explicit store_id — never fall back to
+        # the first owned store, which could silently write to the wrong store.
         store_id = self.request.data.get('store_id')
-        store = Store.objects.filter(id=store_id, owner=self.request.user).first() if store_id else Store.objects.filter(owner=self.request.user).first()
+        if not store_id:
+            raise ValidationError({'store_id': 'This field is required when creating a category.'})
+        store = get_object_or_404(Store, id=store_id, owner=self.request.user)
         serializer.save(store=store)
 
 
@@ -53,8 +58,11 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         return MenuItem.objects.none()
 
     def perform_create(self, serializer):
+        # ✅ SECURITY FIX (Issue #5): Same as MenuCategoryViewSet — require explicit store_id.
         store_id = self.request.data.get('store_id')
-        store = Store.objects.filter(id=store_id, owner=self.request.user).first() if store_id else Store.objects.filter(owner=self.request.user).first()
+        if not store_id:
+            raise ValidationError({'store_id': 'This field is required when creating a menu item.'})
+        store = get_object_or_404(Store, id=store_id, owner=self.request.user)
         serializer.save(store=store)
 
 
@@ -69,7 +77,10 @@ class MenuItemOptionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         item_id = self.kwargs.get('item_pk')
-        menu_item = MenuItem.objects.get(id=item_id)
+        # ✅ SECURITY FIX (Issue #2): Validate store ownership via the menu item chain.
+        # Without store__owner check, Seller A could add options to Seller B's menu items (IDOR).
+        # get_object_or_404 also returns 404 (not 500) for invalid/missing item IDs.
+        menu_item = get_object_or_404(MenuItem, id=item_id, store__owner=self.request.user)
         serializer.save(menu_item=menu_item)
 
 
@@ -84,7 +95,8 @@ class MenuItemExtraViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         item_id = self.kwargs.get('item_pk')
-        menu_item = MenuItem.objects.get(id=item_id)
+        # ✅ SECURITY FIX (Issue #2): Same ownership guard as MenuItemOptionViewSet.
+        menu_item = get_object_or_404(MenuItem, id=item_id, store__owner=self.request.user)
         serializer.save(menu_item=menu_item)
 
 

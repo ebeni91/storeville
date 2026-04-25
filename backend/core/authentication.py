@@ -22,7 +22,23 @@ class BetterAuthAuthentication(authentication.BaseAuthentication):
 
     def enforce_csrf(self, request):
         """
-        By overriding this and doing nothing, we tell DRF to skip CSRF checks
-        for requests using this authentication class.
+        CSRF guard via custom header validation.
+
+        The Next.js proxy (/api/proxy/[...path]/route.ts) injects
+        'X-Requested-From: storeville-proxy' on every forwarded request.
+        Browsers cannot set custom headers in cross-origin requests without a
+        CORS preflight — which Django rejects for non-allowed origins.
+        Therefore, any request reaching Django without this header is either:
+          a) A direct cross-origin attack (CSRF)
+          b) A mis-configured client
+        Both cases are rejected with 403.
+
+        Safe methods (GET, HEAD, OPTIONS) are exempt as they carry no side effects.
         """
-        return
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return  # Read-only requests are always safe
+        if request.META.get('HTTP_X_REQUESTED_FROM') != 'storeville-proxy':
+            raise exceptions.PermissionDenied(
+                "Missing or invalid CSRF guard header. "
+                "All state-mutating requests must originate from the StoreVille proxy."
+            )

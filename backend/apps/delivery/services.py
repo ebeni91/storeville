@@ -14,7 +14,6 @@ class DeliveryService:
         if order.delivery_method in [Order.DeliveryMethod.PICKUP]:
             raise ValueError("This order is marked for customer pickup.")
 
-        # Create the initial delivery record
         delivery = Delivery.objects.create(
             order=order,
             pickup_latitude=order.store.latitude,
@@ -34,11 +33,11 @@ class DeliveryService:
             delivery.status = Delivery.Status.ASSIGNED
             delivery.save()
             
-            # Mark driver as unavailable so they don't get double-booked
+            
             nearest_driver.is_available = False
             nearest_driver.save()
 
-            # Update core order status
+           
             order.status = Order.Status.OUT_FOR_DELIVERY
             order.save()
 

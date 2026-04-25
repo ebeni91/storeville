@@ -67,3 +67,16 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 
 # 🌟 CRITICAL: Django expects the exact origin to be explicitly trusted for POST requests
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
+
+# ── Security Headers ─────────────────────────────────────────────────────────
+# These headers instruct the browser to enforce HTTPS, prevent clickjacking,
+# and block MIME-type sniffing attacks.
+SECURE_HSTS_SECONDS = 31536000          # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+# Tell Django to trust the X-Forwarded-Proto header set by Nginx.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Redirect http:// → https:// at the Django layer (belt-and-suspenders with Nginx).
+SECURE_SSL_REDIRECT = True

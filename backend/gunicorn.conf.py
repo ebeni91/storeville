@@ -17,8 +17,12 @@ workers = int(
 # ✅ sync: Simple, battle-tested, one request at a time per worker.
 # gevent causes Django ORM thread-sharing errors (DatabaseWrapper thread mismatch).
 # On the free tier with WEB_CONCURRENCY=1, there is zero performance difference.
-worker_class = "sync"
-threads = int(os.environ.get("GUNICORN_THREADS", 2))  # sync workers benefit from threads
+# ✅ FIX (Issue #13): Changed from sync+threads to gthread.
+# The sync worker with threads=2 caused Django ORM thread-safety issues:
+# "DatabaseWrapper objects created in a thread can only be used in that same thread."
+# gthread is explicitly built for threaded workers and handles DB connections correctly.
+worker_class = "gthread"
+threads = int(os.environ.get("GUNICORN_THREADS", 2))  # gthread handles threads correctly
 worker_connections = 10
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", 120))
 keepalive = 2

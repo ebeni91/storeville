@@ -18,7 +18,7 @@ urlpatterns = [
     # Active App Routes
     path('api/accounts/', include('apps.accounts.urls')),
     path('api/stores/', include('apps.stores.urls')),
-   path('api/retail/', include('apps.retail_catalog.urls')),
+    path('api/retail/', include('apps.retail_catalog.urls')),
     path('api/food/', include('apps.food_menu.urls')),
     path('api/orders/retail/', include('apps.retail_orders.urls')),
     path('api/orders/food/', include('apps.food_orders.urls')),

@@ -103,7 +103,7 @@ export function AuthScreen({ navigation }: Props) {
 
       const { error } = await authClient.signIn.social({
         provider: 'google',
-        idToken: { token: idToken },
+        idToken: idToken, // Fix: pass the string directly, not { token: idToken }
       });
 
       if (error) throw new Error(error.message);

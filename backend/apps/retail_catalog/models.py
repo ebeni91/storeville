@@ -30,8 +30,10 @@ class RetailProduct(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='retail_catalog/images/', null=True, blank=True)
     
-    # Retail-Specific Fields
-    sku = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    # ✅ FIX (Issue #10): SKU uniqueness must be scoped per store, not platform-wide.
+    # Global unique=True caused IntegrityError for Seller B if Seller A already used
+    # the same SKU string. Enforced per-store via UniqueConstraint (see Meta below).
+    sku = models.CharField(max_length=100, blank=True, null=True)
     stock_quantity = models.PositiveIntegerField(default=0)
     weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     
@@ -40,10 +42,15 @@ class RetailProduct(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        # ✅ FIX (Issue #26): Composite index for the most common query pattern:
-        # "get all active products for store X" (used in storefront & seller dashboard).
         indexes = [
             models.Index(fields=['store', 'is_active'], name='retail_prod_store_active_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['store', 'sku'],
+                condition=models.Q(sku__isnull=False),
+                name='unique_sku_per_store',
+            )
         ]
 
     def __str__(self):

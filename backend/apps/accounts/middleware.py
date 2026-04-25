@@ -71,11 +71,21 @@ class BetterAuthMiddleware:
         suffix to the cookie for extra tamper-resistance. Because our DB lookup
         already validates the token (expired check + existence check), we can
         safely strip the suffix here and let the DB be the security gate.
+
+        We also validate the token format to reject obviously malformed or
+        oversized cookies before they reach the database.
         """
-        if '.' not in raw_cookie:
-            return raw_cookie
-        # The token is everything before the last '.'
-        return raw_cookie[:raw_cookie.rfind('.')]
+        token = raw_cookie[:raw_cookie.rfind('.')] if '.' in raw_cookie else raw_cookie
+
+        # Defence-in-depth: reject tokens that are clearly malformed before DB hit.
+        # Valid Better Auth tokens are alphanumeric + hyphens, max 256 chars.
+        if not token or len(token) > 256:
+            return ''
+        if not all(c.isalnum() or c in ('-', '_') for c in token):
+            logger.warning("[BetterAuth] Rejected malformed session token (invalid characters).")
+            return ''
+
+        return token
 
 
     def _get_auth_data(self, token: str) -> dict | None:
@@ -129,16 +139,33 @@ class BetterAuthMiddleware:
             if not user:
                 # JIT creation — new BA user hitting an API endpoint for the first time.
                 name_parts = data.get('name', '').split(' ', 1)
-                user = User.objects.create(
-                    username=username,
-                    email=email or '',
-                    first_name=name_parts[0] if len(name_parts) > 0 else '',
-                    last_name=name_parts[1] if len(name_parts) > 1 else '',
-                    role=data.get('role', 'CUSTOMER'),
-                    phone_number=phone
-                )
-                user.set_unusable_password()
-                user.save()
+                try:
+                    user = User.objects.create(
+                        username=username,
+                        email=email or '',
+                        first_name=name_parts[0] if len(name_parts) > 0 else '',
+                        last_name=name_parts[1] if len(name_parts) > 1 else '',
+                        role=data.get('role', 'CUSTOMER'),
+                        phone_number=phone
+                    )
+                    user.set_unusable_password()
+                    user.save()
+                except Exception as integrity_exc:
+                    # ✅ FIX (Issue #9): Guard against concurrent first-login race condition.
+                    # Two simultaneous requests (e.g. user opens two tabs) both pass the
+                    # `if not user` check before either commits. The second create() raises
+                    # IntegrityError on the unique email/username constraint.
+                    # Re-query to retrieve the user that the winning request already created.
+                    logger.warning(
+                        f"[BetterAuth] JIT user creation conflict for {username} — "
+                        f"likely a concurrent login. Re-querying. ({integrity_exc})"
+                    )
+                    user = (
+                        User.objects.filter(email=email).first()
+                        if email else
+                        User.objects.filter(username=username).first()
+                    )
+
             else:
                 # Role sync: only promote, never demote. Protect staff/admin roles.
                 new_role = data.get('role', 'CUSTOMER')

@@ -131,11 +131,11 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
       <button
         onClick={locateUser}
         disabled={isLocating}
-        className="absolute bottom-24 right-4 md:bottom-10 md:right-6 z-[2000] bg-black/40 backdrop-blur-md p-3 md:p-3.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:bg-black/60 active:scale-95 transition-all text-white border border-white/20"
+        className="absolute bottom-24 right-4 md:bottom-10 md:right-6 z-[2000] bg-black p-3 md:p-3.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:bg-gray-900 active:scale-95 transition-all text-white border border-white/20"
         style={{ isolation: 'isolate' }}
         aria-label="Locate me"
       >
-        <LocateFixed size={20} className={isLocating ? 'animate-spin text-gray-900' : ''} />
+        <LocateFixed size={20} className={isLocating ? 'animate-spin opacity-50' : 'text-white'} />
       </button>
 
       <MapContainer

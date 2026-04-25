@@ -14,58 +14,48 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
   const user = session?.user
-  
-  // Use a local verified state to prevent "flicker" redirects during client hydration
-  const [isVerified, setIsVerified] = useState(false)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    if (isPending) return;
+    // While the BA client is still fetching the session, hold on the loader.
+    if (isPending) return
 
-    // If no session exists after loading finish, strictly check if we should redirect.
-    // We add a tiny delay or check to ensure we don't bounce a user who is currently
-    // in the middle of a valid middleware-authorized load.
-    if (!session) {
-      // ONLY redirect to login if we are absolutely sure there is no session.
-      // If the middleware let us in, there IS a session cookie. 
-      // If BA library doesn't see it, it might be a hydration delay.
-      const redirectTimer = setTimeout(() => {
-        if (!session) router.replace('/login')
-      }, 1500)
-      return () => clearTimeout(redirectTimer)
-    } 
-    
-    // Check roles
-    if (allowedRoles && user) {
+    if (session && user) {
       const userRole = (user as any).role
-      if (!allowedRoles.includes(userRole)) {
-        if (userRole === 'SELLER') router.replace('/dashboard/seller')
-        else if (userRole === 'DRIVER') router.replace('/dashboard/driver')
-        else router.replace('/')
-      } else {
-        setIsVerified(true)
+      // Correct role — render the children
+      if (!allowedRoles || allowedRoles.includes(userRole)) {
+        setIsReady(true)
+        return
       }
-    } else if (session) {
-      setIsVerified(true)
+      // Wrong role for this page — redirect to correct destination
+      if (userRole === 'SELLER') router.replace('/dashboard/seller')
+      else if (userRole === 'DRIVER') router.replace('/dashboard/driver')
+      else router.replace('/')
+      return
     }
-  }, [session, isPending, user, router, allowedRoles])
 
-  // While pending or before verification is confirmed, show the loader.
-  // This prevents the page from rendering half-broken states that might trigger more redirects.
-  if (isPending || (!isVerified && session)) {
+    // session is null after loading finished.
+    // IMPORTANT: Do NOT immediately redirect to /login here.
+    // The middleware (which runs server-side) already guarantees that only
+    // authenticated users reach protected routes. If useSession() returns null
+    // it is almost always a transient race condition (Render cold start, BA
+    // hydration delay, etc). We simply stay on the loading screen.
+    // The only way to get to /login is a true session expiry, which the
+    // middleware will handle on the next navigation automatically.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, isPending, user])
+
+  if (!isReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
         <div className="relative">
           <div className="w-16 h-16 border-4 border-gray-100 border-t-gray-900 rounded-full animate-spin" />
           <Loader2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-900 animate-pulse" size={24} />
         </div>
-        <p className="mt-6 text-gray-400 font-bold text-xs uppercase tracking-[0.2em] animate-pulse">Syncing Secure Session...</p>
+        <p className="mt-6 text-gray-400 font-bold text-xs uppercase tracking-[0.2em] animate-pulse">Loading...</p>
       </div>
     )
   }
-
-  // Final check: if we finished loading and definitely have no session (and the timer above hasn't kicked in yet),
-  // return null to prevent rendering protected children.
-  if (!session) return null;
 
   return <>{children}</>
 }

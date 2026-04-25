@@ -13,8 +13,10 @@ export default function SmartProductsPage() {
 
   // Form States
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [formData, setFormData] = useState<any>({})
+  const [categoryName, setCategoryName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Advanced Options & Extras
@@ -121,7 +123,7 @@ export default function SmartProductsPage() {
       const submitData = new FormData()
       Object.keys(formData).forEach(key => {
         // Skip purely readonly / generic fields from the API we shouldn't send back
-        if (key === 'category_name' || key === 'id' || key === 'created_at' || key === 'updated_at') return;
+        if (key === 'category_name' || key === 'id' || key === 'created_at' || key === 'updated_at' || key === 'store') return;
         
         // If image is still a String URL, don't append it! Django ImageField expects File objects only on upload
         if (key === 'image' && typeof formData[key] === 'string') return;
@@ -135,6 +137,9 @@ export default function SmartProductsPage() {
           }
         }
       })
+
+      // ALWAYS SEND store_id so backend IDOR checks and assignment works perfectly.
+      submitData.append('store_id', store.id)
 
       // Attach Options and Extras as JSON arrays
       if (pendingOptions.length > 0) submitData.append('options', JSON.stringify(pendingOptions))
@@ -162,6 +167,23 @@ export default function SmartProductsPage() {
       window.location.reload()
     } catch (err) {
       alert("Failed to delete item.")
+    }
+  }
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!categoryName.trim()) return;
+    setIsSubmitting(true)
+    try {
+      const endpoint = store.store_type === 'FOOD' ? '/food/categories/' : '/retail/categories/'
+      await api.post(endpoint, { name: categoryName.trim(), store_id: store.id })
+      setIsCategoryModalOpen(false)
+      window.location.reload()
+    } catch (err) {
+      console.error(err)
+      alert("Failed to create category.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
   
@@ -196,14 +218,19 @@ export default function SmartProductsPage() {
 
   return (
     <div className="p-4 md:p-8 lg:p-12 pb-32 max-w-[1600px] mx-auto relative z-10">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="flex justify-between items-end mb-12">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-5 md:gap-4 w-full">
         <div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter mb-2">{isFood ? 'Menu Manager' : 'Inventory Manager'}</h1>
-          <p className="text-gray-600 font-semibold text-lg">{isFood ? 'Manage your dishes, prep times, and dietary tags.' : 'Manage your products, SKUs, and stock levels.'}</p>
+          <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter mb-1 md:mb-2">{isFood ? 'Menu Manager' : 'Inventory Manager'}</h1>
+          <p className="text-gray-600 font-semibold text-sm md:text-lg">{isFood ? 'Manage your dishes, prep times, and dietary tags.' : 'Manage your products, SKUs, and stock levels.'}</p>
         </div>
-        <button onClick={handleOpenCreate} className="bg-gray-900 text-white px-7 py-3.5 rounded-full text-sm font-black tracking-widest uppercase hover:bg-black hover:shadow-[0_8px_25px_rgba(0,0,0,0.2)] transition-all flex items-center gap-2 transform hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(0,0,0,0.12)]">
-          <Plus size={18} /> {isFood ? 'Add Dish' : 'Add Product'}
-        </button>
+        <div className="flex flex-row md:flex-row items-center gap-3 w-full md:w-auto">
+          <button onClick={() => setIsCategoryModalOpen(true)} className="flex-1 md:flex-none justify-center bg-white text-gray-900 border border-gray-200 px-4 md:px-6 py-3.5 rounded-2xl md:rounded-full text-xs md:text-sm font-black tracking-widest uppercase hover:bg-gray-50 transition-all shadow-sm">
+            Add Category
+          </button>
+          <button onClick={handleOpenCreate} className="flex-1 md:flex-none justify-center bg-gray-900 text-white px-4 md:px-7 py-3.5 rounded-2xl md:rounded-full text-xs md:text-sm font-black tracking-widest uppercase hover:bg-black hover:shadow-[0_8px_25px_rgba(0,0,0,0.2)] transition-all flex items-center gap-2 transform hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(0,0,0,0.12)] whitespace-nowrap">
+            <Plus size={16} className="md:w-[18px] md:h-[18px]" /> {isFood ? 'Add Dish' : 'Add Product'}
+          </button>
+        </div>
       </motion.div>
 
       {/* ITEMS — Grouped by Category */}
@@ -224,21 +251,22 @@ export default function SmartProductsPage() {
         })
         return Object.entries(grouped).map(([catName, catItems], groupIdx) => (
           <motion.div key={catName} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: groupIdx * 0.06 }} className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden mb-6">
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100/80 bg-gray-50/60">
-              <h2 className="text-sm font-black text-gray-900 tracking-tight">{catName}</h2>
-              <span className="text-[10px] font-black uppercase tracking-widest bg-white px-2.5 py-1 rounded-full border border-gray-200 text-gray-600 shadow-sm">{catItems.length} {catItems.length === 1 ? 'item' : 'items'}</span>
+            <div className="flex items-center gap-3 px-5 py-3 md:px-6 md:py-4 border-b border-gray-100/80 bg-gray-50/60">
+              <h2 className="text-xs md:text-sm font-black text-gray-900 tracking-tight">{catName}</h2>
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest bg-white px-2.5 py-1 rounded-full border border-gray-200 text-gray-600 shadow-sm">{catItems.length} {catItems.length === 1 ? 'item' : 'items'}</span>
             </div>
-            <table className="w-full text-left">
-              <thead className="bg-gray-50/30 border-b border-gray-100/50">
-                <tr>
-                  <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Item</th>
-                  <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Price</th>
-                  {isFood ? (<><th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell">Prep</th><th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell">Tags</th></>) : (<><th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell">SKU</th><th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell">Stock</th></>)}
-                  <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  <th className="p-4" />
-                </tr>
-              </thead>
-              <motion.tbody variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100/50">
+            <div className="overflow-x-auto w-full scrollbar-none">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50/30 border-b border-gray-100/50">
+                  <tr>
+                    <th className="p-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Item</th>
+                    <th className="p-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Price</th>
+                    {isFood ? (<><th className="p-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell whitespace-nowrap">Prep</th><th className="p-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell whitespace-nowrap">Tags</th></>) : (<><th className="p-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell whitespace-nowrap">SKU</th><th className="p-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell whitespace-nowrap">Stock</th></>)}
+                    <th className="p-4 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Status</th>
+                    <th className="p-4 whitespace-nowrap" />
+                  </tr>
+                </thead>
+                <motion.tbody variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100/50">
                 {catItems.map((item) => {
                   const isActive = isFood ? item.is_available : item.is_active
                   return (
@@ -261,22 +289,23 @@ export default function SmartProductsPage() {
                           <td className="p-4 hidden md:table-cell"><span className={`px-3 py-1.5 rounded-xl border font-black text-xs shadow-sm ${item.stock_quantity > 5 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{item.stock_quantity}</span></td>
                         </>
                       )}
-                      <td className="p-4"><button onClick={() => toggleVisibility(item)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border shadow-sm transition-all hover:-translate-y-0.5 ${isActive ? 'bg-gray-100 text-gray-900 border-gray-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{isActive ? 'Active' : 'Hidden'}</button></td>
-                      <td className="p-4"><div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleOpenEdit(item)} className="p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-gray-900 transition-colors"><Edit size={15} /></button><button onClick={() => handleDelete(item.id)} className="p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={15} /></button></div></td>
+                      <td className="p-4 whitespace-nowrap"><button onClick={() => toggleVisibility(item)} className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border shadow-sm transition-all hover:-translate-y-0.5 ${isActive ? 'bg-gray-100 text-gray-900 border-gray-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{isActive ? 'Active' : 'Hidden'}</button></td>
+                      <td className="p-4 whitespace-nowrap"><div className="flex items-center justify-end gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleOpenEdit(item)} className="p-2 md:p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-gray-900 transition-colors"><Edit size={14} className="md:w-[15px] md:h-[15px]"/></button><button onClick={() => handleDelete(item.id)} className="p-2 md:p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={14} className="md:w-[15px] md:h-[15px]"/></button></div></td>
                     </motion.tr>
                   )
                 })}
               </motion.tbody>
             </table>
+            </div>
           </motion.div>
         ))
       })()}
 
       {/* MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
-            <h2 className="text-3xl font-black mb-8 tracking-tight text-gray-900">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center md:p-4">
+          <div className="bg-white w-full h-full md:h-auto md:max-w-2xl rounded-none md:rounded-[2rem] p-6 md:p-8 shadow-2xl max-h-[100vh] md:max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200 pt-10 md:pt-8">
+            <h2 className="text-2xl md:text-3xl font-black mb-6 md:mb-8 tracking-tight text-gray-900">
               {editingItemId ? (isFood ? 'Edit Dish' : 'Edit Product') : (isFood ? 'New Menu Item' : 'New Product')}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -441,6 +470,26 @@ export default function SmartProductsPage() {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-black tracking-widest uppercase text-xs hover:bg-gray-200 transition-colors">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="flex-[2] py-4 bg-gray-900 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-xl shadow-[0_8px_20px_rgba(17,24,39,0.2)] hover:bg-black hover:scale-[1.02] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:hover:scale-100">
                   {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : (editingItemId ? 'Update Item' : 'Save Item')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* CATEGORY MODAL */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-0 md:p-4">
+          <div className="bg-white w-full max-w-md rounded-t-[2rem] md:rounded-[2rem] p-6 md:p-8 shadow-2xl relative animate-in slide-in-from-bottom-5 md:zoom-in-95 duration-200">
+            <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-6 tracking-tight text-gray-900">New Category</h2>
+            <form onSubmit={handleCreateCategory} className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Category Name</label>
+                <input required type="text" value={categoryName} onChange={e => setCategoryName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all" placeholder="e.g. Beverages, Starters" />
+              </div>
+              <div className="flex gap-4 pt-4 border-t border-gray-100 mt-6">
+                <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-black tracking-widest uppercase text-xs hover:bg-gray-200 transition-colors">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-xl shadow-[0_8px_20px_rgba(17,24,39,0.2)] hover:bg-black hover:scale-[1.02] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:hover:scale-100">
+                  {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : 'Save Category'}
                 </button>
               </div>
             </form>

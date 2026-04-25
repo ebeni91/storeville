@@ -15,7 +15,11 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   // ✅ FIX: External databases (like Render) require SSL when connected from Vercel.
-  ssl: { rejectUnauthorized: false },
+  // Locally, the standard postgres Docker container does not support SSL.
+  // We use npm start (production mode) inside Docker, so we must check the DB host instead of NODE_ENV.
+  ssl: process.env.DATABASE_URL?.includes('@postgres:5432') || process.env.DATABASE_URL?.includes('@localhost:')
+    ? undefined 
+    : { rejectUnauthorized: false },
   // Limit connections so Vercel edge functions don't exhaust Postgres
   max: 10,
   idleTimeoutMillis: 30_000,

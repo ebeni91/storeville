@@ -21,6 +21,7 @@ export default function ProductDetailPage() {
 
   const [store, setStore] = useState<any>(null)
   const [product, setProduct] = useState<any>(null)
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
@@ -40,18 +41,25 @@ export default function ProductDetailPage() {
     const fetchData = async () => {
       try {
         // Fetch store info first to identify type
-        const storeRes = await api.get(`/stores/discover/?slug=${subdomain}`)
-        const storeList = storeRes.data?.results || storeRes.data || []
-        if (!storeList.length) { setIsLoading(false); return }
-        const s = storeList[0]
+        const storeRes = await api.get(`/stores/discovery/by_slug/?slug=${subdomain}`)
+        const s = storeRes.data
+        if (!s) { setIsLoading(false); return }
         setStore(s)
 
         // Fetch product based on store type
         const endpoint = s.store_type === 'FOOD'
-          ? `/food/items/${productId}/`
-          : `/retail/products/${productId}/`
+          ? `/food/items/${productId}/?store_id=${s.id}`
+          : `/retail/products/${productId}/?store_id=${s.id}`
         const prodRes = await api.get(endpoint)
         setProduct(prodRes.data)
+
+        // Fetch recommended
+        const recEndpoint = s.store_type === 'FOOD'
+          ? `/food/items/?store_id=${s.id}`
+          : `/retail/products/?store_id=${s.id}`
+        const recRes = await api.get(recEndpoint)
+        const allProducts = recRes.data?.results || recRes.data || []
+        setRecommendedProducts(allProducts.filter((p: any) => String(p.id) !== String(productId)).slice(0, 10))
       } catch (err) {
         console.error(err)
       } finally {
@@ -321,6 +329,32 @@ export default function ProductDetailPage() {
             </div>
           </div>
         )}
+        
+        {/* ── RECOMMENDED PRODUCTS ── */}
+        {recommendedProducts.length > 0 && (
+          <div className="mt-12 mb-6 border-t pt-8" style={{ borderColor: `rgba(${textRgb}, 0.08)` }}>
+            <h3 className="font-black text-xl tracking-tight mb-4">More from this store</h3>
+            <div className="flex overflow-x-auto gap-4 pb-4 snap-x [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+              {recommendedProducts.map(p => (
+                <div 
+                  key={p.id} 
+                  onClick={() => router.push(`/store/${subdomain}/product/${p.id}`)}
+                  className="min-w-[160px] md:min-w-[200px] cursor-pointer snap-start rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group border"
+                  style={{ borderColor: `rgba(${textRgb}, 0.08)`, backgroundColor: `rgba(${textRgb}, 0.02)` }}
+                >
+                  <div className="w-full aspect-[4/5] bg-black/5 overflow-hidden">
+                    {p.image ? <img src={p.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center opacity-10"><ShoppingBag size={32} /></div>}
+                  </div>
+                  <div className="p-3 bg-white/40 backdrop-blur-sm" style={{ backgroundColor: `rgba(${bgRgb}, 0.6)` }}>
+                    <h4 className="font-bold text-sm tracking-tight line-clamp-1 mb-1">{p.name}</h4>
+                    <p className="font-black text-sm" style={{ color: store.primary_color }}>Br {parseFloat(p.price).toFixed(2)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* ── STICKY BOTTOM BAR ── */}

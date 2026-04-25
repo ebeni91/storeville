@@ -96,21 +96,27 @@ export default function ProfileDropdown({ isOpen, onClose, onSignOut, userEmail,
 
             <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-900/20">
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: hoverBg }}></div>
-              <ShoppingBag size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 
-              <span className="relative z-10">My Orders</span>
+              <User size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 
+              <span className="relative z-10">My Dashboard</span>
             </button>
 
-            <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-900/20">
+            <button onClick={() => { router.push('/profile?tab=track_order'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-900/20">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: hoverBg }}></div>
+              <MapPin size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 
+              <span className="relative z-10">Track Order</span>
+            </button>
+
+            {/* <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-900/20">
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: hoverBg }}></div>
               <Heart size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 
               <span className="relative z-10">Wishlist</span>
-            </button>
+            </button> */}
 
-            <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-900/20">
+            {/* <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-900/20">
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: hoverBg }}></div>
               <MapPin size={18} className="relative z-10 transition-opacity" style={{ color: subtleTextColor }} /> 
               <span className="relative z-10">My Addresses</span>
-            </button>
+            </button> */}
 
             <button onClick={() => { router.push('/profile'); onClose(); }} className="w-full text-left px-3 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-gray-900/20">
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: hoverBg }}></div>

@@ -13,29 +13,47 @@ interface MapCoreProps {
   onStoreClick?: (store: Store) => void
 }
 
-// Fits the map viewport to show all stores (+user dot if available)
-function MapController({ stores, userLoc }: { stores?: Store[], userLoc: [number, number] | null }) {
+// Fits the map viewport upon initialization or explicit user locate requests
+function MapController({ stores, userLoc, locateTrigger }: { stores?: Store[], userLoc: [number, number] | null, locateTrigger: number }) {
   const map = useMap()
-  useEffect(() => {
-    const validCoords: [number, number][] = (stores || [])
-      .filter(s => s.latitude && s.longitude)
-      .map(s => [Number(s.latitude), Number(s.longitude)])
+  const [hasInit, setHasInit] = useState(false)
 
-    if (validCoords.length > 0) {
-      const bounds = L.latLngBounds(validCoords)
-      if (userLoc) bounds.extend(userLoc)
-      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14, animate: true, duration: 1.2 })
-    } else if (userLoc) {
-      map.flyTo(userLoc, 13, { animate: true, duration: 1.2 })
+  // System Initialization Center
+  useEffect(() => {
+    if (!hasInit && stores !== undefined) {
+      if (userLoc) {
+        // Platform focuses on local discovery: target ~15-20km radius around user
+        map.flyTo(userLoc, 13, { animate: true, duration: 1.2 })
+        setHasInit(true)
+      } else if (stores.length > 0) {
+        // Fallback: View all currently discovered stores platform-wide
+        const validCoords: [number, number][] = stores
+          .filter(s => s.latitude && s.longitude)
+          .map(s => [Number(s.latitude), Number(s.longitude)])
+
+        if (validCoords.length > 0) {
+          const bounds = L.latLngBounds(validCoords)
+          map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14, animate: true, duration: 1.2 })
+        }
+        setHasInit(true)
+      }
     }
-  }, [stores, userLoc, map])
+  }, [stores, userLoc, map, hasInit])
+
+  // Explicit User Hardware Location Request
+  useEffect(() => {
+    if (locateTrigger > 0 && userLoc) {
+      map.flyTo(userLoc, 14, { animate: true, duration: 1.2 }) // Zoom in slightly closer on direct prompt
+    }
+  }, [locateTrigger, userLoc, map])
+
   return null
 }
 
 export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps) {
-  // null until geolocation resolves — never hardcoded
   const [userLoc, setUserLoc] = useState<[number, number] | null>(null)
   const [isLocating, setIsLocating] = useState(false)
+  const [locateTrigger, setLocateTrigger] = useState(0)
 
   const isFood = mode === 'food'
   const accentColor = isFood ? '#f97316' : '#111827'
@@ -58,9 +76,6 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
       const response = await api.get(`/stores/discovery/?type=${storeType}`)
       return (response.data.results || response.data) as Store[]
     },
-    // ✅ PERFORMANCE FIX (Issue #32): Store data rarely changes. 
-    // Increased staleTime to 5 minutes to prevent unnecessary network requests 
-    // when toggling between food/retail modes.
     staleTime: 5 * 60 * 1000,
   })
 
@@ -74,8 +89,8 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
           <div style="width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid ${accentColor};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);position:relative;z-index:1;">
             <div style="width:32px;height:32px;border-radius:50%;background:${accentColor};display:flex;align-items:center;justify-content:center;">
               ${isFood
-                ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`
-                : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`}
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`}
             </div>
           </div>
           <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:${accentColor};clip-path:polygon(50% 100%,0% 0%,100% 0%);"></div>
@@ -95,6 +110,7 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLoc([pos.coords.latitude, pos.coords.longitude])
+        setLocateTrigger(prev => prev + 1)
         setIsLocating(false)
       },
       (err) => {
@@ -109,16 +125,18 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
 
   return (
     <div className="w-full h-full relative z-0">
-      {/* Locate Me button */}
-      {!onStoreClick && (
-        <button
-          onClick={locateUser}
-          disabled={isLocating}
-          className="absolute bottom-6 right-6 z-[1000] bg-white p-3.5 rounded-2xl shadow-[0_10px_20px_rgba(0,0,0,0.1)] hover:scale-105 transition-all text-gray-700 hover:text-gray-900 disabled:opacity-50 border border-gray-100"
-        >
-          <LocateFixed size={22} className={isLocating ? 'animate-spin text-gray-900' : ''} />
-        </button>
-      )}
+      {/* Locate Me button — z-[2000] keeps it above all Leaflet layers (max ~1000) on all screen sizes.
+          bottom-24 on mobile clears the 'Shop Retail / Food & Coffee' chip strip (which is at bottom-6, ~56px tall).
+          bottom-10 on desktop where there are no chips overlapping. */}
+      <button
+        onClick={locateUser}
+        disabled={isLocating}
+        className="absolute bottom-24 right-4 md:bottom-10 md:right-6 z-[2000] bg-black/40 backdrop-blur-md p-3 md:p-3.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:bg-black/60 active:scale-95 transition-all text-white border border-white/20"
+        style={{ isolation: 'isolate' }}
+        aria-label="Locate me"
+      >
+        <LocateFixed size={20} className={isLocating ? 'animate-spin text-gray-900' : ''} />
+      </button>
 
       <MapContainer
         center={mapCenter}
@@ -133,8 +151,8 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
           maxZoom={20}
         />
 
-        {/* Auto-fit to all stores once data loads */}
-        <MapController stores={stores} userLoc={userLoc} />
+        {/* Auto-fit and Locate Manager */}
+        <MapController stores={stores} userLoc={userLoc} locateTrigger={locateTrigger} />
 
         {/* User location marker — only when we have a real GPS fix */}
         {userLoc && <Marker position={userLoc} icon={createCustomIcon(true)} />}
@@ -163,7 +181,8 @@ export default function MapCore({ mode = 'retail', onStoreClick }: MapCoreProps)
         </div>
       )}
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes ripple { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.5); opacity: 0; } }
         .leaflet-control-attribution { display: none !important; }
         .leaflet-control-zoom { display: none !important; }

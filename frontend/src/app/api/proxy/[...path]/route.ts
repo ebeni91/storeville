@@ -47,6 +47,11 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
   // Ensure host is set to the actual backend hostname (e.g. render.com domain or backend:8000 locally)
   forwardedHeaders.set('host', BASE_URL.host)
 
+  // 🔒 CSRF GUARD: Inject a custom header that Django's BetterAuthAuthentication
+  // validates. Browsers cannot set custom headers in cross-origin requests without
+  // a CORS preflight — which Django will reject. This acts as a CSRF token.
+  forwardedHeaders.set('X-Requested-From', 'storeville-proxy')
+
   let body: string | undefined = undefined
   if (!['GET', 'HEAD'].includes(request.method)) {
     body = await request.text()
@@ -81,7 +86,9 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
       })
     }
 
-    const responseBody = await response.arrayBuffer()
+    const buffer = await response.arrayBuffer()
+    const responseBody = buffer.byteLength === 0 || response.status === 204 ? null : buffer
+
     const responseHeaders = new Headers()
 
     response.headers.forEach((value, key) => {

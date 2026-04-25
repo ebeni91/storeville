@@ -8,49 +8,54 @@ export async function middleware(request: NextRequest) {
   const hasSessionCookie = request.cookies.has('better-auth.session_token') || request.cookies.has('__Secure-better-auth.session_token')
   
   if (!hasSessionCookie) {
-    // If accessing a protected route without a token, fast-fail
     if (pathname.startsWith('/dashboard/seller')) {
       return NextResponse.redirect(new URL('/', request.url))
     }
     return NextResponse.next()
   }
 
-  // 1. Resolve Session from Better Auth
-  // We perform an internal fetch to check role-based access at the edge.
-  // CRITICAL: Use INTERNAL_APP_URL, NOT BETTER_AUTH_URL.
-  // BETTER_AUTH_URL may point to ngrok/production — unreachable inside Docker.
-  // INTERNAL_APP_URL is always the container-local address (http://localhost:3000).
-  let session = null
+  // 1. Resolve the user's role from the Django backend.
+  // CRITICAL: We call the Django /api/accounts/profile/ endpoint instead of
+  // Better Auth's /api/auth/get-session because:
+  // - Django backend BetterAuthMiddleware reads the BA session cookie and
+  //   queries the BA user table directly — PROVEN to return the correct role
+  //   (the same mechanism that logs "role=SELLER" in the backend logs)
+  // - Better Auth's own get-session may not include additionalFields reliably.
+  let role: string | null = null
   try {
-    const internalBaseURL = process.env.INTERNAL_APP_URL || 'http://localhost:3000'
-    const sessionRes = await fetch(`${internalBaseURL}/api/auth/get-session`, {
+    const djangoURL = process.env.DJANGO_INTERNAL_URL || 'http://backend:8000'
+    const profileRes = await fetch(`${djangoURL}/api/accounts/profile/`, {
       headers: {
-        cookie: request.headers.get('cookie') || ''
-      }
+        cookie: request.headers.get('cookie') || '',
+        'Accept': 'application/json',
+      },
     })
-    session = await sessionRes.json()
+    if (profileRes.ok) {
+      const profile = await profileRes.json()
+      role = profile?.role ?? null
+    }
   } catch (err) {
-    console.error("Middleware session check failed:", err)
+    console.error('[Middleware] Django profile check failed:', err)
   }
 
-  const user = session?.user
-  const role = user?.role
-
-  // 2. SELLER GUARD: Redirect sellers away from customer storefronts
-  // If they are a seller, they should only be in /dashboard/seller or /api routes
   const isSeller = role === 'SELLER'
+
+  // 2. SELLER GUARD: Redirect sellers away from non-dashboard routes
+  // Exceptions: /auth, /login, /store (live preview from Studio), /logout
   const isAccessingPlatform = !pathname.startsWith('/dashboard') && 
                               !pathname.startsWith('/api') && 
                               !pathname.startsWith('/login') &&
+                              !pathname.startsWith('/auth') &&
+                              !pathname.startsWith('/store') &&
                               pathname !== '/logout'
 
   if (isSeller && isAccessingPlatform) {
-     return NextResponse.redirect(new URL('/dashboard/seller', request.url))
+    return NextResponse.redirect(new URL('/dashboard/seller', request.url))
   }
 
-  // 3. DASHBOARD PROTECTION: Ensure only sellers access dashboard
+  // 3. DASHBOARD PROTECTION: Ensure only sellers access /dashboard/seller
   if (pathname.startsWith('/dashboard/seller') && !isSeller) {
-     return NextResponse.redirect(new URL('/', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return NextResponse.next()

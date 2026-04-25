@@ -110,8 +110,36 @@ export default function RegisterPage() {
         longitude: parseFloat(Number(location.lng).toFixed(6)),
       })
 
-      await authClient.getSession({ fetchOptions: { cache: 'no-store' } })
-      router.push('/dashboard/seller')
+      // ✅ THE FIX: The BA client session is cached in-memory and won't reflect
+      // the new SELLER role even after a getSession() call. We must poll the
+      // server-side session endpoint directly (bypassing the client cache)
+      // until the role has propagated, then do a hard navigation so Next.js
+      // middleware re-evaluates from a clean state.
+      let attempts = 0
+      const maxAttempts = 10
+
+      const pollForSellerRole = async (): Promise<void> => {
+        attempts++
+        try {
+          const res = await fetch('/api/auth/get-session', { cache: 'no-store' })
+          const freshSession = await res.json()
+          if (freshSession?.user?.role === 'SELLER') {
+            // Hard navigate — forces middleware + session to reload from scratch
+            window.location.href = '/dashboard/seller'
+            return
+          }
+        } catch (_) {}
+
+        if (attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 600))
+          return pollForSellerRole()
+        }
+
+        // Fallback: go anyway — backend promotion succeeded even if poll timed out
+        window.location.href = '/dashboard/seller'
+      }
+
+      await pollForSellerRole()
     } catch (err: any) {
       setError(err.message || 'Failed to create your store. Please try again.')
     } finally {
@@ -146,22 +174,7 @@ export default function RegisterPage() {
             <span className="text-white">Digital Empire.</span>
           </h1>
 
-          <div className="space-y-10">
-            <div className="flex items-center gap-6 text-gray-300/90">
-              <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 backdrop-blur-3xl flex items-center justify-center border border-white/10 shadow-2xl font-bold"><CheckCircle2 className="text-[#34d399]" size={28} /></div>
-              <div>
-                <h4 className="font-black text-xl text-white">Instant Payouts</h4>
-                <p className="text-base font-medium opacity-70">Get your earnings deposited daily.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-6 text-gray-300/90">
-              <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 backdrop-blur-3xl flex items-center justify-center border border-white/10 shadow-2xl font-bold"><TrendingUp className="text-[#34d399]" size={28} /></div>
-              <div>
-                <h4 className="font-black text-xl text-white">Powerful Analytics</h4>
-                <p className="text-base font-medium opacity-70">Track every sale with precision.</p>
-              </div>
-            </div>
-          </div>
+          
         </div>
         <div className="relative z-10 text-gray-300/30 font-black text-[10px] uppercase tracking-[0.4em]">© 2026 StoreVille Merchant Platform</div>
       </div>
@@ -172,10 +185,7 @@ export default function RegisterPage() {
           
           {/* Header */}
           <div className="mb-12 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-100 text-gray-900 font-black text-[10px] uppercase tracking-[0.2em] mb-8 border border-gray-200 shadow-sm">
-              🚀 Merchant Onboarding
-            </div>
-            <h2 className="text-5xl md:text-[4rem] font-black text-gray-900 mb-4 tracking-tighter leading-[0.9] text-balance">
+            <h2 className="text-4xl sm:text-5xl lg:text-[4rem] font-black text-gray-900 mb-4 tracking-tighter leading-[0.9] text-balance">
               {!session ? "Let's begin." : "Your Business Profile."}
             </h2>
             <p className="text-gray-500 font-bold text-lg max-w-lg mb-2">
@@ -225,7 +235,7 @@ export default function RegisterPage() {
                     type="button" 
                     onClick={handleSendOtp} 
                     disabled={isSendingOtp || phone.length < 9}
-                    className="w-full bg-gray-900 text-white py-5 rounded-full font-black text-xl shadow-[0_15px_30px_-10px_rgba(17,24,39,0.5)] hover:bg-black hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                    className="w-full bg-[#fe5114] text-white py-5 rounded-[1.25rem] font-black text-xl shadow-[0_15px_30px_-10px_rgba(254,81,20,0.4)] hover:bg-[#eb4a10] hover:-translate-y-1 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
                   >
                     {isSendingOtp ? <Loader2 size={24} className="animate-spin" /> : 'Continue'}
                   </button>
@@ -266,7 +276,7 @@ export default function RegisterPage() {
                     maxLength={6} 
                     value={otp} 
                     onChange={e => setOtp(e.target.value)}
-                    className="w-full bg-[#f8fafc] border border-gray-100 rounded-[2.5rem] py-10 px-8 text-gray-900 focus:outline-none focus:bg-white focus:ring-8 focus:ring-gray-900/5 focus:border-gray-900/10 font-black text-5xl text-center tracking-[1.5rem] transition-all shadow-inner"
+                    className="w-full bg-[#f8fafc] border border-gray-100 rounded-[2.5rem] py-10 px-4 sm:px-8 text-gray-900 focus:outline-none focus:bg-white focus:ring-8 focus:ring-gray-900/5 focus:border-gray-900/10 font-black text-3xl sm:text-5xl text-center tracking-[0.5em] sm:tracking-[1.5rem] transition-all shadow-inner"
                     placeholder="······" 
                   />
 
@@ -274,7 +284,7 @@ export default function RegisterPage() {
                     <button 
                       type="submit" 
                       disabled={isLoading || otp.length < 6}
-                      className="w-full bg-gray-900 text-white py-6 rounded-full font-black text-2xl shadow-[0_20px_40px_-10px_rgba(17,24,39,0.5)] hover:bg-black transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                      className="w-full bg-[#fe5114] text-white py-6 rounded-[1.25rem] font-black text-2xl shadow-[0_20px_40px_-10px_rgba(254,81,20,0.5)] hover:bg-[#eb4a10] transition-all flex items-center justify-center gap-4 active:scale-[0.98] disabled:opacity-50"
                     >
                       {isLoading ? <Loader2 size={28} className="animate-spin" /> : <>Verify Identity <CheckCircle2 size={24}/></>}
                     </button>

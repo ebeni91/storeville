@@ -19,6 +19,8 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
 
   // Form States
   const [address, setAddress] = useState('')
+  const [contactName, setContactName] = useState('')
+  const [contactPhone, setContactPhone] = useState('')
   const [instructions, setInstructions] = useState('') 
   const [isAsap, setIsAsap] = useState(true) 
 
@@ -65,11 +67,13 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
     setIsSubmitting(true)
 
     try {
+      const formattedAddress = `Name: ${contactName} | Phone: ${contactPhone} | Location: ${address}`
+
       if (store.store_type === 'FOOD') {
         // 🍔 SUBMIT TO FOOD ENGINE
         const payload = {
           store: store.id,
-          delivery_address: address,
+          delivery_address: formattedAddress,
           delivery_instructions: instructions,
           is_asap: isAsap,
           items: cartItems.map(item => ({
@@ -87,7 +91,7 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
         // 🛍️ SUBMIT TO RETAIL ENGINE
         const payload = {
           store: store.id,
-          shipping_address: address,
+          shipping_address: formattedAddress,
           items: cartItems.map(item => ({
             product_id: item.id,
             quantity: item.quantity
@@ -149,14 +153,32 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
   return (
     <main className="min-h-screen pb-24 font-sans" style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}>
       
-      {/* HEADER */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl border-b px-4 py-4" style={{ borderColor: `rgba(0,0,0,0.05)`, backgroundColor: `rgba(255,255,255,0.8)` }}>
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <button onClick={() => router.push(`/store/${params.subdomain}`)} className="flex items-center gap-2 font-bold text-sm hover:opacity-70 transition-opacity text-gray-900">
-            <ChevronLeft size={18} /> Back to Store
-          </button>
-          <h1 className="text-xl font-black tracking-tighter text-gray-900">Secure Checkout</h1>
-          <div className="w-20"></div> {/* Spacer for center alignment */}
+      {/* ── UNIFIED STICKY HEADER ── */}
+      <div className="sticky top-0 z-[150] flex flex-col w-full">
+        {/* ANNOUNCEMENT BAR */}
+        {(store.announcement_is_active && store.announcement_text) && (
+          <div className="w-full px-4 pt-4 md:pt-6 lg:pt-8 pb-2 max-w-[1400px] mx-auto pointer-events-none">
+            <div className="w-full py-2.5 px-4 text-xs font-black tracking-widest uppercase shadow-md rounded-2xl overflow-hidden whitespace-nowrap pointer-events-auto border" style={{ backgroundColor: store.announcement_color || store.primary_color, color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
+              <div className="inline-block" style={{ animation: 'marquee 30s linear infinite', paddingLeft: '100%' }}>
+                {Array(15).fill(store.announcement_text).map((text, i) => (
+                  <span key={i}>
+                    {text} <span className="mx-6 opacity-50 text-[10px]">✦</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HEADER */}
+        <div className="backdrop-blur-xl border-b px-4 py-4 w-full" style={{ borderColor: `rgba(0,0,0,0.05)`, backgroundColor: `rgba(255,255,255,0.85)` }}>
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <button onClick={() => router.push(`/store/${params.subdomain}`)} className="flex items-center gap-2 font-bold text-sm hover:opacity-70 transition-opacity text-gray-900">
+              <ChevronLeft size={18} /> Back to Store
+            </button>
+            <h1 className="text-xl font-black tracking-tighter text-gray-900">Secure Checkout</h1>
+            <div className="w-20"></div> {/* Spacer for center alignment */}
+          </div>
         </div>
       </div>
 
@@ -173,6 +195,17 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
                 <MapPin size={20} className="text-gray-900" />
                 {store.store_type === 'FOOD' ? 'Delivery Location' : 'Shipping Address'}
               </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2 text-gray-700">Full Name</label>
+                  <input required type="text" value={contactName} onChange={e => setContactName(e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all text-gray-900" placeholder="e.g. Abebe Kebede" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2 text-gray-700">Phone Number</label>
+                  <input required type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all text-gray-900" placeholder="+251 911 123 456" />
+                </div>
+              </div>
               
               <div>
                 <label className="block text-xs font-bold tracking-widest uppercase opacity-60 mb-2 text-gray-700">Full Address</label>
@@ -282,6 +315,9 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
         </div>
 
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
+      ` }} />
     </main>
   )
 }

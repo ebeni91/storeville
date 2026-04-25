@@ -101,13 +101,13 @@ export default function OrdersPage() {
 
   return (
     <main className="p-4 md:p-8 relative h-full max-w-[1600px] mx-auto flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-2 md:gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-gray-900 flex items-center gap-3">
-            {isFood ? <ChefHat size={32} className="text-orange-500"/> : <Package size={32} className="text-gray-900"/>}
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900 flex items-center gap-2 md:gap-3">
+            {isFood ? <ChefHat size={28} className="text-orange-500 md:w-8 md:h-8"/> : <Package size={28} className="text-gray-900 md:w-8 md:h-8"/>}
             {isFood ? 'Kitchen Orders' : 'Store Orders'}
           </h1>
-          <p className="text-gray-500 font-medium mt-1 text-sm">Manage and fulfill your customer purchases.</p>
+          <p className="text-gray-500 font-medium mt-1 text-xs md:text-sm">Manage and fulfill your customer purchases.</p>
         </div>
       </div>
 
@@ -124,43 +124,43 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex-1 flex flex-col p-2">
-        <div className="overflow-x-auto">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white/70 backdrop-blur-2xl rounded-[1.5rem] md:rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex-1 flex flex-col p-1 md:p-2">
+        <div className="overflow-x-auto w-full scrollbar-none">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-100/50 text-gray-400 text-[10px] uppercase tracking-widest font-black">
-                <th className="p-6">Order ID</th>
-                <th className="p-6">Date</th>
-                <th className="p-6">Customer (ID)</th>
-                <th className="p-6">Total</th>
-                <th className="p-6">Status</th>
-                <th className="p-6 text-right">Actions</th>
+              <tr className="border-b border-gray-100/50 text-gray-400 text-[9px] md:text-[10px] uppercase tracking-widest font-black">
+                <th className="p-4 md:p-6 whitespace-nowrap">Order ID</th>
+                <th className="p-4 md:p-6 whitespace-nowrap">Date</th>
+                <th className="p-4 md:p-6 whitespace-nowrap">Customer (ID)</th>
+                <th className="p-4 md:p-6 whitespace-nowrap">Total</th>
+                <th className="p-4 md:p-6 whitespace-nowrap">Status</th>
+                <th className="p-4 md:p-6 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <motion.tbody variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100/50">
               {isFetching ? (
                 <tr><td colSpan={6} className="p-12 text-center text-gray-500"><Loader2 className="animate-spin mx-auto mb-3" size={32} /> Loading orders...</td></tr>
               ) : filteredOrders.length === 0 ? (
-                <tr><td colSpan={6} className="p-20 text-center text-gray-400 font-medium">No orders found. Keep marketing your store!</td></tr>
+                <tr><td colSpan={6} className="p-12 md:p-20 text-center text-gray-400 font-medium text-xs md:text-sm">No orders found. Keep marketing your store!</td></tr>
               ) : (
                 filteredOrders.map((order) => (
                   <motion.tr variants={rowVariants} key={order.id} className="hover:bg-white/60 transition-colors group">
-                    <td className="p-6 font-black text-gray-900 text-sm">
-                      <span className="font-mono bg-white border border-gray-100 shadow-sm px-3 py-1.5 rounded-xl">#{order.id.toString().slice(0,8).toUpperCase()}</span>
-                      {isFood && order.is_asap && <span className="ml-3 bg-red-100 text-red-700 font-bold px-2 py-1 rounded-md text-[10px] uppercase tracking-widest">ASAP</span>}
+                    <td className="p-4 md:p-6 font-black text-gray-900 text-xs md:text-sm whitespace-nowrap border-r border-transparent">
+                      <span className="font-mono bg-white border border-gray-100 shadow-sm px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl">#{order.id.toString().slice(0,8).toUpperCase()}</span>
+                      {isFood && order.is_asap && <span className="ml-2 mt-1 md:mt-0 md:ml-3 bg-red-100 text-red-700 font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-[9px] md:text-[10px] uppercase tracking-widest block md:inline-block w-max">ASAP</span>}
                     </td>
-                    <td className="p-6 font-medium text-gray-500 text-xs">
+                    <td className="p-4 md:p-6 font-medium text-gray-500 text-[10px] md:text-xs whitespace-nowrap">
                       {new Date(order.created_at).toLocaleDateString()} <br/>
-                      <span className="text-[10px] opacity-70 font-bold">{new Date(order.created_at).toLocaleTimeString()}</span>
+                      <span className="text-[9px] md:text-[10px] opacity-70 font-bold">{new Date(order.created_at).toLocaleTimeString()}</span>
                     </td>
-                    <td className="p-6">
-                      <p className="font-black text-gray-900 text-sm">User #{order.customer}</p>
+                    <td className="p-4 md:p-6 whitespace-nowrap">
+                      <p className="font-black text-gray-900 text-xs md:text-sm">User #{order.customer}</p>
                     </td>
-                    <td className="p-6 font-black text-gray-900 text-lg tracking-tight">Br {parseFloat(order.total_amount).toFixed(2)}</td>
-                    <td className="p-6"><StatusBadge status={order.status} /></td>
-                    <td className="p-6 text-right">
-                      <button onClick={() => setSelectedOrder(order)} className="p-3 bg-white border border-gray-100 shadow-sm text-gray-900 hover:text-white hover:bg-gray-900 rounded-2xl transition-all inline-flex items-center justify-center group/btn hover:scale-105 active:scale-95">
-                        <Eye size={18} />
+                    <td className="p-4 md:p-6 font-black text-gray-900 text-sm md:text-lg tracking-tight whitespace-nowrap">Br {parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td className="p-4 md:p-6 whitespace-nowrap"><StatusBadge status={order.status} /></td>
+                    <td className="p-4 md:p-6 text-right whitespace-nowrap">
+                      <button onClick={() => setSelectedOrder(order)} className="p-2 md:p-3 bg-white border border-gray-100 shadow-sm text-gray-900 hover:text-white hover:bg-gray-900 rounded-xl md:rounded-2xl transition-all inline-flex items-center justify-center group/btn hover:scale-105 active:scale-95">
+                        <Eye size={16} className="md:w-4 md:h-4" />
                       </button>
                     </td>
                   </motion.tr>
@@ -176,7 +176,7 @@ export default function OrdersPage() {
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setSelectedOrder(null)}></div>
           
-          <div className="relative w-full sm:w-[500px] bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 ease-out">
+          <div className="relative w-full sm:w-[500px] bg-white h-full shadow-[0_0_60px_rgba(0,0,0,0.2)] flex flex-col animate-in slide-in-from-right duration-500 ease-out sm:rounded-l-[2rem] overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
               <div>
                 <h2 className="text-2xl font-black tracking-tight text-gray-900">

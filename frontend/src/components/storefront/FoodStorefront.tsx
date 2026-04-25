@@ -7,7 +7,7 @@ import { api } from '@/lib/api'
 import {
   Loader2, ShoppingBag, Search, Heart, User, X, Check,
   Star, Clock, Bike, Flame, Leaf, ArrowLeft, ArrowRight,
-  CheckCircle2, Chrome, Lock
+  CheckCircle2, Chrome, Lock, MapPin,CheckCircle
 } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { useAuthStore } from '@/store/authStore'
@@ -37,7 +37,6 @@ export default function FoodStorefront({ store }: { store: any }) {
   const [items, setItems] = useState<MenuItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string>('ALL')
-  const [searchQuery, setSearchQuery] = useState('')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -83,10 +82,7 @@ export default function FoodStorefront({ store }: { store: any }) {
   const cartCount = cartItems.reduce((acc, i) => acc + i.quantity, 0)
 
   const safeItems = Array.isArray(items) ? items : []
-  const filteredItems = safeItems.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesSearch
-  })
+  const filteredItems = safeItems
 
   // Group items by category
   const categoriesWithItems = categories
@@ -170,80 +166,20 @@ export default function FoodStorefront({ store }: { store: any }) {
       className="min-h-screen pb-32 font-sans transition-colors duration-700 relative"
       style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}
     >
-      {/* ── NAVBAR ── */}
-      <div
-        className={`fixed top-0 inset-x-0 z-[150] px-4 py-3 md:py-4 transition-all duration-500 ${isScrolled ? 'backdrop-blur-2xl shadow-xl' : ''}`}
-        style={{ backgroundColor: isScrolled ? `rgba(${bgRgb}, 0.85)` : 'transparent', borderBottom: isScrolled ? `1px solid rgba(${textRgb}, 0.05)` : 'none' }}
-      >
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-          {/* Left */}
-          <div className="flex items-center gap-3">
-            <button onClick={() => router.push('/')} className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-105 transition-transform">
-              <ArrowLeft size={20} />
-            </button>
-            <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-black tracking-tighter leading-none">{store.name}</span>
-              <span className="text-[10px] font-bold opacity-50 uppercase tracking-widest mt-0.5">Ethiopia</span>
-            </div>
-          </div>
-
-          {/* Center search */}
-          <div className="hidden lg:flex flex-1 max-w-xl relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:opacity-100 transition-opacity" size={18} />
-            <input
-              type="text"
-              placeholder="Search menu..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/5 rounded-2xl py-3 pl-12 pr-4 outline-none font-bold text-sm focus:bg-white/10 transition-all"
-            />
-          </div>
-
-          {/* Right */}
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* Cart */}
-            <button
-              onClick={() => router.push(`/store/${store.slug}/cart`)}
-              className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform relative"
-            >
-              <ShoppingBag size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce" style={{ backgroundColor: store.primary_color }}>
-                  {cartCount}
+      {/* ── TOP ANNOUNCEMENT BAR (Floating Pill) ── */}
+      {(store.announcement_is_active && store.announcement_text) && (
+        <div className="absolute top-4 md:top-6 lg:top-8 inset-x-0 z-[150] px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto pointer-events-none">
+          <div className="w-full py-2.5 px-4 text-xs font-black tracking-widest uppercase shadow-2xl rounded-2xl overflow-hidden whitespace-nowrap pointer-events-auto border" style={{ backgroundColor: store.announcement_color || store.primary_color, color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
+            <div className="inline-block" style={{ animation: 'marquee 30s linear infinite', paddingLeft: '100%' }}>
+              {Array(15).fill(store.announcement_text).map((text, i) => (
+                <span key={i}>
+                  {text} <span className="mx-6 opacity-50 text-[10px]">✦</span>
                 </span>
-              )}
-            </button>
-
-            {/* Wishlist */}
-            <button
-              onClick={() => router.push(`/store/${store.slug}/wishlist`)}
-              className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform"
-            >
-              <Heart size={20} />
-            </button>
-
-            {/* Profile */}
-            <div className="relative">
-              <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-110 transition-transform">
-                <User size={20} />
-              </button>
-              <ProfileDropdown isOpen={isUserMenuOpen} onClose={() => setIsUserMenuOpen(false)} onSignOut={handleSignOut} />
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Mobile Search */}
-        <div className="lg:hidden mt-3 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={16} />
-          <input
-            type="text"
-            placeholder="Search our menu..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-black/5 rounded-[1.25rem] py-3 pl-11 pr-4 outline-none font-bold text-xs"
-          />
-        </div>
-      </div>
+      )}
 
       {/* TOAST */}
       <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ${toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10 pointer-events-none'}`}>
@@ -295,51 +231,79 @@ export default function FoodStorefront({ store }: { store: any }) {
       </div>
 
       {/* ── HERO ── */}
-      <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
+      <div className={`px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8 max-w-[1600px] mx-auto ${(store.announcement_is_active && store.announcement_text) ? 'pt-[4.5rem] md:pt-[5.5rem] lg:pt-[6.5rem]' : 'pt-4 md:pt-6 lg:pt-8'}`}>
         <header
-          className="relative w-full h-[45vh] md:h-[55vh] rounded-[2rem] md:rounded-[3rem] flex flex-col items-center justify-center overflow-hidden shadow-xl border"
+          className="relative w-full h-[60vh] md:h-[65vh] rounded-[2rem] md:rounded-[3rem] flex flex-col justify-between overflow-hidden shadow-2xl border"
           style={{ borderColor: `rgba(${textRgb}, 0.05)` }}
         >
           {store.banner_image
             ? <img src={store.banner_image} className="absolute inset-0 w-full h-full object-cover" alt="Banner" />
             : <div className="absolute inset-0 opacity-20" style={{ backgroundColor: store.primary_color }} />
           }
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/60" />
 
-          <div className="relative z-10 flex flex-col items-center text-center px-4 mt-8">
-            {/* Status & Info Pill */}
-            <div className="flex items-center gap-3 mb-5 backdrop-blur-md bg-white/10 px-5 py-2.5 rounded-full border border-white/20 text-white shadow-lg flex-wrap justify-center">
-              {/* Open/Closed badge */}
-              <span className={`flex items-center gap-1 text-xs font-black px-2.5 py-1 rounded-full ${store.is_open ? 'bg-green-500/30 text-green-300' : 'bg-red-500/30 text-red-300'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${store.is_open ? 'bg-green-400' : 'bg-red-400'}`} />
-                {store.is_open ? 'Open Now' : 'Closed'}
-              </span>
-              <span className="w-1 h-1 rounded-full bg-white/30" />
-              <span className="flex items-center gap-1 text-sm font-bold"><Star size={13} className="fill-yellow-400 text-yellow-400" /> 4.8</span>
-              <span className="w-1 h-1 rounded-full bg-white/30" />
-              <span className="flex items-center gap-1.5 text-sm font-bold"><Clock size={13} className="text-orange-400" /> 15–25 min</span>
-              {hoursDisplay && (
-                <>
-                  <span className="w-1 h-1 rounded-full bg-white/30 hidden md:block" />
-                  <span className="hidden md:flex items-center gap-1.5 text-sm font-bold opacity-80">{hoursDisplay}</span>
-                </>
-              )}
+          {/* Top Actions Row (Inside Hero) */}
+          <div className="relative z-20 flex items-center justify-between p-6 md:p-8 w-full animate-in fade-in slide-in-from-top-4 duration-700">
+            <button onClick={() => router.push('/')} className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105 transition-all text-white shadow-lg">
+              <ArrowLeft size={20} />
+            </button>
+            
+            <div className="flex items-center gap-3">
+              <button onClick={() => router.push(`/store/${store.slug}/cart`)} className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105 transition-all text-white shadow-lg relative">
+                <ShoppingBag size={20} />
+                {cartCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce" style={{ backgroundColor: store.primary_color }}>{cartCount}</span>}
+              </button>
+              
+              <button onClick={() => router.push(`/store/${store.slug}/wishlist`)} className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105 transition-all text-white shadow-lg">
+                <Heart size={20} />
+              </button>
+              
+              <div className="relative">
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105 transition-all text-white shadow-lg">
+                  <User size={20} />
+                </button>
+                <ProfileDropdown isOpen={isUserMenuOpen} onClose={() => setIsUserMenuOpen(false)} onSignOut={handleSignOut} />
+              </div>
             </div>
+          </div>
 
+          {/* Center Content (Name & Description) */}
+          <div className="relative z-10 flex flex-col items-center text-center px-4 mt-auto">
             <h1
-              className="text-5xl md:text-8xl font-black tracking-tighter text-white drop-shadow-xl mb-3 leading-none max-w-5xl"
+              className="text-5xl md:text-8xl lg:text-[7rem] font-black tracking-tighter text-white drop-shadow-2xl mb-4 leading-none max-w-5xl"
               style={{ fontFamily: `"${store.heading_font || 'Inter'}", sans-serif` }}
             >
               {store.name}
             </h1>
-
+            
             {store.description && (
-              <p className="max-w-2xl text-white/80 text-base md:text-lg font-medium leading-relaxed drop-shadow-md px-4">{store.description}</p>
+              <p className="max-w-2xl text-white/90 text-sm md:text-lg lg:text-xl font-medium leading-relaxed drop-shadow-lg px-4 mb-6 md:mb-8">
+                {store.description}
+              </p>
             )}
-
+            
             {daysDisplay && (
-              <p className="mt-3 text-white/60 text-xs font-bold uppercase tracking-widest">{daysDisplay}</p>
+              <p className="mb-4 text-white/70 text-[10px] md:text-xs font-black uppercase tracking-widest">{daysDisplay}</p>
             )}
+            
+            {/* Status & Info Pill beautifully placed */}
+            <div className="flex items-center gap-4 backdrop-blur-2xl bg-black/40 px-6 py-3.5 rounded-full border border-white/10 text-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] flex-wrap justify-center mb-8 md:mb-12 translate-y-2">
+              <span className={`flex items-center gap-2 text-xs md:text-sm font-black uppercase tracking-wider ${store.is_open ? 'text-[#34d399]' : 'text-[#f87171]'}`}>
+                <span className={`w-2 h-2 rounded-full ${store.is_open ? 'bg-[#34d399] animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]' : 'bg-[#f87171]'}`} />
+                {store.is_open ? 'Open Now' : 'Closed'}
+              </span>
+              <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-white/30" />
+              <span className="flex items-center gap-1.5 text-sm font-bold"><Star size={14} className="fill-yellow-400 text-yellow-400" /> 4.8</span>
+              <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-white/30" />
+              <span className="flex items-center gap-1.5 text-sm font-bold"><CheckCircle size={14} className="text-blue-400" /> Verified</span>
+              {store.city && <><span className="w-1.5 h-1.5 rounded-full bg-white/30 hidden sm:block" /><span className="hidden sm:flex items-center gap-1.5 text-sm font-bold"><MapPin size={14} className="opacity-80" /> {store.city}</span></>}
+              {hoursDisplay && (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/30 hidden md:block" />
+                  <span className="hidden md:flex items-center gap-1.5 text-sm font-bold opacity-80">{hoursDisplay}</span>
+                </>
+              )}
+            </div>
           </div>
         </header>
       </div>
@@ -427,7 +391,10 @@ export default function FoodStorefront({ store }: { store: any }) {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}` }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        .hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
+      ` }} />
     </main>
   )
 }

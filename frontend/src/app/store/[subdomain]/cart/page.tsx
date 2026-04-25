@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ShoppingBag, X, Plus, Minus, ArrowLeft, ArrowRight, Trash2, Loader2 } from 'lucide-react'
+import { ShoppingBag, X, Plus, Minus, ArrowLeft, ArrowRight, Trash2, Loader2, User, Heart } from 'lucide-react'
+import ProfileDropdown from '@/components/ProfileDropdown'
 import { useCartStore } from '@/store/cartStore'
 import { authClient } from '@/lib/auth-client'
 import { api } from '@/lib/api'
@@ -15,6 +16,7 @@ export default function CartPage() {
   const [store, setStore] = useState<any>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
   const { data: session } = authClient.useSession()
   const { carts, addItem, removeItem, updateQuantity, mergeCartWithBackend } = useCartStore()
@@ -24,9 +26,8 @@ export default function CartPage() {
   useEffect(() => {
     const fetchStore = async () => {
       try {
-        const res = await api.get(`/stores/discover/?slug=${subdomain}`)
-        const list = res.data?.results || res.data || []
-        if (list.length > 0) setStore(list[0])
+        const res = await api.get(`/stores/discovery/by_slug/?slug=${subdomain}`)
+        if (res.data) setStore(res.data)
       } catch (err) { console.error(err) }
     }
     if (subdomain) fetchStore()
@@ -46,6 +47,10 @@ export default function CartPage() {
     const extras = (item.selectedExtras || []).reduce((s: number, e: any) => s + parseFloat(e.price || 0), 0)
     return acc + (parseFloat(item.price) + extras) * item.quantity
   }, 0)
+
+  const handleSignOut = async () => {
+    await authClient.signOut({ fetchOptions: { onSuccess: () => { setIsUserMenuOpen(false); window.location.reload() } } })
+  }
 
   const handleProceedToCheckout = async () => {
     if (!session) {
@@ -75,20 +80,56 @@ export default function CartPage() {
       className="min-h-screen font-sans"
       style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111' }}
     >
-      {/* Header */}
-      <div
-        className="sticky top-0 z-50 px-4 py-4 backdrop-blur-2xl border-b flex items-center gap-4"
-        style={{ backgroundColor: `rgba(${bgRgb}, 0.9)`, borderColor: `rgba(${textRgb}, 0.08)` }}
-      >
-        <button
-          onClick={() => router.push(`/store/${subdomain}`)}
-          className="p-2.5 rounded-2xl bg-white/10 border border-white/20 hover:scale-105 transition-transform"
+      {/* ── UNIFIED STICKY HEADER ── */}
+      <div className="sticky top-0 z-[150] flex flex-col w-full">
+        {/* ANNOUNCEMENT BAR */}
+        {(store.announcement_is_active && store.announcement_text) && (
+          <div className="w-full px-4 pt-4 md:pt-6 lg:pt-8 pb-2 max-w-[1400px] mx-auto pointer-events-none">
+            <div className="w-full py-2.5 px-4 text-xs font-black tracking-widest uppercase shadow-md rounded-2xl overflow-hidden whitespace-nowrap pointer-events-auto border" style={{ backgroundColor: store.announcement_color || store.primary_color, color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
+              <div className="inline-block" style={{ animation: 'marquee 30s linear infinite', paddingLeft: '100%' }}>
+                {Array(15).fill(store.announcement_text).map((text, i) => (
+                  <span key={i}>
+                    {text} <span className="mx-6 opacity-50 text-[10px]">✦</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NAVBAR */}
+        <div
+          className="px-4 py-4 md:py-6 border-b w-full"
+          style={{ backgroundColor: `rgba(${bgRgb}, 0.85)`, backdropFilter: 'blur(16px)', borderColor: `rgba(${textRgb}, 0.05)` }}
         >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-xl font-black tracking-tight">Your Cart</h1>
-          <p className="text-xs opacity-50 font-semibold">{cartItems.length} item{cartItems.length !== 1 ? 's' : ''}</p>
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button onClick={() => router.push(`/store/${store.slug}`)} className="p-2.5 rounded-full hover:scale-105 transition-transform" style={{ backgroundColor: `rgba(${textRgb}, 0.05)`, color: store.secondary_color }}>
+                <ArrowLeft size={20} />
+              </button>
+              <div className="hidden sm:flex flex-col">
+                <span className="text-lg font-black tracking-tighter leading-none">{store.name}</span>
+                <span className="text-[10px] font-bold opacity-50 uppercase tracking-widest mt-1">Cart ({cartItems.length})</span>
+              </div>
+              <h1 className="sm:hidden text-xl font-black tracking-tight ml-2">Cart</h1>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-3">
+              <button onClick={() => router.push(`/store/${store.slug}/cart`)} className="p-3 rounded-full hover:scale-105 transition-transform relative" style={{ backgroundColor: `rgba(${textRgb}, 0.05)`, color: store.secondary_color }}>
+                <ShoppingBag size={20} />
+                {cartItems.length > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg animate-bounce" style={{ backgroundColor: store.primary_color }}>{cartItems.length}</span>}
+              </button>
+              <button onClick={() => router.push(`/store/${store.slug}/wishlist`)} className="p-3 rounded-full hover:scale-105 transition-transform" style={{ backgroundColor: `rgba(${textRgb}, 0.05)`, color: store.secondary_color }}>
+                <Heart size={20} />
+              </button>
+              <div className="relative">
+                <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="p-3 rounded-full hover:scale-105 transition-transform" style={{ backgroundColor: `rgba(${textRgb}, 0.05)`, color: store.secondary_color }}>
+                  <User size={20} />
+                </button>
+                <ProfileDropdown isOpen={isUserMenuOpen} onClose={() => setIsUserMenuOpen(false)} onSignOut={handleSignOut} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -220,6 +261,9 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
+      ` }} />
     </main>
   )
 }

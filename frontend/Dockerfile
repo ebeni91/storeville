@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:22-bookworm-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -7,7 +7,8 @@ WORKDIR /app
 # This layer is only invalidated when package.json/package-lock.json change,
 # not on every code change.
 COPY package.json package-lock.json* ./
-RUN npm ci --prefer-offline
+# Copy node_modules pre-installed on host (avoids npm network calls inside Docker)
+COPY node_modules ./node_modules
 
 # Copy application source
 COPY . .
@@ -21,7 +22,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # ── Production runner ─────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:22-bookworm-slim@sha256:d415caac2f1f77b98caaf9415c5f807e14bc8d7bdea62561ea2fef4fbd08a73c AS runner
 
 WORKDIR /app
 

@@ -64,7 +64,7 @@ export default function LoginPage() {
     setError('')
     await authClient.signIn.social({
       provider: 'google',
-      callbackURL: '/',
+      callbackURL: '/auth/callback',
     })
   }
 
@@ -88,20 +88,7 @@ export default function LoginPage() {
             The Digital Heart of<br/>
             <span className="text-gray-900">Local Commerce.</span>
           </h1>
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 text-gray-700">
-              <div className="w-12 h-12 rounded-[1rem] bg-gray-100 flex items-center justify-center border border-gray-200 shadow-sm">
-                <ShieldCheck size={22} className="text-gray-900" />
-              </div>
-              <span className="font-bold text-lg">Bank-grade Security</span>
-            </div>
-            <div className="flex items-center gap-4 text-gray-700">
-              <div className="w-12 h-12 rounded-[1rem] bg-gray-100 flex items-center justify-center border border-gray-200 shadow-sm">
-                <TrendingUp size={22} className="text-gray-900" />
-              </div>
-              <span className="font-bold text-lg">Real-time Order Tracking</span>
-            </div>
-          </div>
+          
         </div>
         <div className="relative z-10 text-gray-500 font-bold text-sm uppercase tracking-widest">© 2026 StoreVille Technologies</div>
       </div>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Store as StoreIcon, Coffee, ShoppingBag, Navigation,
   Search, SlidersHorizontal, User, LogOut, Menu, X, ArrowRight,
-  CheckCircle, Star, LocateFixed, Truck
+  CheckCircle, Star, LocateFixed, Truck, Settings, Headphones
 } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -86,7 +86,6 @@ export default function Home() {
 
   const [activeGateway, setActiveGateway] = useState<Gateway>('RETAIL')
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeChip, setActiveChip] = useState('Fashion')
   const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   // Store drawer
@@ -101,11 +100,7 @@ export default function Home() {
 
   useEffect(() => { setIsMounted(true) }, [])
 
-  useEffect(() => {
-    if (isMobileMenuOpen) document.body.style.overflow = 'hidden'
-    else document.body.style.overflow = 'unset'
-    return () => { document.body.style.overflow = 'unset' }
-  }, [isMobileMenuOpen])
+
 
   const switchGateway = (type: Gateway) => {
     setActiveGateway(type)
@@ -165,7 +160,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               
               {/* Expandable Search */}
-              <div className="hidden md:flex items-center relative h-10 border border-transparent mr-2">
+              <div className="flex items-center relative h-10">
                 <AnimatePresence>
                   {isSearchExpanded && (
                     <motion.div
@@ -173,12 +168,12 @@ export default function Home() {
                       animate={{ width: 220, opacity: 1 }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
+                      className="absolute right-8 md:right-10 overflow-hidden h-10 z-[60]"
                     >
                       <input 
                         type="text" 
                         placeholder="Search stores…" 
-                        className="w-full h-full bg-gray-100 rounded-l-full pl-4 pr-1 outline-none text-sm font-medium text-gray-800 placeholder-gray-500" 
+                        className="w-full h-full bg-gray-100 rounded-l-full pl-4 pr-6 outline-none text-sm font-medium text-gray-800 placeholder-gray-500 shadow-inner" 
                         autoFocus
                       />
                     </motion.div>
@@ -186,21 +181,17 @@ export default function Home() {
                 </AnimatePresence>
                 <button
                   onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                  className={`w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors ${isSearchExpanded ? 'bg-gray-100 rounded-r-full' : 'bg-transparent hover:bg-gray-100 rounded-full'}`}
+                  className={`relative z-[65] w-9 h-9 md:w-10 md:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors ${isSearchExpanded ? 'bg-gray-100 rounded-r-full' : 'bg-transparent hover:bg-gray-100 rounded-full'}`}
                 >
                   <Search size={18} strokeWidth={2.5} />
                 </button>
               </div>
 
-              <button className="hidden lg:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 rounded-xl hover:bg-gray-100">
-                <Truck size={16} /> Track Order
-              </button>
-
               {isMounted && session ? (
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center text-white hover:bg-black transition-colors shadow-lg shadow-gray-900/30"
+                    className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center text-white hover:bg-black transition-colors shadow-lg shadow-gray-900/30 shrink-0"
                   >
                     <User size={18} />
                   </button>
@@ -209,25 +200,19 @@ export default function Home() {
               ) : (
                 <Link
                   href="/login"
-                  className="hidden md:block bg-gray-900 text-white text-sm px-5 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-all duration-300 hover:shadow-gray-900/30"
+                  className="bg-gray-900 text-white text-xs md:text-sm px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-all duration-300 hover:shadow-gray-900/30 shrink-0"
                 >
-                  Sign in
+                  <span className="hidden sm:inline">Sign In</span>
+                  <span className="sm:hidden">Sign In</span>
                 </Link>
               )}
-
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 text-gray-900"
-              >
-                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
             </div>
           </div>
         </div>
 
         {/* ── CHIPS UNDER NAVBAR ───────────────────── */}
         <div className="absolute z-40 inset-x-4 top-[88px] pointer-events-none">
-          <div className="max-w-[1400px] mx-auto pointer-events-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none justify-center md:justify-start md:px-5">
+          <div className="max-w-[1400px] mx-auto pointer-events-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none justify-center md:px-5">
             {chips.map((chip) => {
               const active = activeChip === chip
               return (
@@ -246,14 +231,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── BOTTOM LOCATE ME BUTTON ──────────────────────────── */}
-        <button className="absolute z-40 right-5 bottom-24 md:bottom-24 w-12 h-12 rounded-full bg-white shadow-[0_8px_30px_rgba(0,0,0,0.15)] border border-white/60 flex items-center justify-center hover:scale-105 transition-transform group">
-          <LocateFixed size={20} className="text-gray-700 group-hover:text-gray-900 transition-colors" strokeWidth={2.5} />
-        </button>
-
         {/* ── BOTTOM CONTROLS CLUSTER ─────────────────────── */}
+
         <div className="absolute z-40 bottom-6 inset-x-0 flex flex-col items-center gap-4 px-4 pointer-events-none">
-          
           {/* 1. GATEWAY SWITCHER PILLS */}
           <div className="flex items-center gap-3 pointer-events-auto">
             {/* Shop Retail */}
@@ -303,7 +283,7 @@ export default function Home() {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                className="absolute bottom-0 inset-x-0 z-[70] bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.2)] overflow-hidden"
+                className="absolute bottom-0 inset-x-0 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[480px] md:bottom-8 z-[70] bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.2)] overflow-hidden mt-auto md:mt-0"
               >
                 <div className="px-6 pt-4 pb-8 max-w-lg mx-auto">
                   {/* Handle */}
@@ -363,56 +343,6 @@ export default function Home() {
                 </div>
               </motion.div>
             </>
-          )}
-        </AnimatePresence>
-
-        {/* ── MOBILE MENU OVERLAY ───────────────────────── */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[80]"
-            >
-              <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-2xl" />
-              <div className="relative h-full flex flex-col p-8 pt-24">
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
-                >
-                  <X size={22} className="text-white" />
-                </button>
-
-                <div className="space-y-6">
-                  {[
-                    { href: '/', label: 'Home' },
-                    { href: '/stores/launch', label: 'Open a Store' },
-                  ].map((link) => (
-                    <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)}
-                      className="block text-3xl font-black text-white tracking-tighter hover:text-gray-400 transition-colors">
-                      {link.label}
-                    </Link>
-                  ))}
-                  <button className="flex items-center gap-3 text-2xl font-bold text-white/70">
-                    <Truck size={22} /> Track Order
-                  </button>
-                </div>
-
-                <div className="mt-auto">
-                  {session ? (
-                    <button onClick={handleSignOut} className="w-full py-4 rounded-2xl bg-white/10 text-white font-bold text-lg flex items-center justify-center gap-2">
-                      <LogOut size={20} /> Sign Out
-                    </button>
-                  ) : (
-                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}
-                      className="block w-full py-4 rounded-2xl bg-white text-gray-900 text-center font-black text-lg shadow-xl shadow-black/30 hover:bg-gray-100 transition-colors">
-                      Sign In / Sign Up
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>

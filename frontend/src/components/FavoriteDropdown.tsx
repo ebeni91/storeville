@@ -64,7 +64,7 @@ export default function FavoriteDropdown({
               <div className="space-y-2">
                 {favorites.map(item => (
                   <div key={item.id} className="flex gap-3 items-center p-2 rounded-xl hover:bg-black/5 transition-colors cursor-pointer group"
-                    onClick={() => router.push('/profile')}
+                    onClick={() => router.push('/dashboard/buyer')}
                   >
                     <div className="w-12 h-12 rounded-lg bg-black/5 overflow-hidden shrink-0">
                       {item.image ? (
@@ -98,7 +98,7 @@ export default function FavoriteDropdown({
           {favorites.length > 0 && (
             <div className="p-3 border-t bg-black/5" style={{ borderColor: `rgba(${textRgb}, 0.05)` }}>
               <button 
-                onClick={() => router.push('/profile')}
+                onClick={() => router.push('/dashboard/buyer')}
                 className="w-full py-3 rounded-xl text-xs font-black tracking-widest uppercase hover:bg-black/10 transition-colors flex items-center justify-center gap-2"
               >
                 Go to Profile Wishlist <ArrowRight size={14} />

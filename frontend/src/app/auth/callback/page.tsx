@@ -1,69 +1,83 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState('Completing Sign In...')
+  const router = useRouter()
+  // Guard to ensure we only redirect once even if the effect fires multiple times
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
+    if (hasRedirected.current) return
+
     const resolveAndRedirect = async () => {
       let attempts = 0
-      const maxAttempts = 12
+      const maxAttempts = 15 // ~7.5 seconds total
 
       const poll = async (): Promise<void> => {
+        if (hasRedirected.current) return
         attempts++
+
         try {
-          // Use Django profile endpoint \u2014 same source as the middleware.
-          // The Django BetterAuthMiddleware reads the session cookie and
-          // returns the correct role directly from the BA user table.
-          const res = await fetch('/api/proxy/accounts/profile/', {
+          // No trailing slash — avoids Django 301 redirect that drops cookies
+          const res = await fetch('/api/proxy/accounts/profile', {
             cache: 'no-store',
             credentials: 'include',
           })
+
           if (res.ok) {
             const profile = await res.json()
             const role = profile?.role
 
             if (role === 'SELLER') {
+              if (hasRedirected.current) return
+              hasRedirected.current = true
               setStatus('Launching your Dashboard...')
-              window.location.href = '/dashboard/seller'
+              // Use replace to avoid back-button loop
+              router.replace('/dashboard/seller')
+              return
             } else if (role) {
-              // Known role (CUSTOMER etc.) \u2014 go home
-              window.location.href = '/'
-            } else if (attempts < maxAttempts) {
-              // No role yet \u2014 session establishing, retry
-              await new Promise(r => setTimeout(r, 500))
-              return poll()
-            } else {
-              window.location.href = '/'
+              if (hasRedirected.current) return
+              hasRedirected.current = true
+              setStatus('Redirecting...')
+              router.replace('/')
+              return
             }
-            return
-          } else if (res.status === 401 || res.status === 403) {
-            // Not authenticated yet \u2014 retry
+            // role is null/undefined — session not fully synced yet, retry
           }
+          // 401/403 or no role — retry
         } catch (_) {}
 
         if (attempts < maxAttempts) {
+          setStatus(`Syncing session... (${attempts}/${maxAttempts})`)
           await new Promise(r => setTimeout(r, 500))
           return poll()
         }
 
-        // No session established after retries — send to login
-        window.location.href = '/login'
+        // Exhausted retries — send to login
+        if (!hasRedirected.current) {
+          hasRedirected.current = true
+          router.replace('/login')
+        }
       }
 
       await poll()
     }
 
     resolveAndRedirect()
-  }, [])
+  }, [router])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <Loader2 size={48} className="animate-spin text-gray-900 mb-4" />
-      <h1 className="text-xl font-bold text-gray-900">{status}</h1>
-      <p className="text-gray-500 font-medium">Please wait while we route you securely.</p>
+      <div className="relative mb-6">
+        <div className="w-16 h-16 border-4 border-gray-100 border-t-gray-900 rounded-full animate-spin" />
+        <Loader2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-900 animate-pulse" size={22} />
+      </div>
+      <h1 className="text-xl font-bold text-gray-900 mb-2">{status}</h1>
+      <p className="text-gray-400 font-medium text-sm">Please wait while we route you securely.</p>
     </div>
   )
 }

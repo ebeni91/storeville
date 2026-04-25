@@ -35,25 +35,25 @@ export default function SmartProductsPage() {
         const storeRes = await api.get('/stores/manage/')
         const storeList = storeRes.data?.results || storeRes.data || []
         const currentStore = storeList[0]
-        
+
         if (!currentStore) {
-            console.error("No store found for user")
-            setIsLoading(false)
-            return
+          console.error("No store found for user")
+          setIsLoading(false)
+          return
         }
 
         setStore(currentStore)
 
         if (currentStore.store_type === 'FOOD') {
           const [menuRes, catRes] = await Promise.all([
-            api.get(`/food/items/?_t=${Date.now()}`), 
+            api.get(`/food/items/?_t=${Date.now()}`),
             api.get(`/food/categories/?limit=1000&_t=${Date.now()}`)
           ])
           setItems(menuRes.data?.results || menuRes.data || [])
           setCategories(catRes.data?.results || catRes.data || [])
         } else {
           const [prodRes, catRes] = await Promise.all([
-            api.get(`/retail/products/?_t=${Date.now()}`), 
+            api.get(`/retail/products/?_t=${Date.now()}`),
             api.get(`/retail/categories/?limit=1000&_t=${Date.now()}`)
           ])
           setItems(prodRes.data?.results || prodRes.data || [])
@@ -119,12 +119,12 @@ export default function SmartProductsPage() {
       const isFood = store.store_type === 'FOOD'
       const baseEndpoint = isFood ? '/food/items/' : '/retail/products/'
       const submitEndpoint = editingItemId ? `${baseEndpoint}${editingItemId}/` : baseEndpoint
-      
+
       const submitData = new FormData()
       Object.keys(formData).forEach(key => {
         // Skip purely readonly / generic fields from the API we shouldn't send back
         if (key === 'category_name' || key === 'id' || key === 'created_at' || key === 'updated_at' || key === 'store') return;
-        
+
         // If image is still a String URL, don't append it! Django ImageField expects File objects only on upload
         if (key === 'image' && typeof formData[key] === 'string') return;
 
@@ -150,8 +150,8 @@ export default function SmartProductsPage() {
       } else {
         await api.post(submitEndpoint, submitData, { headers: { 'Content-Type': 'multipart/form-data' } })
       }
-      
-      window.location.reload() 
+
+      window.location.reload()
     } catch (err: any) {
       console.error(err.response?.data)
       alert("Failed to save item. Ensure all required fields are filled.")
@@ -186,16 +186,16 @@ export default function SmartProductsPage() {
       setIsSubmitting(false)
     }
   }
-  
+
   const toggleVisibility = async (item: any) => {
     try {
       const isFood = store.store_type === 'FOOD'
       const endpoint = isFood ? `/food/items/${item.id}/` : `/retail/products/${item.id}/`
       const field = isFood ? 'is_available' : 'is_active'
       const newValue = !item[field]
-      
+
       await api.patch(endpoint, { [field]: newValue })
-      
+
       setItems(items.map(i => i.id === item.id ? { ...i, [field]: newValue } : i))
     } catch (err) {
       alert("Failed to update status.")
@@ -267,35 +267,35 @@ export default function SmartProductsPage() {
                   </tr>
                 </thead>
                 <motion.tbody variants={containerVariants} initial="hidden" animate="show" className="divide-y divide-gray-100/50">
-                {catItems.map((item) => {
-                  const isActive = isFood ? item.is_available : item.is_active
-                  return (
-                    <motion.tr variants={rowVariants} key={item.id} className={`hover:bg-white/60 transition-colors group ${!isActive ? 'opacity-60 grayscale-[0.5]' : ''}`}>
-                      <td className="p-4 font-black text-gray-900 flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white rounded-[0.75rem] shadow-sm border border-gray-100 overflow-hidden flex items-center justify-center shrink-0">
-                          {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <ImageIcon className="text-gray-300" size={18} />}
-                        </div>
-                        <span className="flex items-center gap-2">{item.name}{!isActive && <EyeOff size={13} className="text-gray-400" />}</span>
-                      </td>
-                      <td className="p-4 font-black text-gray-600">Br {item.price}</td>
-                      {isFood ? (
-                        <>
-                          <td className="p-4 hidden md:table-cell"><span className="bg-white shadow-sm border border-gray-100 text-orange-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center w-max gap-1"><Clock size={12} /> {item.preparation_time_minutes}m</span></td>
-                          <td className="p-4 hidden md:table-cell"><div className="flex gap-1">{item.is_vegan && <span className="p-1 px-2 bg-green-50 rounded border border-green-100 text-green-600 text-[10px] font-bold flex items-center gap-1"><Leaf size={11} />Vegan</span>}{item.is_spicy && <span className="p-1 px-2 bg-red-50 rounded border border-red-100 text-red-600 text-[10px] font-bold flex items-center gap-1"><Flame size={11} />Spicy</span>}{!item.is_vegan && !item.is_spicy && <span className="text-xs text-gray-400">–</span>}</div></td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="p-4 hidden md:table-cell"><span className="text-xs text-gray-500 font-mono font-bold">{item.sku || '–'}</span></td>
-                          <td className="p-4 hidden md:table-cell"><span className={`px-3 py-1.5 rounded-xl border font-black text-xs shadow-sm ${item.stock_quantity > 5 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{item.stock_quantity}</span></td>
-                        </>
-                      )}
-                      <td className="p-4 whitespace-nowrap"><button onClick={() => toggleVisibility(item)} className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border shadow-sm transition-all hover:-translate-y-0.5 ${isActive ? 'bg-gray-100 text-gray-900 border-gray-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{isActive ? 'Active' : 'Hidden'}</button></td>
-                      <td className="p-4 whitespace-nowrap"><div className="flex items-center justify-end gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleOpenEdit(item)} className="p-2 md:p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-gray-900 transition-colors"><Edit size={14} className="md:w-[15px] md:h-[15px]"/></button><button onClick={() => handleDelete(item.id)} className="p-2 md:p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={14} className="md:w-[15px] md:h-[15px]"/></button></div></td>
-                    </motion.tr>
-                  )
-                })}
-              </motion.tbody>
-            </table>
+                  {catItems.map((item) => {
+                    const isActive = isFood ? item.is_available : item.is_active
+                    return (
+                      <motion.tr variants={rowVariants} key={item.id} className={`hover:bg-white/60 transition-colors group ${!isActive ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+                        <td className="p-4 font-black text-gray-900 flex items-center gap-3">
+                          <div className="w-12 h-12 bg-white rounded-[0.75rem] shadow-sm border border-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+                            {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <ImageIcon className="text-gray-300" size={18} />}
+                          </div>
+                          <span className="flex items-center gap-2">{item.name}{!isActive && <EyeOff size={13} className="text-gray-400" />}</span>
+                        </td>
+                        <td className="p-4 font-black text-gray-600">Br {item.price}</td>
+                        {isFood ? (
+                          <>
+                            <td className="p-4 hidden md:table-cell"><span className="bg-white shadow-sm border border-gray-100 text-orange-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center w-max gap-1"><Clock size={12} /> {item.preparation_time_minutes}m</span></td>
+                            <td className="p-4 hidden md:table-cell"><div className="flex gap-1">{item.is_vegan && <span className="p-1 px-2 bg-green-50 rounded border border-green-100 text-green-600 text-[10px] font-bold flex items-center gap-1"><Leaf size={11} />Vegan</span>}{item.is_spicy && <span className="p-1 px-2 bg-red-50 rounded border border-red-100 text-red-600 text-[10px] font-bold flex items-center gap-1"><Flame size={11} />Spicy</span>}{!item.is_vegan && !item.is_spicy && <span className="text-xs text-gray-400">–</span>}</div></td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="p-4 hidden md:table-cell"><span className="text-xs text-gray-500 font-mono font-bold">{item.sku || '–'}</span></td>
+                            <td className="p-4 hidden md:table-cell"><span className={`px-3 py-1.5 rounded-xl border font-black text-xs shadow-sm ${item.stock_quantity > 5 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{item.stock_quantity}</span></td>
+                          </>
+                        )}
+                        <td className="p-4 whitespace-nowrap"><button onClick={() => toggleVisibility(item)} className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border shadow-sm transition-all hover:-translate-y-0.5 ${isActive ? 'bg-gray-100 text-gray-900 border-gray-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{isActive ? 'Active' : 'Hidden'}</button></td>
+                        <td className="p-4 whitespace-nowrap"><div className="flex items-center justify-end gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => handleOpenEdit(item)} className="p-2 md:p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-gray-900 transition-colors"><Edit size={14} className="md:w-[15px] md:h-[15px]" /></button><button onClick={() => handleDelete(item.id)} className="p-2 md:p-2.5 bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={14} className="md:w-[15px] md:h-[15px]" /></button></div></td>
+                      </motion.tr>
+                    )
+                  })}
+                </motion.tbody>
+              </table>
             </div>
           </motion.div>
         ))
@@ -309,25 +309,25 @@ export default function SmartProductsPage() {
               {editingItemId ? (isFood ? 'Edit Dish' : 'Edit Product') : (isFood ? 'New Menu Item' : 'New Product')}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Item Name</label>
-                  <input required type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all" placeholder="e.g. Classic Burger" />
+                  <input required type="text" value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all" placeholder="e.g. Classic Burger" />
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Description</label>
-                  <textarea value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all resize-none min-h-[100px]" placeholder="Brief description of the item..."></textarea>
+                  <textarea value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-medium focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all resize-none min-h-[100px]" placeholder="Brief description of the item..."></textarea>
                 </div>
 
                 <div>
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Price (Br)</label>
-                  <input required type="number" step="0.01" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-black text-lg focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all text-gray-900" placeholder="0.00" />
+                  <input required type="number" step="0.01" value={formData.price || ''} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-black text-lg focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all text-gray-900" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Category</label>
-                  <select required value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all appearance-none cursor-pointer">
+                  <select required value={formData.category || ''} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none font-bold focus:ring-2 focus:ring-gray-900 focus:bg-white transition-all appearance-none cursor-pointer">
                     <option value="">Select Category...</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
@@ -340,14 +340,14 @@ export default function SmartProductsPage() {
                     <p className="text-xs text-gray-500 font-medium mt-1">If hidden, customers will not see or be able to order this item.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="sr-only peer" 
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
                       checked={isFood ? (formData.is_available !== false) : (formData.is_active !== false)}
                       onChange={e => setFormData({
-                        ...formData, 
+                        ...formData,
                         ...(isFood ? { is_available: e.target.checked } : { is_active: e.target.checked })
-                      })} 
+                      })}
                     />
                     <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gray-900 shadow-inner"></div>
                   </label>
@@ -358,12 +358,12 @@ export default function SmartProductsPage() {
                   <label className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 block">Featured Image</label>
                   <label className="group relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all overflow-hidden bg-gray-50/50">
                     {formData.image ? (
-                        <div className="absolute inset-0 w-full h-full bg-gray-100">
-                           <img src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)} className="w-full h-full object-contain opacity-80 group-hover:opacity-50 transition-opacity" />
-                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <span className="bg-black/80 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-xl">Change Image</span>
-                           </div>
+                      <div className="absolute inset-0 w-full h-full bg-gray-100">
+                        <img src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)} className="w-full h-full object-contain opacity-80 group-hover:opacity-50 transition-opacity" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="bg-black/80 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-xl">Change Image</span>
                         </div>
+                      </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6 text-gray-400 group-hover:text-gray-900 transition-colors">
                         <UploadCloud className="w-10 h-10 mb-3" />
@@ -371,7 +371,7 @@ export default function SmartProductsPage() {
                         <p className="text-xs font-medium opacity-70 mt-1">JPEG, PNG, WEBP (Max 5MB)</p>
                       </div>
                     )}
-                    <input type="file" accept="image/*" className="hidden" onChange={e => setFormData({...formData, image: e.target.files?.[0]})} />
+                    <input type="file" accept="image/*" className="hidden" onChange={e => setFormData({ ...formData, image: e.target.files?.[0] })} />
                   </label>
                 </div>
               </div>
@@ -380,25 +380,25 @@ export default function SmartProductsPage() {
               {isFood ? (
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 bg-orange-50/50 p-6 rounded-2xl border border-orange-100">
                   <div className="col-span-2 lg:col-span-3">
-                    <h4 className="text-sm font-black text-orange-900 tracking-tight flex items-center gap-2 mb-4"><Flame className="text-orange-500" size={18}/> Kitchen Details</h4>
+                    <h4 className="text-sm font-black text-orange-900 tracking-tight flex items-center gap-2 mb-4"><Flame className="text-orange-500" size={18} /> Kitchen Details</h4>
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-orange-900/60 tracking-widest uppercase mb-2 block flex items-center gap-1">Prep Time (Mins)</label>
-                    <input type="number" value={formData.preparation_time_minutes || ''} onChange={e => setFormData({...formData, preparation_time_minutes: e.target.value})} className="w-full bg-white border border-orange-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-orange-500 font-bold text-orange-900" />
+                    <input type="number" value={formData.preparation_time_minutes || ''} onChange={e => setFormData({ ...formData, preparation_time_minutes: e.target.value })} className="w-full bg-white border border-orange-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-orange-500 font-bold text-orange-900" />
                   </div>
                   <label className="flex items-center justify-center gap-3 cursor-pointer p-4 bg-white rounded-xl border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
-                    <input type="checkbox" checked={formData.is_vegan || false} onChange={e => setFormData({...formData, is_vegan: e.target.checked})} className="w-5 h-5 accent-green-600" /> 
-                    <span className="text-sm font-bold text-green-700 flex items-center gap-1.5"><Leaf size={16}/> Vegan</span>
+                    <input type="checkbox" checked={formData.is_vegan || false} onChange={e => setFormData({ ...formData, is_vegan: e.target.checked })} className="w-5 h-5 accent-green-600" />
+                    <span className="text-sm font-bold text-green-700 flex items-center gap-1.5"><Leaf size={16} /> Vegan</span>
                   </label>
                   <label className="flex items-center justify-center gap-3 cursor-pointer p-4 bg-white rounded-xl border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
-                    <input type="checkbox" checked={formData.is_spicy || false} onChange={e => setFormData({...formData, is_spicy: e.target.checked})} className="w-5 h-5 accent-red-600" /> 
-                    <span className="text-sm font-bold text-red-700 flex items-center gap-1.5"><Flame size={16}/> Spicy</span>
+                    <input type="checkbox" checked={formData.is_spicy || false} onChange={e => setFormData({ ...formData, is_spicy: e.target.checked })} className="w-5 h-5 accent-red-600" />
+                    <span className="text-sm font-bold text-red-700 flex items-center gap-1.5"><Flame size={16} /> Spicy</span>
                   </label>
-                  
+
                   {/* FOOD EXTRAS SECTION */}
                   <div className="col-span-2 lg:col-span-3 mt-4 pt-4 border-t border-orange-200 border-dashed space-y-4">
                     <h4 className="text-sm font-black text-orange-900 tracking-tight flex items-center gap-2 mb-2">Extras & Add-ons <span className="opacity-50 text-[10px] uppercase font-bold">(Optional)</span></h4>
-                    
+
                     {/* Existing extras */}
                     {pendingExtras.map((extra, idx) => (
                       <div key={extra.id} className="flex items-center justify-between bg-white border border-orange-200 p-3 rounded-xl shadow-sm">
@@ -406,70 +406,70 @@ export default function SmartProductsPage() {
                           <p className="text-sm font-bold text-gray-900">{extra.name}</p>
                           <p className="text-xs font-black text-orange-600">+Br {parseFloat(extra.price).toFixed(2)}</p>
                         </div>
-                        <button type="button" onClick={() => setPendingExtras(p => p.filter((_, i) => i !== idx))} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={14}/></button>
+                        <button type="button" onClick={() => setPendingExtras(p => p.filter((_, i) => i !== idx))} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={14} /></button>
                       </div>
                     ))}
 
                     <div className="flex flex-col md:flex-row gap-3 bg-white p-3 rounded-xl border border-orange-200 mt-2">
-                       <input type="text" value={newExtraName} onChange={e => setNewExtraName(e.target.value)} placeholder="Extra (e.g. Extra Cheese)" className="flex-1 bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-orange-500"/>
-                       <input type="number" value={newExtraPrice} onChange={e => setNewExtraPrice(e.target.value)} placeholder="Price (Br)" className="w-full md:w-32 bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none text-orange-600 focus:ring-1 focus:ring-orange-500"/>
-                       <button type="button" onClick={addPendingExtra} className="bg-orange-100 text-orange-700 hover:bg-orange-200 px-4 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap"><Plus size={16}/> Add Extra</button>
+                      <input type="text" value={newExtraName} onChange={e => setNewExtraName(e.target.value)} placeholder="Extra (e.g. Extra Cheese)" className="flex-1 bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-orange-500" />
+                      <input type="number" value={newExtraPrice} onChange={e => setNewExtraPrice(e.target.value)} placeholder="Price (Br)" className="w-full md:w-32 bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none text-orange-600 focus:ring-1 focus:ring-orange-500" />
+                      <button type="button" onClick={addPendingExtra} className="bg-orange-100 text-orange-700 hover:bg-orange-200 px-4 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap"><Plus size={16} /> Add Extra</button>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4 bg-gray-50/50 p-6 rounded-2xl border border-gray-200">
                   <div className="col-span-2">
-                    <h4 className="text-sm font-black text-gray-900 tracking-tight flex items-center gap-2 mb-4"><Package className="text-gray-900" size={18}/> Inventory Details</h4>
+                    <h4 className="text-sm font-black text-gray-900 tracking-tight flex items-center gap-2 mb-4"><Package className="text-gray-900" size={18} /> Inventory Details</h4>
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-gray-900/60 tracking-widest uppercase mb-2 block">SKU</label>
-                    <input type="text" value={formData.sku || ''} onChange={e => setFormData({...formData, sku: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-gray-900 font-bold text-gray-900" placeholder="e.g. TSHIRT-01" />
+                    <input type="text" value={formData.sku || ''} onChange={e => setFormData({ ...formData, sku: e.target.value })} className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-gray-900 font-bold text-gray-900" placeholder="e.g. TSHIRT-01" />
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-gray-900/60 tracking-widest uppercase mb-2 block">Stock Limit</label>
-                    <input type="number" value={formData.stock_quantity || ''} onChange={e => setFormData({...formData, stock_quantity: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-gray-900 font-bold text-gray-900" />
+                    <input type="number" value={formData.stock_quantity || ''} onChange={e => setFormData({ ...formData, stock_quantity: e.target.value })} className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-gray-900 font-bold text-gray-900" />
                   </div>
                 </div>
               )}
 
               {/* OPTIONS (SHARED BETWEEN RETAIL / FOOD) */}
               <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-200 space-y-4">
-                 <h4 className="text-sm font-black text-gray-900 tracking-tight flex items-center gap-2 mb-2">Variants & Custom Size Options <span className="opacity-50 text-[10px] uppercase font-bold">(Optional)</span></h4>
-                 <p className="text-xs text-gray-500 font-medium -mt-2 mb-4">Define product variants or customizations that your customers can select from.</p>
-                 
-                 {/* Existing Option Rows */}
-                 {pendingOptions.map((opt, idx) => (
-                    <div key={opt.id} className="flex items-center justify-between bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-black text-gray-900">{opt.name}</p>
-                          {opt.required && <span className="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded uppercase font-bold tracking-widest">Required</span>}
-                        </div>
-                        <p className="text-xs font-bold text-gray-900">Choices: {opt.choices.join(', ')}</p>
-                      </div>
-                      <button type="button" onClick={() => setPendingOptions(p => p.filter((_, i) => i !== idx))} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={16}/></button>
-                    </div>
-                 ))}
+                <h4 className="text-sm font-black text-gray-900 tracking-tight flex items-center gap-2 mb-2">Variants & Custom Size Options <span className="opacity-50 text-[10px] uppercase font-bold">(Optional)</span></h4>
+                <p className="text-xs text-gray-500 font-medium -mt-2 mb-4">Define product variants or customizations that your customers can select from.</p>
 
-                 {/* Add New Option Area */}
-                 <div className="bg-white border border-gray-200 p-4 rounded-xl space-y-3 mt-4">
-                    <input type="text" value={newOptionName} onChange={e => setNewOptionName(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-gray-900" placeholder="Variant Name (e.g. Size, Color, Delivery Mode)"/>
-                    <input type="text" value={newOptionChoices} onChange={e => setNewOptionChoices(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-gray-900" placeholder="Comma separated choices (e.g. Small, Medium, Large)"/>
-                    <div className="flex items-center justify-between pt-2">
-                       <label className="flex items-center gap-2 cursor-pointer">
-                         <input type="checkbox" checked={newOptionRequired} onChange={e => setNewOptionRequired(e.target.checked)} className="w-4 h-4 accent-gray-900"/>
-                         <span className="text-xs font-bold text-gray-700">Selection is Required</span>
-                       </label>
-                       <button type="button" onClick={addPendingOption} className="bg-gray-100 text-gray-900 hover:bg-gray-200 px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16}/> Add Variant</button>
+                {/* Existing Option Rows */}
+                {pendingOptions.map((opt, idx) => (
+                  <div key={opt.id} className="flex items-center justify-between bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-black text-gray-900">{opt.name}</p>
+                        {opt.required && <span className="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded uppercase font-bold tracking-widest">Required</span>}
+                      </div>
+                      <p className="text-xs font-bold text-gray-900">Choices: {opt.choices.join(', ')}</p>
                     </div>
-                 </div>
+                    <button type="button" onClick={() => setPendingOptions(p => p.filter((_, i) => i !== idx))} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><Trash2 size={16} /></button>
+                  </div>
+                ))}
+
+                {/* Add New Option Area */}
+                <div className="bg-white border border-gray-200 p-4 rounded-xl space-y-3 mt-4">
+                  <input type="text" value={newOptionName} onChange={e => setNewOptionName(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-gray-900" placeholder="Variant Name (e.g. Size, Color, Delivery Mode)" />
+                  <input type="text" value={newOptionChoices} onChange={e => setNewOptionChoices(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm font-bold outline-none focus:ring-1 focus:ring-gray-900" placeholder="Comma separated choices (e.g. Small, Medium, Large)" />
+                  <div className="flex items-center justify-between pt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={newOptionRequired} onChange={e => setNewOptionRequired(e.target.checked)} className="w-4 h-4 accent-gray-900" />
+                      <span className="text-xs font-bold text-gray-700">Selection is Required</span>
+                    </label>
+                    <button type="button" onClick={addPendingOption} className="bg-gray-100 text-gray-900 hover:bg-gray-200 px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16} /> Add Variant</button>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-4 pt-6 border-t border-gray-100 mt-8">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-black tracking-widest uppercase text-xs hover:bg-gray-200 transition-colors">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="flex-[2] py-4 bg-gray-900 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-xl shadow-[0_8px_20px_rgba(17,24,39,0.2)] hover:bg-black hover:scale-[1.02] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:hover:scale-100">
-                  {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : (editingItemId ? 'Update Item' : 'Save Item')}
+                  {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : (editingItemId ? 'Update Item' : 'Save Item')}
                 </button>
               </div>
             </form>
@@ -489,7 +489,7 @@ export default function SmartProductsPage() {
               <div className="flex gap-4 pt-4 border-t border-gray-100 mt-6">
                 <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-black tracking-widest uppercase text-xs hover:bg-gray-200 transition-colors">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-xl shadow-[0_8px_20px_rgba(17,24,39,0.2)] hover:bg-black hover:scale-[1.02] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:hover:scale-100">
-                  {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : 'Save Category'}
+                  {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : 'Save Category'}
                 </button>
               </div>
             </form>

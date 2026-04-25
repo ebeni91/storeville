@@ -37,29 +37,33 @@ class StoreThemeMixin(serializers.Serializer):
     def update(self, instance, validated_data):
         # Extract theme data
         theme_data = validated_data.pop('theme_config', {})
-        
+
         # Update core Store instance
         instance = super().update(instance, validated_data)
-        
-        # Update nested StoreTheme
+
+        # Update nested StoreTheme — use get_or_create so stores that were
+        # created before the auto-signal was deployed still get a theme row
+        # rather than crashing with RelatedObjectDoesNotExist.
         if theme_data:
-            theme_config = instance.theme_config
+            theme_config, _ = StoreTheme.objects.get_or_create(store=instance)
             for attr, value in theme_data.items():
                 setattr(theme_config, attr, value)
             theme_config.save()
-            
+
         return instance
 
     def create(self, validated_data):
         theme_data = validated_data.pop('theme_config', {})
         instance = super().create(validated_data)
-        
+
+        # Always get_or_create — the post_save signal may have already created
+        # it; this is idempotent and prevents any race-condition duplicates.
+        theme_config, _ = StoreTheme.objects.get_or_create(store=instance)
         if theme_data:
-            theme_config = instance.theme_config
             for attr, value in theme_data.items():
                 setattr(theme_config, attr, value)
             theme_config.save()
-            
+
         return instance
 
 

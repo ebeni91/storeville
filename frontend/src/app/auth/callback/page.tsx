@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState('Completing Sign In...')
-  const router = useRouter()
-  // Guard to ensure we only redirect once even if the effect fires multiple times
   const hasRedirected = useRef(false)
 
   useEffect(() => {
@@ -15,41 +13,41 @@ export default function AuthCallback() {
 
     const resolveAndRedirect = async () => {
       let attempts = 0
-      const maxAttempts = 15 // ~7.5 seconds total
+      const maxAttempts = 20 // 10 seconds max
 
       const poll = async (): Promise<void> => {
         if (hasRedirected.current) return
         attempts++
 
         try {
-          // No trailing slash — avoids Django 301 redirect that drops cookies
-          const res = await fetch('/api/proxy/accounts/profile', {
-            cache: 'no-store',
-            credentials: 'include',
-          })
+          // Step 1: Verify the Better Auth session exists
+          const { data: session } = await authClient.getSession()
 
-          if (res.ok) {
-            const profile = await res.json()
-            const role = profile?.role
+          if (session?.user) {
+            // Step 2: Get the authoritative role from Django
+            const res = await fetch('/api/proxy/accounts/profile', {
+              cache: 'no-store',
+              credentials: 'include',
+            })
 
-            if (role === 'SELLER') {
-              if (hasRedirected.current) return
-              hasRedirected.current = true
-              setStatus('Launching your Dashboard...')
-              // Use replace to avoid back-button loop
-              router.replace('/dashboard/seller')
-              return
-            } else if (role) {
-              if (hasRedirected.current) return
-              hasRedirected.current = true
-              setStatus('Redirecting...')
-              router.replace('/')
-              return
+            if (res.ok) {
+              const profile = await res.json()
+              const role = profile?.role
+
+              if (role && !hasRedirected.current) {
+                hasRedirected.current = true
+                const dest = role === 'SELLER' ? '/dashboard/seller' : '/'
+                setStatus(role === 'SELLER' ? 'Launching your Dashboard...' : 'Redirecting...')
+                // window.location.assign = hard navigation, bypasses App Router
+                // interception and reliably navigates even on Vercel Edge
+                window.location.assign(dest)
+                return
+              }
             }
-            // role is null/undefined — session not fully synced yet, retry
           }
-          // 401/403 or no role — retry
-        } catch (_) {}
+        } catch (_) {
+          // Session not ready yet — retry
+        }
 
         if (attempts < maxAttempts) {
           setStatus(`Syncing session... (${attempts}/${maxAttempts})`)
@@ -60,7 +58,7 @@ export default function AuthCallback() {
         // Exhausted retries — send to login
         if (!hasRedirected.current) {
           hasRedirected.current = true
-          router.replace('/login')
+          window.location.assign('/login')
         }
       }
 
@@ -68,7 +66,7 @@ export default function AuthCallback() {
     }
 
     resolveAndRedirect()
-  }, [router])
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">

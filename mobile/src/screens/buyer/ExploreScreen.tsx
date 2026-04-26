@@ -83,9 +83,9 @@ window.addEventListener('initMap', function(e) {
   if (!window.hasAutoLocated) {
     if (closest.length > 0) {
       // Automatically calculates the perfect optical zoom stretching the nearest coordinates across the screen
-      window.map.flyToBounds(dynamicBounds, { padding: [60, 60], maxZoom: 17, animate: true, duration: 1.5 });
+      window.map.flyToBounds(dynamicBounds, { padding: [60, 60], maxZoom: 19, animate: true, duration: 1.5 });
     } else {
-      window.map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
+      window.map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
     }
     window.hasAutoLocated = true;
   }
@@ -308,14 +308,11 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
             onPress={async () => {
               try {
                 const currentLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-                setLocation(currentLoc);
+                // Unlock map camera so the useEffect sync can trigger the dynamic zoom physics
                 if (webviewRef.current) {
-                  webviewRef.current.injectJavaScript(`
-                    if (window.map) window.map.flyTo([${currentLoc.coords.latitude}, ${currentLoc.coords.longitude}], 15, { animate: true, duration: 1.5 });
-                    if (window.userMarker) window.userMarker.setLatLng([${currentLoc.coords.latitude}, ${currentLoc.coords.longitude}]);
-                    true;
-                  `);
+                  webviewRef.current.injectJavaScript('window.hasAutoLocated = false; true;');
                 }
+                setLocation(currentLoc);
               } catch (e) { /* ignore */ }
             }}
           >

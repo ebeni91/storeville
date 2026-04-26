@@ -186,20 +186,6 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   useEffect(() => { injectStoreData(); }, [stores, activeGateway, location]); // dynamic updates
   
 
-    if (!webviewRef.current || !stores) return;
-    // JSON.stringify is safe — it properly escapes all special characters
-    const payload = JSON.stringify({ stores: stores || [], lat, lng });
-    webviewRef.current.injectJavaScript(`
-      (function() {
-        try {
-          var payload = ${payload};
-          window.dispatchEvent(new CustomEvent('initMap', { detail: payload }));
-        } catch(e) { console.error('[StoreVille] injectStoreData error:', e); }
-        true;
-      })();
-    `);
-  };
-
   
 
   const foodChips = ['Cafes', 'Restaurants', 'Bakeries', 'Hotels'];

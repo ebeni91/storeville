@@ -1,4 +1,70 @@
 import React, { useEffect, useState, useRef } from 'react';
+const MAP_SOURCE = {
+  html: `<!DOCTYPE html><html><head>
+<title>StoreVille Map</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+body,html,#map{margin:0;padding:0;height:100vh;width:100vw;}
+.leaflet-control-attribution,.leaflet-control-zoom{display:none!important;}
+@keyframes pinPop{0%{transform:scale(0.3) translateY(20px);opacity:0;}80%{transform:scale(1.08) translateY(-2px);}100%{transform:scale(1) translateY(0);opacity:1;}}
+@keyframes ripple{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(2.2);opacity:0;}}
+.store-pin{animation:pinPop 0.35s cubic-bezier(.175,.885,.32,1.275) forwards;}
+.pin-ripple{animation:ripple 1.8s ease-out infinite;}
+</style></head><body><div id="map"></div>
+<script>
+// ✅ SECURITY: Map initialised with no data. Store data injected via initMap event.
+window.map = L.map('map', {zoomControl:false, attributionControl:false}).setView([9.0,38.75], 5);
+L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {maxZoom:20}).addTo(window.map);
+
+window.addEventListener('initMap', function(e) {
+  var data = e.detail;
+  var lat = data.lat; var lng = data.lng;
+  var stores = data.stores;
+  if(window.userMarker) window.map.removeLayer(window.userMarker);
+  if(window.storeMarkers) window.storeMarkers.forEach(function(m){window.map.removeLayer(m);});
+  window.storeMarkers = [];
+
+  // Place user dot
+  var ud = '<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(0,0,0,0.20);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#111827;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(0,0,0,0.30);"></div></div>';
+  window.userMarker = L.marker([lat,lng],{icon:L.divIcon({html:ud,className:'',iconSize:[22,22],iconAnchor:[11,11]})}).addTo(window.map);
+
+  var bounds = L.latLngBounds([[lat,lng]]);
+
+  stores.forEach(function(s) {
+    if (!s.latitude || !s.longitude) return;
+    var isF = s.store_type === 'FOOD';
+    var col = isF ? '#f97316' : '#111827';
+    var svg = isF
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+    var h = '<div class="store-pin" style="position:relative;width:46px;height:54px;cursor:pointer;">'
+      + '<div style="width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid '+col+';display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);position:relative;z-index:1;">'
+      + '<div style="width:32px;height:32px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;">'+svg+'</div>'
+      + '</div>'
+      + '<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:'+col+';clip-path:polygon(50% 100%,0% 0%,100% 0%);"></div>'
+      + '</div>';
+    var ic = L.divIcon({className:'', html:h, iconSize:[46,54], iconAnchor:[23,54]});
+    var coord = [parseFloat(s.latitude), parseFloat(s.longitude)];
+    bounds.extend(coord);
+    var m = L.marker(coord, {icon:ic}).addTo(window.map);
+    window.storeMarkers.push(m);
+    m
+      .on('click', function() {
+        window.ReactNativeWebView.postMessage(JSON.stringify({type:'STORE_CLICK', storeId:s.id}));
+      });
+  });
+
+  if (stores.length > 0) {
+    window.map.fitBounds(bounds, {padding:[50,50], maxZoom:15, animate:true, duration:1.5});
+  } else {
+    window.map.setView([lat,lng], 13);
+  }
+});
+</script></body></html>`
+};
+
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
   ActivityIndicator, Animated, Dimensions, StatusBar, StyleSheet
@@ -77,6 +143,8 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     },
     // Always enabled — don't gate on auth state
     enabled: true,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
     retry: 2,
   });
 
@@ -107,6 +175,18 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
   // Called after WebView finishes loading — safely injects store data
   const injectStoreData = () => {
     if (!webviewRef.current || !stores) return;
+    const payload = JSON.stringify({ stores: stores || [], lat, lng });
+    webviewRef.current.injectJavaScript(`
+      (function() {
+        try { window.dispatchEvent(new CustomEvent('initMap', { detail: ${payload} })); } catch(e){}
+        true;
+      })();
+    `);
+  };
+  useEffect(() => { injectStoreData(); }, [stores, activeGateway, location]); // dynamic updates
+  
+
+    if (!webviewRef.current || !stores) return;
     // JSON.stringify is safe — it properly escapes all special characters
     const payload = JSON.stringify({ stores: stores || [], lat, lng });
     webviewRef.current.injectJavaScript(`
@@ -120,64 +200,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     `);
   };
 
-  const leafletHTML = `<!DOCTYPE html><html><head>
-<title>StoreVille Map</title>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-body,html,#map{margin:0;padding:0;height:100vh;width:100vw;}
-.leaflet-control-attribution,.leaflet-control-zoom{display:none!important;}
-@keyframes pinPop{0%{transform:scale(0.3) translateY(20px);opacity:0;}80%{transform:scale(1.08) translateY(-2px);}100%{transform:scale(1) translateY(0);opacity:1;}}
-@keyframes ripple{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(2.2);opacity:0;}}
-.store-pin{animation:pinPop 0.35s cubic-bezier(.175,.885,.32,1.275) forwards;}
-.pin-ripple{animation:ripple 1.8s ease-out infinite;}
-</style></head><body><div id="map"></div>
-<script>
-// ✅ SECURITY: Map initialised with no data. Store data injected via initMap event.
-window.map = L.map('map', {zoomControl:false, attributionControl:false}).setView([9.0,38.75], 5);
-L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {maxZoom:20}).addTo(window.map);
-
-window.addEventListener('initMap', function(e) {
-  var data = e.detail;
-  var lat = data.lat; var lng = data.lng;
-  var stores = data.stores;
-
-  // Place user dot
-  var ud = '<div style="position:relative;width:22px;height:22px"><div class="pin-ripple" style="position:absolute;width:22px;height:22px;background:rgba(0,0,0,0.20);border-radius:50%;top:0;left:0;"></div><div style="position:absolute;width:14px;height:14px;background:#111827;border:2.5px solid #fff;border-radius:50%;top:4px;left:4px;box-shadow:0 2px 8px rgba(0,0,0,0.30);"></div></div>';
-  L.marker([lat,lng],{icon:L.divIcon({html:ud,className:'',iconSize:[22,22],iconAnchor:[11,11]})}).addTo(window.map);
-
-  var bounds = L.latLngBounds([[lat,lng]]);
-
-  stores.forEach(function(s) {
-    if (!s.latitude || !s.longitude) return;
-    var isF = s.store_type === 'FOOD';
-    var col = isF ? '#f97316' : '#111827';
-    var svg = isF
-      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>'
-      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
-    var h = '<div class="store-pin" style="position:relative;width:46px;height:54px;cursor:pointer;">'
-      + '<div style="width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid '+col+';display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);position:relative;z-index:1;">'
-      + '<div style="width:32px;height:32px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;">'+svg+'</div>'
-      + '</div>'
-      + '<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:'+col+';clip-path:polygon(50% 100%,0% 0%,100% 0%);"></div>'
-      + '</div>';
-    var ic = L.divIcon({className:'', html:h, iconSize:[46,54], iconAnchor:[23,54]});
-    var coord = [parseFloat(s.latitude), parseFloat(s.longitude)];
-    bounds.extend(coord);
-    L.marker(coord, {icon:ic}).addTo(window.map)
-      .on('click', function() {
-        window.ReactNativeWebView.postMessage(JSON.stringify({type:'STORE_CLICK', storeId:s.id}));
-      });
-  });
-
-  if (stores.length > 0) {
-    window.map.fitBounds(bounds, {padding:[50,50], maxZoom:15, animate:true, duration:1.5});
-  } else {
-    window.map.setView([lat,lng], 13);
-  }
-});
-</script></body></html>`;
+  
 
   const foodChips = ['Cafes', 'Restaurants', 'Bakeries', 'Hotels'];
   const retailChips = ['Fashion', 'Electronics', 'Home', 'Beauty'];
@@ -205,7 +228,7 @@ window.addEventListener('initMap', function(e) {
           {/* ── Full-screen Map ───────────────────── */}
           <WebView
             ref={webviewRef}
-            source={{ html: leafletHTML }}
+            source={MAP_SOURCE}
             style={{ flex: 1 }}
             scrollEnabled={false}
             bounces={false}
@@ -367,7 +390,7 @@ window.addEventListener('initMap', function(e) {
 
                 {/* CTA — sits above the floating tab bar */}
                 <TouchableOpacity
-                  onPress={() => { closeDrawer(); navigation.navigate('StoreGateway', { store: selectedStore }); }}
+                  onPress={() => { drawerAnim.setValue(0); setSelectedStore(null); navigation.navigate('StoreGateway', { store: selectedStore }); }}
                   activeOpacity={0.85}
                   style={[styles.ctaButton, { backgroundColor: isFood ? '#f97316' : '#111827', shadowColor: isFood ? '#f97316' : '#111827' }]}
                 >

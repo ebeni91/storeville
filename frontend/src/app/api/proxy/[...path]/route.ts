@@ -92,7 +92,8 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
     const responseHeaders = new Headers()
 
     response.headers.forEach((value, key) => {
-      if (!['transfer-encoding', 'connection'].includes(key.toLowerCase())) {
+      const k = key.toLowerCase()
+      if (!['transfer-encoding', 'connection', 'content-length', 'content-encoding'].includes(k)) {
         responseHeaders.set(key, value)
       }
     })

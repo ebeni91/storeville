@@ -70,10 +70,10 @@ window.addEventListener('initMap', function(e) {
   var closest = distances.slice(0, 5); // Take the top 5 closest stores
   
   var dynamicBounds = L.latLngBounds([[lat, lng]]);
-  // Ensure we include at least a 1km radius visually even if stores are extremely close
-  // 1 degree is roughly 111km, so 0.009 is about 1km
-  dynamicBounds.extend([lat + 0.009, lng + 0.009]);
-  dynamicBounds.extend([lat - 0.009, lng - 0.009]);
+  // Ensure we include at least a 100m radius visually even if stores are extremely close
+  // 1 degree is roughly 111km, so 0.0009 is about 100m
+  dynamicBounds.extend([lat + 0.0009, lng + 0.0009]);
+  dynamicBounds.extend([lat - 0.0009, lng - 0.0009]);
   
   closest.forEach(function(c) {
     dynamicBounds.extend([c[0], c[1]]);

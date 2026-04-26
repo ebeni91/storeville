@@ -39,12 +39,13 @@ window.addEventListener('initMap', function(e) {
     var svg = isF
       ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>'
       : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+    var t = '<div style="position:absolute;top:56px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.95);padding:4px 10px;border-radius:12px;box-shadow:0 3px 12px rgba(0,0,0,0.12);white-space:nowrap;font-family:-apple-system, BlinkMacSystemFont, sans-serif;font-weight:800;font-size:12px;color:#111827;letter-spacing:-0.3px;pointer-events:none;">' + (s.name || 'Store') + '</div>';
     var h = '<div class="store-pin" style="position:relative;width:46px;height:54px;cursor:pointer;">'
       + '<div style="width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid '+col+';display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);position:relative;z-index:1;">'
       + '<div style="width:32px;height:32px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;">'+svg+'</div>'
       + '</div>'
       + '<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:10px;background:'+col+';clip-path:polygon(50% 100%,0% 0%,100% 0%);"></div>'
-      + '</div>';
+      + t + '</div>';
     var ic = L.divIcon({className:'', html:h, iconSize:[46,54], iconAnchor:[23,54]});
     var coord = [parseFloat(s.latitude), parseFloat(s.longitude)];
     bounds.extend(coord);
@@ -56,10 +57,21 @@ window.addEventListener('initMap', function(e) {
       });
   });
 
-  // Because React Native guards the WebView until location is resolved, we always have location natively.
-  // Smoothly zoom in to the user.
+  // 1. Dynamically calculate population density to adjust zoom level
+  var nearbyCount = 0;
+  stores.forEach(function(s) {
+    if (!s.latitude) return;
+    var d = window.map.distance([lat, lng], [parseFloat(s.latitude), parseFloat(s.longitude)]);
+    if (d < 15000) nearbyCount++; // count stores within 15km
+  });
+  
+  var targetZoom = 13;
+  if (nearbyCount > 15) targetZoom = 15; // highly populated, zoom deeply to separate pins
+  else if (nearbyCount > 5) targetZoom = 14;
+
+  // 2. Seamless mapping zoom override on first hit
   if (!window.hasAutoLocated) {
-    window.map.flyTo([lat, lng], 13, { animate: true, duration: 1.5 });
+    window.map.flyTo([lat, lng], targetZoom, { animate: true, duration: 1.5 });
     window.hasAutoLocated = true;
   }
 });

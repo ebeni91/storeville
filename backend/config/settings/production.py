@@ -4,6 +4,35 @@ from .base import *
 
 DEBUG = False
 
+# ── Cache backend ──────────────────────────────────────────────────────────────
+# base.py points CACHES at redis://redis:6379/1 (Docker hostname).
+# On Render's free tier there is no Redis service, so that hostname never
+# resolves. Any cache.get / cache.set call would raise ConnectionError and
+# silently break parts of the app (map discovery, etc.).
+#
+# Override here: use Redis when REDIS_URL is injected (paid tier / upgrade),
+# fall back to in-process LocMemCache otherwise.  LocMemCache is cleared on
+# every dyno restart but that is fine — it is only used for short-lived
+# acceleration, not session or auth storage.
+_REDIS_URL = os.environ.get('REDIS_URL')
+if _REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _REDIS_URL,
+            'TIMEOUT': 300,
+            'KEY_PREFIX': 'storeville',
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'storeville-cache',
+        }
+    }
+
+
 # Configure allowed hosts for deployment
 # Automatically includes Render's assigned domain (e.g. your-app.onrender.com)
 RENDER_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')

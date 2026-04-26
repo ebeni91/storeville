@@ -56,10 +56,11 @@ window.addEventListener('initMap', function(e) {
       });
   });
 
-  if (stores.length > 0) {
-    window.map.fitBounds(bounds, {padding:[50,50], maxZoom:15, animate:true, duration:1.5});
-  } else {
-    window.map.setView([lat,lng], 13);
+  // Because React Native guards the WebView until location is resolved, we always have location natively.
+  // Smoothly zoom in to the user.
+  if (!window.hasAutoLocated) {
+    window.map.flyTo([lat, lng], 13, { animate: true, duration: 1.5 });
+    window.hasAutoLocated = true;
   }
 });
 </script></body></html>`

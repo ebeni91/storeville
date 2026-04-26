@@ -16,35 +16,15 @@ logger = logging.getLogger(__name__)
 
 # ── Store Discovery (Public, Read-Only) ───────────────────────────────────────
 
-@method_decorator(
-    # ✅ PERFORMANCE: Cache the discovery list for 5 minutes.
-    # Store data changes rarely — no need to hit Postgres on every map load.
-    cache_page(60 * 5),
-    name='list'
-)
-@method_decorator(
-    # ✅ SECURITY FIX: Vary the cache key by Cookie header so authenticated users
-    # never receive a cached response intended for an anonymous user (or vice versa).
-    vary_on_headers('Cookie'),
-    name='list'
-)
 class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StoreDiscoverySerializer
     permission_classes = [AllowAny]
     lookup_field = 'slug'
 
     def get_queryset(self):
-        # ✅ PERFORMANCE FIX (Issue #8): Removed select_related('theme_config') from the
-        # list queryset. The map discovery endpoint only needs store location, name, and slug —
-        # not the full theme config (colors, fonts, working hours, social links).
-        # select_related is kept on by_slug (single store detail) and StoreManagement
-        # where the theme data is actually rendered.
-        # Using .only() with verified concrete Store fields (is_open and primary_color
-        # live on StoreTheme, not Store — they were removed to fix FieldDoesNotExist).
-        queryset = Store.objects.filter(is_active=True).only(
-            'id', 'name', 'slug', 'store_type', 'latitude', 'longitude',
-            'city', 'logo', 'is_active', 'created_at', 'category', 'description',
-        ).order_by('created_at')
+        # ✅ FIX: Explicit ordering and select_related for the new theme config
+        # to prevent N+1 queries while maintaining the flattened API response.
+        queryset = Store.objects.filter(is_active=True).select_related('theme_config').order_by('created_at')
         store_type = self.request.query_params.get('type')
         if store_type:
             queryset = queryset.filter(store_type=store_type.upper())

@@ -1,22 +1,24 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 
-// ✅ FIX: Dynamically resolve the host IP from Expo's manifest so the app
-// works on any machine/network — no more hardcoding a specific LAN IP.
-const getDevHost = () => {
-  const expoHost = Constants.expoConfig?.hostUri;
-  if (expoHost) {
-    // expoHost is "192.168.x.x:8081" — extract the IP part only
-    return expoHost.split(':')[0];
-  }
-  // Fallback for bare React Native (non-Expo) or simulator edge cases
-  return Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-};
+import { Platform } from 'react-native';
 
-const DEV_URL  = `http://${getDevHost()}:8000/api`;
 const PROD_URL = 'https://api.storeville.app/api';
 
-const getBaseUrl = () => (__DEV__ ? DEV_URL : PROD_URL);
+const getBaseUrl = () => {
+  if (!__DEV__) return PROD_URL;
+  
+  // If we are using Ngrok for Auth, route API traffic through the Ngrok proxy endpoint
+  // to bypass Docker's 127.0.0.1 isolation and preserve cookie domains.
+  if (process.env.EXPO_PUBLIC_AUTH_URL) {
+    return `${process.env.EXPO_PUBLIC_AUTH_URL}/api/proxy`;
+  }
+
+  // Fallback for LAN without Ngrok (requires docker-compose to bind 0.0.0.0:8000)
+  const expoHost = Constants.expoConfig?.hostUri;
+  const devHost = expoHost ? expoHost.split(':')[0] : (Platform.OS === 'android' ? '10.0.2.2' : 'localhost');
+  return `http://${devHost}:8000/api`;
+};
 
 export const API_URL = getBaseUrl();
 

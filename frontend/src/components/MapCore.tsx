@@ -16,31 +16,34 @@ interface MapCoreProps {
 // Fits the map viewport upon initialization or explicit user locate requests
 function MapController({ stores, userLoc, locateTrigger }: { stores?: Store[], userLoc: [number, number] | null, locateTrigger: number }) {
   const map = useMap()
-  const [hasInit, setHasInit] = useState(false)
+  const [hasFitStores, setHasFitStores] = useState(false)
+  const [hasLocatedUser, setHasLocatedUser] = useState(false)
 
-  // System Initialization Center
+  // 1. Autocorrect to fit all known stores initially if we don't have user location yet
   useEffect(() => {
-    if (!hasInit && stores !== undefined) {
-      if (userLoc) {
-        // Platform focuses on local discovery: target ~15-20km radius around user
-        map.flyTo(userLoc, 13, { animate: true, duration: 1.2 })
-        setHasInit(true)
-      } else if (stores.length > 0) {
-        // Fallback: View all currently discovered stores platform-wide
-        const validCoords: [number, number][] = stores
-          .filter(s => s.latitude && s.longitude)
-          .map(s => [Number(s.latitude), Number(s.longitude)])
+    if (!hasFitStores && stores !== undefined && stores.length > 0 && !hasLocatedUser) {
+      const validCoords: [number, number][] = stores
+        .filter(s => s.latitude && s.longitude)
+        .map(s => [Number(s.latitude), Number(s.longitude)])
 
-        if (validCoords.length > 0) {
-          const bounds = L.latLngBounds(validCoords)
-          map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14, animate: true, duration: 1.2 })
-        }
-        setHasInit(true)
+      if (validCoords.length > 0) {
+        const bounds = L.latLngBounds(validCoords)
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14, animate: true, duration: 1.2 })
       }
+      setHasFitStores(true)
     }
-  }, [stores, userLoc, map, hasInit])
+  }, [stores, map, hasFitStores, hasLocatedUser])
 
-  // Explicit User Hardware Location Request
+  // 2. Fly to user location automatically ONCE when it resolves (overrides store view)
+  useEffect(() => {
+    if (userLoc && !hasLocatedUser) {
+      // Platform focuses on local discovery: target ~15-20km radius around user
+      map.flyTo(userLoc, 13, { animate: true, duration: 1.2 })
+      setHasLocatedUser(true)
+    }
+  }, [userLoc, map, hasLocatedUser])
+
+  // 3. Explicit User Hardware Location Request (Button Click)
   useEffect(() => {
     if (locateTrigger > 0 && userLoc) {
       map.flyTo(userLoc, 14, { animate: true, duration: 1.2 }) // Zoom in slightly closer on direct prompt

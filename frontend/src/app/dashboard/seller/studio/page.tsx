@@ -37,6 +37,7 @@ export default function StoreSettingsPage() {
   const [store, setStore] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'theme' | 'identity' | 'hours'>('theme')
   const [showMobilePreview, setShowMobilePreview] = useState(false)
 
@@ -73,9 +74,14 @@ export default function StoreSettingsPage() {
             delivery_hours: s.delivery_hours || '',
           })
           setLogoPreview(s.logo)
-          setBannerPreview(s.banner_image)
+          setBannerPreview(s.banner)
+        } else {
+            setFetchError("No store created yet or failed to load store config.")
         }
-      } catch (err) { console.error(err) }
+      } catch (err: any) { 
+          console.error(err)
+          setFetchError(err.response?.data?.error || err.message || "Network Error.")
+      }
       finally { setIsFetching(false) }
     }
     load()
@@ -92,7 +98,7 @@ export default function StoreSettingsPage() {
         else data.append(k, v.toString())
       })
       if (logoFile) data.append('logo', logoFile)
-      if (bannerFile) data.append('banner_image', bannerFile)
+      if (bannerFile) data.append('banner', bannerFile)
       await api.patch(`/stores/manage/${store.id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } })
       alert('Premium Storefront Updated!')
     } catch { alert('Error saving your settings.') }
@@ -111,6 +117,20 @@ export default function StoreSettingsPage() {
   if (isFetching) return (
     <div className="flex h-screen items-center justify-center">
       <Loader2 className="animate-spin text-gray-900" size={40} />
+    </div>
+  )
+
+  if (fetchError) return (
+    <div className="flex h-screen items-center justify-center flex-col gap-4 bg-gray-50/50 p-6">
+      <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center shadow-lg border border-red-200">
+        <X size={28} />
+      </div>
+      <h2 className="text-xl font-black text-gray-900">Failed to load studio</h2>
+      <p className="text-gray-500 text-sm max-w-sm text-center">There was an issue loading your store details. Ensure you have launched a store first.</p>
+      <div className="text-xs bg-red-50 text-red-600 px-4 py-2 font-mono rounded-lg border border-red-100">{fetchError}</div>
+      <button onClick={() => window.location.reload()} className="mt-4 bg-gray-900 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg hover:bg-black active:scale-95 transition-all">
+        Retry Loading
+      </button>
     </div>
   )
 

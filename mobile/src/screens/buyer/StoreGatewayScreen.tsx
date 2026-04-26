@@ -238,7 +238,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         {/* ── Hero card ───────────────────────────────────────────────────── */}
-        <View style={[styles.heroCard, { marginTop: STATUS_H + announcementH + 16, height: HERO_H - 160 }]}>
+        <View style={[styles.heroCard, { marginTop: STATUS_H + announcementH + 16, height: Math.max(340, HERO_H - 40) }]}>
           {/* Back + Cart + Wishlist */}
           <View style={[styles.heroNav, { paddingTop: 16 }]}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.navGlass}>
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   cartBadge:{ position: 'absolute', top: -5, right: -5, minWidth: 17, height: 17, borderRadius: 9, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)' },
 
   // Hero card
-  heroCard:    { marginHorizontal: 14, borderRadius: 28, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.28, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 12 },
+  heroCard:    { marginHorizontal: 14, borderRadius: 28, overflow: 'hidden' },
   heroNav:     { position: 'absolute', top: 0, left: 14, right: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 20 },
   heroContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 22, paddingBottom: 26 },
   logoWrap:    { width: 58, height: 58, borderRadius: 16, backgroundColor: '#fff', padding: 2, marginBottom: 14 },

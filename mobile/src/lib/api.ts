@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
-
 import { Platform } from 'react-native';
+import { authClient } from './auth-client';
 
 const PROD_URL = 'https://api.storeville.app/api';
 

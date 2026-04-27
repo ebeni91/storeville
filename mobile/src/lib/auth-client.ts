@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 //   PROD → https://storeville.app
 export const AUTH_URL = __DEV__
   ? (process.env.EXPO_PUBLIC_AUTH_URL ?? 'http://localhost:3000')
-  : (process.env.EXPO_PUBLIC_AUTH_URL ?? 'https://storeville.app');
+  : 'https://storeville.app';
 
 export const authClient = createAuthClient({
   baseURL: AUTH_URL,

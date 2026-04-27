@@ -6,11 +6,9 @@ import * as SecureStore from 'expo-secure-store';
 // ✅ Environment-driven auth URL:
 //   DEV  → EXPO_PUBLIC_AUTH_URL in mobile/.env (set to ngrok static domain for Google OAuth)
 //   PROD → https://storeville.app
-const PROD_URL = 'https://storeville.app';
-
 export const AUTH_URL = __DEV__
   ? (process.env.EXPO_PUBLIC_AUTH_URL ?? 'http://localhost:3000')
-  : PROD_URL;
+  : (process.env.EXPO_PUBLIC_AUTH_URL ?? 'https://storeville.app');
 
 export const authClient = createAuthClient({
   baseURL: AUTH_URL,

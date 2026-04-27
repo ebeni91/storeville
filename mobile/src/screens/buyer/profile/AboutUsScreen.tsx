@@ -10,8 +10,8 @@ export function AboutUsScreen({ navigation }: Props) {
 
   const contacts = [
     { icon: MapPin, label: 'Addis Ababa, Ethiopia', color: '#10b981', bg: mode === 'dark' ? 'rgba(16,185,129,0.12)' : '#ecfdf5' },
-    { icon: Mail, label: 'support@storeville.app', color: colors.accent, bg: colors.accentFaint },
-    { icon: Phone, label: '+251 111 234 567', color: '#f59e0b', bg: mode === 'dark' ? 'rgba(245,158,11,0.12)' : '#fffbeb' },
+    { icon: Mail, label: 'storevillesupport@gmail.com', color: colors.accent, bg: colors.accentFaint },
+    { icon: Phone, label: '+251 914391675', color: '#f59e0b', bg: mode === 'dark' ? 'rgba(245,158,11,0.12)' : '#fffbeb' },
     { icon: Globe, label: 'www.storeville.app', color: '#0ea5e9', bg: mode === 'dark' ? 'rgba(14,165,233,0.12)' : '#f0f9ff' },
   ];
 

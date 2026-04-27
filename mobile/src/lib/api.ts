@@ -3,12 +3,13 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { authClient } from './auth-client';
 
-const PROD_URL = 'https://api.storeville.app/api';
-
 const getBaseUrl = () => {
-  if (!__DEV__) return PROD_URL;
+  if (!__DEV__) {
+    // Production: Direct Link to Render (Data Flow)
+    return process.env.EXPO_PUBLIC_API_URL ?? 'https://api.storeville.app/api';
+  }
   
-  // If we are using Ngrok for Auth, route API traffic through the Ngrok proxy endpoint
+  // Development: If we are using Ngrok for Auth, route API traffic through the Ngrok proxy endpoint
   // to bypass Docker's 127.0.0.1 isolation and preserve cookie domains.
   if (process.env.EXPO_PUBLIC_AUTH_URL) {
     return `${process.env.EXPO_PUBLIC_AUTH_URL}/api/proxy`;

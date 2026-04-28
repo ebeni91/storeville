@@ -4,7 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-// Keep the splash screen visible while we fetch resources
+// Drop the native blank splash screen as fast as possible —
+// the custom SplashScreen.tsx takes over immediately after.
 SplashScreen.preventAutoHideAsync();
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootNavigator } from './src/navigation/RootNavigator';
@@ -15,14 +16,11 @@ const queryClient = new QueryClient();
 function AppInit() {
   const loadTheme = useThemeStore(s => s.loadTheme);
   useEffect(() => {
-    async function prepare() {
-      try {
-        await loadTheme();
-      } finally {
-        await SplashScreen.hideAsync();
-      }
-    }
-    prepare();
+    // Fire hideAsync immediately — do NOT wait for loadTheme.
+    // The custom SplashScreen component handles the visual experience
+    // while loadTheme runs in the background.
+    SplashScreen.hideAsync();
+    loadTheme();
   }, []);
   return null;
 }

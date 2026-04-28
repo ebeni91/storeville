@@ -16,8 +16,10 @@ export function SplashScreen({ onFinish }: Props) {
   const isDark = mode === 'dark';
 
   // ── Animation values ─────────────────────────────────────────
+  const screenOpacity   = useRef(new Animated.Value(0)).current; // whole screen fades in from white
   const contentOpacity  = useRef(new Animated.Value(0)).current;
-  const contentY        = useRef(new Animated.Value(22)).current;
+  const contentY        = useRef(new Animated.Value(18)).current;
+  const contentScale    = useRef(new Animated.Value(0.93)).current;
   const shimmerX        = useRef(new Animated.Value(-width * 1.2)).current;
   const exitOpacity     = useRef(new Animated.Value(1)).current;
   const exitScale       = useRef(new Animated.Value(1)).current;
@@ -25,47 +27,61 @@ export function SplashScreen({ onFinish }: Props) {
   useEffect(() => {
     Animated.sequence([
 
-      // 1. Content rises + fades in — clean, elegant entrance
+      // 1. Screen materialises out of the white native splash — ultra fast
+      Animated.timing(screenOpacity, {
+        toValue: 1,
+        duration: 180,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+
+      // 2. Brand rises + scales into view — cinematic entrance
       Animated.parallel([
         Animated.timing(contentOpacity, {
           toValue: 1,
-          duration: 680,
+          duration: 550,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(contentY, {
           toValue: 0,
-          duration: 680,
+          duration: 550,
           easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentScale, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.back(1.2)),
           useNativeDriver: true,
         }),
       ]),
 
-      // 2. Hold — let the user read the brand
-      Animated.delay(600),
+      // 3. Hold — let the user read the brand
+      Animated.delay(420),
 
-      // 3. Shimmer sweep — a bright light glides through the wordmark
+      // 4. Shimmer sweep — a bright light glides through the wordmark
       Animated.timing(shimmerX, {
         toValue: width * 1.4,
-        duration: 820,
+        duration: 700,
         easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
       }),
 
-      // 4. Brief pause after shimmer settles
-      Animated.delay(160),
+      // 5. Brief pause after shimmer
+      Animated.delay(100),
 
-      // 5. Graceful exit — fade + very gentle scale-up (feels like zooming into auth)
+      // 6. Graceful exit — fade + very gentle scale-up
       Animated.parallel([
         Animated.timing(exitOpacity, {
           toValue: 0,
-          duration: 520,
+          duration: 420,
           easing: Easing.in(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(exitScale, {
-          toValue: 1.06,
-          duration: 520,
+          toValue: 1.05,
+          duration: 420,
           easing: Easing.in(Easing.quad),
           useNativeDriver: true,
         }),
@@ -87,6 +103,8 @@ export function SplashScreen({ onFinish }: Props) {
         },
       ]}
     >
+      {/* Inner layer fades in from 0 so it continues seamlessly from the white native screen */}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: screenOpacity, backgroundColor: bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {/* ── Subtle vignette / depth gradient ─────────────────── */}
@@ -107,7 +125,7 @@ export function SplashScreen({ onFinish }: Props) {
           styles.center,
           {
             opacity: contentOpacity,
-            transform: [{ translateY: contentY }],
+            transform: [{ translateY: contentY }, { scale: contentScale }],
           },
         ]}
       >
@@ -188,7 +206,8 @@ export function SplashScreen({ onFinish }: Props) {
         ]}
       >
         © 2026 StoreVille Technology
-      </Animated.Text>
+        </Animated.Text>
+      </Animated.View>{/* end screenOpacity inner view */}
     </Animated.View>
   );
 }

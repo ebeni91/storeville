@@ -3,8 +3,7 @@ import { expo } from '@better-auth/expo';
 import { phoneNumber } from 'better-auth/plugins';
 import { Pool } from 'pg';
 
-// ✅ SECURITY FIX: Never fall back to hardcoded credentials.
-// DATABASE_URL must always be set in .env / environment variables.
+
 if (!process.env.DATABASE_URL) {
   throw new Error(
     '[StoreVille] DATABASE_URL environment variable is required. ' +
@@ -43,7 +42,6 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // 🌟 THE FIX: Forced account selection to prevent "sticky sessions" 
       // where Google auto-selects the previous account.
       prompt: 'select_account',
     },
@@ -74,9 +72,7 @@ export const auth = betterAuth({
         // TODO: Replace with Africa's Talking or Twilio in production
         console.log(`[DEV OTP] Phone: ${phoneNumber}  Code: ${code}`);
       },
-      // 🌟 THE FIX: Map the plugin's DB columns using its schema override.
-      // This tells the phoneNumber plugin to query 'phone_number' in Postgres
-      // instead of its default 'phoneNumber' column.
+      
       schema: {
         user: {
           fields: {

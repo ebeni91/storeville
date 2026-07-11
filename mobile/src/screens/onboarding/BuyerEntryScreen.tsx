@@ -21,7 +21,7 @@ export function BuyerEntryScreen({ navigation }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000000' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000"  backgroundColor="transparent" translucent={true} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
 
       {/* Ambient glow */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>

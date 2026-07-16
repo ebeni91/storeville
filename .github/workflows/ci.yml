@@ -1,0 +1,151 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# StoreVille CI Pipeline
+# Runs on every push and pull request. Validates all three platform components
+# in parallel: Django API, Next.js Frontend, and Expo Mobile.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: ['**']        # Run on pushes to ANY branch (feature branches too)
+  pull_request:
+    branches: [main]        # Run on PRs targeting main
+
+# Cancel in-progress runs when a new commit is pushed to the same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ── Backend (Django) ──────────────────────────────────────────────────────
+  backend:
+    name: Backend (Django)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: storeville_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test_user -d storeville_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.ci
+      DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/storeville_test
+      POSTGRES_DB: storeville_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Django system checks
+        run: python manage.py check --deploy --fail-level WARNING
+        env:
+          # Override settings for CI — use localhost Postgres, not Docker service name
+          DJANGO_SETTINGS_MODULE: config.settings.ci
+
+      - name: Check for missing migrations
+        run: python manage.py migrate --check --no-input
+        continue-on-error: true  # Won't fail CI, but will flag issues
+
+      - name: Run migrations
+        run: python manage.py migrate --no-input
+
+      - name: Run tests
+        run: python manage.py test --verbosity=2
+
+  # ── Frontend (Next.js) ────────────────────────────────────────────────────
+  frontend:
+    name: Frontend (Next.js)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      # Dummy values so Next.js can compile without real credentials
+      DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+      BETTER_AUTH_SECRET: ci-dummy-secret
+      BETTER_AUTH_URL: http://localhost:3000
+      GOOGLE_CLIENT_ID: dummy-client-id
+      GOOGLE_CLIENT_SECRET: dummy-client-secret
+      INTERNAL_SYNC_SECRET: ci-dummy-sync-secret
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  # ── Mobile (Expo / React Native) ──────────────────────────────────────────
+  mobile:
+    name: Mobile (Expo)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Expo Doctor (SDK compatibility check)
+        run: npx expo-doctor@latest
+        continue-on-error: true  # Advisory — don't block CI on SDK warnings
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit

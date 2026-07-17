@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim AS builder
+FROM node:22-bookworm-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -12,6 +12,9 @@ COPY node_modules ./node_modules
 
 # Copy application source
 COPY . .
+
+# ── Builder: compiles the Next.js production bundle ────────────────────────────
+FROM base AS builder
 
 # Disable telemetry
 ENV NEXT_TELEMETRY_DISABLED=1

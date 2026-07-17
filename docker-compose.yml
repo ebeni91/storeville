@@ -65,7 +65,7 @@ services:
   db-migrate:
     build:
       context: ./frontend
-      target: builder          # reuse the builder stage — no extra image needed
+      target: base          # source + deps only — does NOT run npm run build
     command: npm run ba:migrate
     env_file:
       - .env

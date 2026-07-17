@@ -46,7 +46,7 @@ class SyncUserView(APIView):
         name = data.get('name', '') or ''
         phone = data.get('phone_number') or None
 
-        # 🔒 SECURITY FIX: Enforce a role allowlist for user registration.
+        # SECURITY FIX: Enforce a role allowlist for user registration.
         # The Better Auth hook can send any role string. We must never allow
         # a registration webhook to create a SUPER_ADMIN or STAFF account.
         # New users from registration are always CUSTOMER — role is promoted

@@ -26,17 +26,13 @@ class RetailOrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         customer = self.context['request'].user
 
-        # ✅ SECURITY FIX: Resolve and lock all products BEFORE creating the order.
-        # Using select_for_update() acquires a row-level lock in Postgres, preventing
-        # two concurrent transactions from both passing the stock check for the same unit.
         product_ids = [item['product_id'] for item in items_data]
         products = {
             p.id: p
             for p in RetailProduct.objects.select_for_update().filter(id__in=product_ids)
         }
 
-        # ✅ DATA INTEGRITY FIX: Compute the total before creating the order record.
-        # This prevents an order from ever existing in the DB with total_amount=0.
+
         total = 0
         resolved_items = []
         for item_data in items_data:
@@ -65,7 +61,7 @@ class RetailOrderSerializer(serializers.ModelSerializer):
                 quantity=quantity,
                 price_at_time=product.price
             )
-            # ✅ RACE CONDITION FIX: DB-level atomic decrement — immune to concurrent orders.
+           
             RetailProduct.objects.filter(pk=product.pk).update(
                 stock_quantity=F('stock_quantity') - quantity
             )

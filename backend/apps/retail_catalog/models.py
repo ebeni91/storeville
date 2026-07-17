@@ -13,8 +13,6 @@ class RetailCategory(models.Model):
 
     class Meta:
         verbose_name_plural = 'Retail Categories'
-        # ✅ FIX (Issue #27): Prevent duplicate slugs within the same store.
-        # Two categories in different stores can share a slug, but not within one store.
         unique_together = ('store', 'slug')
 
     def __str__(self):
@@ -29,10 +27,7 @@ class RetailProduct(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='retail_catalog/images/', null=True, blank=True)
-    
-    # ✅ FIX (Issue #10): SKU uniqueness must be scoped per store, not platform-wide.
-    # Global unique=True caused IntegrityError for Seller B if Seller A already used
-    # the same SKU string. Enforced per-store via UniqueConstraint (see Meta below).
+
     sku = models.CharField(max_length=100, blank=True, null=True)
     stock_quantity = models.PositiveIntegerField(default=0)
     weight_kg = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)

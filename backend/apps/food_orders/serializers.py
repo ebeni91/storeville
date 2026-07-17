@@ -21,10 +21,7 @@ class FoodOrderSerializer(serializers.ModelSerializer):
         read_only_fields = ['status', 'total_amount', 'delivery_fee']
 
     def validate_scheduled_time(self, value):
-        """
-        ✅ FIX (Issue #11): Reject scheduled delivery times that are in the past.
-        A food order scheduled for the past creates impossible delivery windows.
-        """
+     
         if value is not None:
             from django.utils import timezone
             if value < timezone.now():
@@ -37,10 +34,6 @@ class FoodOrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         customer = self.context['request'].user
-
-        # ✅ DATA INTEGRITY FIX (mirrors RetailOrderSerializer):
-        # Resolve all menu items in a single query before creating the order.
-        # This ensures the order is never written to the DB with total_amount=0.
         menu_item_ids = [item['menu_item_id'] for item in items_data]
         menu_items = {
             m.id: m

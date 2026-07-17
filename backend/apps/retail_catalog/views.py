@@ -59,8 +59,6 @@ class RetailProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         store_id = self.request.query_params.get('store_id')
 
-        # ✅ FIX (Issue #7): IDOR prevention.
-        # Public/read requests: filter by store_id if provided (allows storefront browsing).
         if store_id and self.request.method in permissions.SAFE_METHODS:
             return RetailProduct.objects.filter(
                 store_id=store_id, is_active=True
@@ -76,7 +74,7 @@ class RetailProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         store_id = self.request.data.get('store_id')
-        # ✅ FIX (Issue #17): Require explicit store_id — never fall back silently.
+
         if not store_id:
             raise ValidationError({'store_id': 'This field is required when creating a product.'})
         store = get_object_or_404(Store, id=store_id, owner=self.request.user)

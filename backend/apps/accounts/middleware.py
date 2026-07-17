@@ -151,11 +151,7 @@ class BetterAuthMiddleware:
                     user.set_unusable_password()
                     user.save()
                 except Exception as integrity_exc:
-                    # ✅ FIX (Issue #9): Guard against concurrent first-login race condition.
-                    # Two simultaneous requests (e.g. user opens two tabs) both pass the
-                    # `if not user` check before either commits. The second create() raises
-                    # IntegrityError on the unique email/username constraint.
-                    # Re-query to retrieve the user that the winning request already created.
+                   
                     logger.warning(
                         f"[BetterAuth] JIT user creation conflict for {username} — "
                         f"likely a concurrent login. Re-querying. ({integrity_exc})"

@@ -15,11 +15,6 @@ class FoodOrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        """
-        ✅ SECURITY FIX (Issue #4): Lock down write actions by role.
-        Mirrors RetailOrderViewSet.get_permissions().
-        Sellers can update order status; only admins can delete order records.
-        """
         if self.action == 'destroy':
             return [IsAuthenticated(), IsAdminUser()]
         return [IsAuthenticated()]

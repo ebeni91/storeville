@@ -122,10 +122,11 @@ export const auth = pool ? betterAuth({
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
     // Native mobile deep link scheme
     'storeville://',
+    // ✅ FIX: Always allow localhost:3000 because Docker internal traffic uses it
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
     // Allow dev origins only in development
     ...(process.env.NODE_ENV === 'development' ? [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
       // NGROK_URL is set in .env to the static ngrok domain (willette-conclusive-robby.ngrok-free.dev)
       // It gives Google OAuth a real HTTPS domain without hardcoding anything here.
       ...(process.env.NGROK_URL ? [process.env.NGROK_URL] : []),

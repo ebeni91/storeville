@@ -3,8 +3,8 @@ const nextConfig = {
   // Proxy to Django backend is handled via src/app/api/proxy/[...path]/route.ts
   // which correctly forwards Cookie headers (unlike rewrites() which strip them).
 
-  // ✅ FIX (Issue #14): Add HTTP security headers to all Next.js responses.
-  // These provide browser-side defense against XSS, clickjacking, and MIME sniffing.
+  // Apply HTTP security headers to all Next.js responses.
+  // These headers provide browser-side defense against XSS, clickjacking, and MIME sniffing.
   async headers() {
     return [
       {

@@ -149,7 +149,7 @@ export default function ProductDetailPage() {
       className="min-h-screen font-sans pb-36"
       style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111' }}
     >
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <div
         className="sticky top-0 z-50 px-4 py-4 backdrop-blur-2xl border-b flex items-center justify-between"
         style={{ backgroundColor: `rgba(${bgRgb}, 0.9)`, borderColor: `rgba(${textRgb}, 0.08)` }}
@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
         </button>
       </div>
 
-      {/* ── PRODUCT IMAGE ── */}
+      {/* PRODUCT IMAGE */}
       <div
         className="relative w-full aspect-[4/3] md:aspect-[16/7] bg-black/5 overflow-hidden"
       >
@@ -191,7 +191,7 @@ export default function ProductDetailPage() {
         />
       </div>
 
-      {/* ── PRODUCT INFO ── */}
+      {/* PRODUCT INFO */}
       <div className="max-w-2xl mx-auto px-4 pt-4 pb-32">
 
         {/* Category + dietary tags */}
@@ -250,7 +250,7 @@ export default function ProductDetailPage() {
           <p className="text-sm md:text-base opacity-70 font-medium leading-relaxed mb-6">{product.description}</p>
         )}
 
-        {/* ── OPTIONS (Food & Retail) ── */}
+        {/* OPTIONS (Food & Retail) */}
         {parsedOptions.length > 0 && (
           <div className="mb-6">
             {parsedOptions.map((opt: any) => (
@@ -286,7 +286,7 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        {/* ── EXTRAS (Food only, but shown for retail if present) ── */}
+        {/* EXTRAS (Food only, but shown for retail if present) */}
         {parsedExtras.length > 0 && (
           <div className="mb-6">
             <h3 className="font-black text-sm tracking-tight mb-3">
@@ -330,7 +330,7 @@ export default function ProductDetailPage() {
           </div>
         )}
         
-        {/* ── RECOMMENDED PRODUCTS ── */}
+        {/* RECOMMENDED PRODUCTS */}
         {recommendedProducts.length > 0 && (
           <div className="mt-12 mb-6 border-t pt-8" style={{ borderColor: `rgba(${textRgb}, 0.08)` }}>
             <h3 className="font-black text-xl tracking-tight mb-4">More from this store</h3>
@@ -357,7 +357,7 @@ export default function ProductDetailPage() {
 
       </div>
 
-      {/* ── STICKY BOTTOM BAR ── */}
+      {/* STICKY BOTTOM BAR */}
       <div
         className="fixed bottom-0 inset-x-0 z-50 px-4 py-4 backdrop-blur-2xl border-t"
         style={{ backgroundColor: `rgba(${bgRgb}, 0.95)`, borderColor: `rgba(${textRgb}, 0.08)` }}

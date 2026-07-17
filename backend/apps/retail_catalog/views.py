@@ -26,14 +26,13 @@ class RetailCategoryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         store_id = self.request.data.get('store_id')
-        # ✅ FIX (Issue #17): Require explicit store_id — never fall back to
-        # "the first store owned by the user" as that silently creates under the wrong store.
+        # Require explicit store_id to prevent silently creating the category under the wrong store.
         if not store_id:
             raise ValidationError({'store_id': 'This field is required when creating a category.'})
         store = get_object_or_404(Store, id=store_id, owner=self.request.user)
 
-        # ✅ FIX: Auto-generate slug from name. Handle unique_together conflicts
-        # by appending a counter (e.g. 'drinks', 'drinks-2', 'drinks-3').
+        # Auto-generate URL-friendly slug from the category name.
+        # Handles uniqueness collisions by appending an incremental counter.
         name = self.request.data.get('name', '')
         base_slug = slugify(name) or 'category'
         slug = base_slug
@@ -46,9 +45,9 @@ class RetailCategoryViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(
-    # ✅ PERFORMANCE: Cache product list for 10 minutes. Products change rarely.
-    # Cache is keyed by URL so ?store_id= still returns store-specific results.
-    # Invalidate manually via Django cache API when a product is updated.
+    # Cache the product list response for 10 minutes to improve read performance.
+    # The cache is keyed by URL (including query params like ?store_id=) to ensure 
+    # store-specific results are returned correctly.
     cache_page(60 * 10),
     name='list'
 )

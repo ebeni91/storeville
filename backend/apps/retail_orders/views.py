@@ -18,18 +18,6 @@ class RetailOrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        """
-        ✅ SECURITY FIX (Issue #4): Lock down write actions by role.
-        ModelViewSet exposes full CRUD by default. Without this, any authenticated
-        user (including sellers) could DELETE customer order records or PATCH
-        order totals, shipping addresses, etc.
-
-        - CREATE: any authenticated user (customers placing orders)
-        - PARTIAL_UPDATE: authenticated users only (sellers update status via dashboard)
-        - UPDATE (full replace): disabled — use PATCH for status updates only
-        - DESTROY: admin only — order records must be preserved for audit/accounting
-        - LIST / RETRIEVE: authenticated users (each sees only their own via get_queryset)
-        """
         if self.action == 'destroy':
             return [IsAuthenticated(), IsAdminUser()]
         return [IsAuthenticated()]
@@ -110,8 +98,6 @@ class CartDetailView(APIView):
         if not store_id:
             return Response({"error": "store_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ PERFORMANCE FIX (Issue #19): prefetch_related eliminates N+1 queries.
-        # Without this, each cart item triggers a separate DB query for the product.
         cart = Cart.objects.filter(
             user=request.user, store_id=store_id
         ).prefetch_related('items__product').first()

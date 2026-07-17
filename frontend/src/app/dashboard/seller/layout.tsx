@@ -6,11 +6,9 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { authClient } from '@/lib/auth-client'
 import Link from 'next/link'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PREMIUM DARK THEME  ·  Obsidian Soft UI
+// // PREMIUM DARK THEME  ·  Obsidian Soft UI
 // A true premium dark aesthetic inspired by Apple, Linear, and modern luxury.
-// ─────────────────────────────────────────────────────────────────────────────
-const DARK_CSS = `
+// const DARK_CSS = `
   /* ── Root tokens ───────────────────────────────────────────────────────── */
   [data-seller-theme="dark"] {
     color-scheme: dark;
@@ -238,7 +236,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
 
-  // ── Persist theme ──────────────────────────────────────────────────────────
+  // Persist theme
   useEffect(() => {
     try {
       if (localStorage.getItem('seller-theme') === 'dark') setIsDark(true)
@@ -286,13 +284,13 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
         style={{ transition: 'background 0.4s ease, color 0.3s ease' }}
       >
 
-        {/* ── MOBILE HEADER ──────────────────────────────────────────────── */}
+        {/* MOBILE HEADER */}
         <header className="fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-2xl border-b border-gray-100 z-[90] flex items-center justify-between px-6 md:hidden">
           <Link href="/" className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
             <div className="flex items-start">
               <span className="text-xl font-light tracking-[-0.5px] text-gray-400">Store</span>
               <span className="text-xl font-black tracking-[-0.5px] text-gray-900">Ville</span>
-              <span className="text-[10px] font-black text-[#34d399] mt-0.5 ml-0.5">™</span>
+              <span className="text-[10px] font-black text-[#34d399] mt-0.5 ml-0.5"></span>
             </div>
           </Link>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -301,18 +299,18 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
           </button>
         </header>
 
-        {/* ── BACKDROP OVERLAY ────────────────────────────────────────────── */}
+        {/* BACKDROP OVERLAY */}
         <div
           className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[95] transition-opacity duration-300 md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
           onClick={() => setIsMobileMenuOpen(false)}
         />
 
-        {/* ── PAGE BACKGROUND ─────────────────────────────────────────────── */}
+        {/* PAGE BACKGROUND */}
         <div className="fixed inset-0 z-0 bg-gray-50">
           <div className="absolute inset-0 opacity-[0.4] mix-blend-overlay bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_20%,transparent_100%)]" />
         </div>
 
-        {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
+        {/* SIDEBAR */}
         <aside className={`w-64 bg-white/90 backdrop-blur-3xl border-r border-gray-100 shadow-[8px_0_30px_rgb(0,0,0,0.02)] fixed h-full z-[100] transition-transform duration-500 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
 
           {/* Logo */}
@@ -321,7 +319,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
               <div className="flex items-start">
                 <span className="text-2xl font-light tracking-[-1px] text-gray-400">Store</span>
                 <span className="text-2xl font-black tracking-[-1px] text-gray-900">Ville</span>
-                <span className="text-xs font-black text-[#34d399] mt-1 ml-[1px]">™</span>
+                <span className="text-xs font-black text-[#34d399] mt-1 ml-[1px]"></span>
               </div>
             </Link>
           </div>
@@ -345,7 +343,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
           {/* Bottom controls */}
           <div className="p-4 border-t border-gray-100 space-y-1">
 
-            {/* ─ Theme Toggle ─────────────────────────────────────────────── */}
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               className="theme-toggle-row w-full flex items-center justify-between px-4 py-3 rounded-[1.25rem] text-xs font-bold transition-all duration-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
@@ -378,7 +376,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
               </span>
             </button>
 
-            {/* ─ Logout ───────────────────────────────────────────────────── */}
+            {/* Logout */}
             <button onClick={handleLogout}
               className="w-full flex items-center justify-center gap-3 px-4 py-3.5 text-xs text-red-500 hover:bg-white hover:text-red-600 hover:shadow-sm rounded-[1.25rem] font-bold transition-all uppercase tracking-widest group">
               <LogOut size={15} className="group-hover:-translate-x-1 transition-transform" />
@@ -387,7 +385,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
           </div>
         </aside>
 
-        {/* ── CONTENT AREA ─────────────────────────────────────────────────── */}
+        {/* CONTENT AREA */}
         <div className="flex-1 ml-0 md:ml-64 relative z-10 w-full overflow-x-hidden min-h-screen pt-16 md:pt-0">
           {children}
         </div>

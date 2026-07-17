@@ -129,7 +129,7 @@ export function AuthScreen({ navigation }: Props) {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
       
-      {/* ── Background Hero Image ───────────────────────────── */}
+      {/* Background Hero Image */}
       <View style={{ height: height * 0.55, width: '100%', position: 'absolute', top: 0 }}>
         <Image 
           source={isDark ? mapImageDark : mapImageLight} 
@@ -155,7 +155,7 @@ export function AuthScreen({ navigation }: Props) {
           {/* Spacer to push content down below the map */}
           <View style={{ height: height * 0.4 }} />
 
-          {/* ── Heading ─────────────────────────────────────── */}
+          {/* Heading */}
           {!otpSent ? (
             <View style={{ marginBottom: 32, alignItems: 'center' }}>
               <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text, letterSpacing: -0.5 }}>
@@ -164,7 +164,7 @@ export function AuthScreen({ navigation }: Props) {
             </View>
           ) : null}
 
-          {/* ── OTP VERIFICATION STEP ───────────────────────── */}
+          {/* OTP VERIFICATION STEP */}
           {otpSent ? (
             <Animated.View style={{
               transform: [{ translateY: otpSlide }],
@@ -233,7 +233,7 @@ export function AuthScreen({ navigation }: Props) {
             </Animated.View>
           ) : (
             <>
-              {/* ── PHONE INPUT ──────────────────────────────── */}
+              {/* PHONE INPUT */}
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 28 }}>
                 <View style={{
                   flex: 1, backgroundColor: inputBg, borderWidth: 1.5,
@@ -267,14 +267,14 @@ export function AuthScreen({ navigation }: Props) {
                 </View>
               </View>
 
-              {/* ── DIVIDER ───────────────────────────────────── */}
+              {/* DIVIDER */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 28, paddingHorizontal: 10 }}>
                 <View style={{ flex: 1, height: 1, backgroundColor: borderColor }} />
                 <Text style={{ color: colors.textSub, fontSize: 13, fontWeight: '600' }}>Or continue with</Text>
                 <View style={{ flex: 1, height: 1, backgroundColor: borderColor }} />
               </View>
 
-              {/* ── SOCIAL BUTTONS ROW ────────────────────────── */}
+              {/* SOCIAL BUTTONS ROW */}
               <View style={{ flexDirection: 'row', gap: 16, marginBottom: 32 }}>
                 
                 {/* Google Button */}
@@ -324,7 +324,7 @@ export function AuthScreen({ navigation }: Props) {
                 </TouchableOpacity>
               </View>
               
-              {/* ── GUEST MODE ──────────────────────────────────── */}
+              {/* GUEST MODE */}
               <View style={{ alignItems: 'center' }}>
                 <TouchableOpacity onPress={enterGuestMode} activeOpacity={0.7} style={{ paddingVertical: 10 }}>
                   <Text style={{

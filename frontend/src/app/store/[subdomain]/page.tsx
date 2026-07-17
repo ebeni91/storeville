@@ -43,7 +43,7 @@ export default async function StorefrontGateway({ params }: { params: { subdomai
   }
 
   // ==============================================================================
-  // 🌟 THE ARCHITECTURAL SPLIT: ROUTING TRAFFIC BASED ON STORE TYPE
+  //  THE ARCHITECTURAL SPLIT: ROUTING TRAFFIC BASED ON STORE TYPE
   // ==============================================================================
 
   // A. The Food & Coffee Engine

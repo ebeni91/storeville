@@ -14,7 +14,7 @@ import { api } from '../../lib/api';
 
 const { width, height } = Dimensions.get('window');
 
-// ─── Colour helpers ────────────────────────────────────────────────────────────
+// Colour helpers
 const hexRgb = (hex: string) => {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#ffffff');
   return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : { r: 255, g: 255, b: 255 };
@@ -23,7 +23,7 @@ const rgbStr = (hex: string) => { const c = hexRgb(hex); return `${c.r},${c.g},$
 const luma   = (hex: string) => { const c = hexRgb(hex); return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b; };
 const onColor= (hex: string) => luma(hex) > 160 ? '#0a0a0a' : '#ffffff';
 
-// ─── ProductDetailScreen ───────────────────────────────────────────────────────
+// ProductDetailScreen
 export function ProductDetailScreen({ route, navigation }: any) {
   const { item, store } = route.params;
   const isFood  = store.store_type === 'FOOD';
@@ -41,7 +41,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
   const { addItem, addToWishlist, removeFromWishlist, isInWishlist } = useCartStore();
   const wishlisted = isInWishlist(item.id);
 
-  // ── State: options & extras ──────────────────────────────────────────────────
+  // State: options & extras
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
   const [selectedExtras, setSelectedExtras]   = useState<SelectedExtra[]>([]);
   const [addedAnim]   = useState(new Animated.Value(1));
@@ -76,7 +76,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
   const extrasTotal = selectedExtras.reduce((s, e) => s + e.price, 0);
   const unitPrice   = parseFloat(item.price) + extrasTotal;
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
+  // Handlers
   const toggleOption = (option: any, choice: string) => {
     setSelectedOptions(prev => {
       const existing = prev.find(o => o.optionId === option.id);
@@ -141,7 +141,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
     }
   };
 
-  // ── Animated header ──────────────────────────────────────────────────────────
+  // Animated header
   const IMG_H = height * 0.42;
   const headerOpacity = scrollY.interpolate({ inputRange: [IMG_H - 80, IMG_H - 30], outputRange: [0, 1], extrapolate: 'clamp' });
 
@@ -151,7 +151,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
     <View style={{ flex: 1, backgroundColor: bg }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
 
-      {/* ── Sticky header ─────────────────────────────────── */}
+      {/* Sticky header */}
       <Animated.View style={[styles.stickyHeader, { opacity: headerOpacity, backgroundColor: bg, borderBottomColor: border }]}>
         <View style={[styles.stickyInner, { paddingTop: Platform.OS === 'ios' ? 52 : 36 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.glassBtn, { backgroundColor: `rgba(${rgbStr(bg === '#ffffff' ? '#000000' : bg)},0.08)` }]}>
@@ -172,12 +172,12 @@ export function ProductDetailScreen({ route, navigation }: any) {
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
         contentContainerStyle={{ paddingBottom: 140 }}
       >
-        {/* ── Hero image ──────────────────────────────────────────────────── */}
+        {/* Hero image */}
         <View style={{ height: IMG_H, overflow: 'hidden' }}>
           {item.image
             ? <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
             : <View style={{ flex: 1, backgroundColor: `rgba(${acRgb},0.12)`, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 72 }}>{isFood ? '🍽️' : '📦'}</Text>
+                <Text style={{ fontSize: 72 }}>{isFood ? '' : ''}</Text>
               </View>}
           <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} locations={[0.5, 1]} style={StyleSheet.absoluteFill} />
 
@@ -205,7 +205,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
           )}
         </View>
 
-        {/* ── Content card (rounded top) ───────────────────────────────────── */}
+        {/* Content card (rounded top) */}
         <View style={[styles.contentCard, { backgroundColor: bg, marginTop: -24 }]}>
           {/* Name + badges */}
           <Text style={[styles.itemName, { color: textPrimary }]}>{item.name}</Text>
@@ -254,7 +254,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
             <Text style={[styles.description, { color: textSecondary }]}>{item.description}</Text>
           ) : null}
 
-          {/* ── OPTIONS (food only) ────────────────────────────────────────── */}
+          {/* OPTIONS (food only) */}
           {isFood && options.length > 0 && options.map((option: any) => {
             const chosen = selectedOptions.find(o => o.optionId === option.id)?.choice;
             return (
@@ -290,7 +290,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
             );
           })}
 
-          {/* ── EXTRAS (food only) ─────────────────────────────────────────── */}
+          {/* EXTRAS (food only) */}
           {isFood && extras.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Add Extras</Text>
@@ -320,7 +320,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
             </View>
           )}
 
-          {/* ── RECOMMENDATIONS ────────────────────────────────────────────── */}
+          {/* RECOMMENDATIONS */}
           {!loadingRecs && recommendations.length > 0 && (
             <View style={[styles.section, { marginTop: 16 }]}>
               <Text style={styles.sectionLabel}>You may also like</Text>
@@ -337,7 +337,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
                         <Image source={{ uri: rec.image }} style={styles.recImg} resizeMode="cover" />
                       ) : (
                         <View style={[styles.recImg, { backgroundColor: `rgba(${acRgb},0.08)`, alignItems: 'center', justifyContent: 'center' }]}>
-                          <Text style={{ fontSize: 40, opacity: 0.8 }}>{isFood ? '🍽️' : '📦'}</Text>
+                          <Text style={{ fontSize: 40, opacity: 0.8 }}>{isFood ? '' : ''}</Text>
                         </View>
                       )}
                     </View>
@@ -353,7 +353,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
         </View>
       </Animated.ScrollView>
 
-      {/* ── Sticky bottom bar ─────────────────────────────────────────────────── */}
+      {/* Sticky bottom bar */}
       {!ooc && (
         <View style={[styles.bottomBar, { backgroundColor: bg }]}>
           {/* Running total */}
@@ -384,7 +384,7 @@ export function ProductDetailScreen({ route, navigation }: any) {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// Styles
 const styles = StyleSheet.create({
   stickyHeader: {
     position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50,

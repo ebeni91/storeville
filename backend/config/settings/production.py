@@ -4,16 +4,10 @@ from .base import *
 
 DEBUG = False
 
-# ── Cache backend ──────────────────────────────────────────────────────────────
-# base.py points CACHES at redis://redis:6379/1 (Docker hostname).
-# On Render's free tier there is no Redis service, so that hostname never
-# resolves. Any cache.get / cache.set call would raise ConnectionError and
-# silently break parts of the app (map discovery, etc.).
-#
-# Override here: use Redis when REDIS_URL is injected (paid tier / upgrade),
-# fall back to in-process LocMemCache otherwise.  LocMemCache is cleared on
-# every dyno restart but that is fine — it is only used for short-lived
-# acceleration, not session or auth storage.
+# Configure dynamic cache backend based on environment.
+# Defaults to Redis when REDIS_URL is present. 
+# Falls back to in-process LocMemCache for environments without a dedicated Redis service.
+# Note: LocMemCache is cleared on process restart; it is used only for ephemeral acceleration.
 _REDIS_URL = os.environ.get('REDIS_URL')
 if _REDIS_URL:
     CACHES = {
@@ -94,10 +88,10 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://\w+\.storeville\.app$",
 ]
 
-# 🌟 CRITICAL: Django expects the exact origin to be explicitly trusted for POST requests
+# Django expects the exact origin to be explicitly trusted for POST requests
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
 
-# ── Security Headers ─────────────────────────────────────────────────────────
+# Security Headers
 # These headers instruct the browser to enforce HTTPS, prevent clickjacking,
 # and block MIME-type sniffing attacks.
 SECURE_HSTS_SECONDS = 31536000          # 1 year

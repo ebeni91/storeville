@@ -15,7 +15,7 @@ export function SplashScreen({ onFinish }: Props) {
   const { colors, mode } = useThemeStore();
   const isDark = mode === 'dark';
 
-  // ── Animation values ─────────────────────────────────────────
+  // Animation values
   const screenOpacity   = useRef(new Animated.Value(0)).current; // whole screen fades in from white
   const contentOpacity  = useRef(new Animated.Value(0)).current;
   const contentY        = useRef(new Animated.Value(18)).current;
@@ -107,7 +107,7 @@ export function SplashScreen({ onFinish }: Props) {
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: screenOpacity, backgroundColor: bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {/* ── Subtle vignette / depth gradient ─────────────────── */}
+      {/* Subtle vignette / depth gradient */}
       <LinearGradient
         colors={
           isDark
@@ -119,7 +119,7 @@ export function SplashScreen({ onFinish }: Props) {
         pointerEvents="none"
       />
 
-      {/* ── Centre brand block ───────────────────────────────── */}
+      {/* Centre brand block */}
       <Animated.View
         style={[
           styles.center,
@@ -154,10 +154,10 @@ export function SplashScreen({ onFinish }: Props) {
             >
               Ville
             </Text>
-            <Text style={[styles.trademark, { color: ACCENT }]}>™</Text>
+            <Text style={[styles.trademark, { color: ACCENT }]}></Text>
           </View>
 
-          {/* ── Shimmer sweep overlay — clipped to wordmark bounds ── */}
+          {/* Shimmer sweep overlay — clipped to wordmark bounds */}
           <Animated.View
             pointerEvents="none"
             style={[
@@ -195,7 +195,7 @@ export function SplashScreen({ onFinish }: Props) {
         {/* <View style={[styles.mintDot, { backgroundColor: ACCENT }]} /> */}
       </Animated.View>
 
-      {/* ── Bottom trademark ─────────────────────────────────── */}
+      {/* Bottom trademark */}
       <Animated.Text
         style={[
           styles.footer,
@@ -205,7 +205,7 @@ export function SplashScreen({ onFinish }: Props) {
           },
         ]}
       >
-        © 2026 StoreVille Technology
+         2026 StoreVille Technology
         </Animated.Text>
       </Animated.View>{/* end screenOpacity inner view */}
     </Animated.View>

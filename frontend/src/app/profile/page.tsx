@@ -416,7 +416,7 @@ function BuyerDashboardContent() {
                         <div className="relative w-full sm:max-w-[300px]">
                           <div className="px-4 py-3 bg-white border border-gray-300 rounded-lg flex items-center justify-between cursor-pointer">
                             <div className="flex items-center gap-3">
-                              <span className="text-lg leading-none">🇪🇹</span>
+                              <span className="text-lg leading-none"></span>
                               <span className="text-sm font-medium text-gray-700">Ethiopia</span>
                             </div>
                             <ChevronRight size={16} className="text-gray-400 rotate-90" />

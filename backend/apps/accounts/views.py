@@ -16,13 +16,10 @@ logger = logging.getLogger(__name__)
 
 class SyncUserView(APIView):
     """
-    🌟 Internal server-to-server endpoint.
-    Called by Better Auth's databaseHooks.user.create.after hook
-    when a new user registers. This ensures every BA signup immediately
-    creates a corresponding Django user in the Admin dashboard.
-
-    ✅ SECURITY: Protected by a shared secret (INTERNAL_SYNC_SECRET).
-    Never expose raw exception details in responses.
+    Internal server-to-server webhook endpoint.
+    Synchronizes new users created via Better Auth into the Django Admin dashboard.
+    Protected by a shared secret (INTERNAL_SYNC_SECRET) and must never expose 
+    raw exception details in error responses.
     """
     permission_classes = [permissions.AllowAny]
 
@@ -46,11 +43,9 @@ class SyncUserView(APIView):
         name = data.get('name', '') or ''
         phone = data.get('phone_number') or None
 
-        # SECURITY FIX: Enforce a role allowlist for user registration.
-        # The Better Auth hook can send any role string. We must never allow
-        # a registration webhook to create a SUPER_ADMIN or STAFF account.
-        # New users from registration are always CUSTOMER — role is promoted
-        # later via the JIT upgrade flow in the middleware.
+        # Enforce a strict role allowlist for user registration via webhooks.
+        # Users must always default to CUSTOMER; elevated roles (e.g., SELLER) 
+        # are handled downstream via JIT role promotion in the auth middleware.
         _REGISTRATION_ROLE_ALLOWLIST = {'CUSTOMER'}
         requested_role = data.get('role', 'CUSTOMER')
         role = requested_role if requested_role in _REGISTRATION_ROLE_ALLOWLIST else 'CUSTOMER'

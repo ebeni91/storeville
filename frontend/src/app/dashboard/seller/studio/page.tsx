@@ -9,7 +9,7 @@ import {
 import { api } from '@/lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// ── All 14 premium themes (synced with mobile app) ──────────────────────────
+// All 14 premium themes (synced with mobile app)
 const THEMES = [
   { id: 'apple-dark', name: 'Cupertino Dark', desc: "Apple's signature obsidian", bg: '#000000', text: '#F5F5F7', primary: '#2997FF' },
   { id: 'apple-light', name: 'Cupertino Light', desc: 'Clean daylight silicon', bg: '#F5F5F7', text: '#1D1D1F', primary: '#0066CC' },
@@ -136,7 +136,7 @@ export default function StoreSettingsPage() {
 
   const isFood = store?.store_type === 'FOOD'
 
-  // ── Phone Preview ───────────────────────────────────────────────────────────
+  // Phone Preview
   const renderPhonePreview = () => (
     <div className="w-full max-w-[280px] mx-auto md:max-w-none">
       <div className="bg-gray-200 rounded-[2.8rem] p-3 shadow-2xl border-[7px] border-gray-900 aspect-[9/19] flex flex-col overflow-hidden relative">
@@ -197,7 +197,7 @@ export default function StoreSettingsPage() {
     </div>
   )
 
-  // ── Tab Content ─────────────────────────────────────────────────────────────
+  // Tab Content
   const renderTabContent = () => (
     <AnimatePresence mode="wait">
       {activeTab === 'theme' && (
@@ -374,7 +374,7 @@ export default function StoreSettingsPage() {
   return (
     <div className="flex flex-col h-full min-h-screen relative z-10">
 
-      {/* ── STICKY HEADER ──────────────────────────────────────────────────── */}
+      {/* STICKY HEADER */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 md:px-8 py-4 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div>
@@ -402,7 +402,7 @@ export default function StoreSettingsPage() {
         </div>
       </header>
 
-      {/* ── HORIZONTAL TAB PILLS (mobile / tablet, hidden on lg) ─────────── */}
+      {/* HORIZONTAL TAB PILLS (mobile / tablet, hidden on lg) */}
       <div className="lg:hidden flex items-center gap-2 px-4 md:px-8 py-3 bg-white/60 backdrop-blur-sm border-b border-gray-100 overflow-x-auto no-scrollbar">
         {TABS.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key as any)}
@@ -412,7 +412,7 @@ export default function StoreSettingsPage() {
         ))}
       </div>
 
-      {/* ── THREE-PANE CONTENT AREA ───────────────────────────────────────── */}
+      {/* THREE-PANE CONTENT AREA */}
       <div className="flex flex-1 overflow-hidden">
 
         {/* LEFT SIDEBAR (desktop only) */}
@@ -440,7 +440,7 @@ export default function StoreSettingsPage() {
         </aside>
       </div>
 
-      {/* ── MOBILE PREVIEW BUTTON (visible only on < md) ─────────────────── */}
+      {/* MOBILE PREVIEW BUTTON (visible only on < md) */}
       <button
         onClick={() => setShowMobilePreview(true)}
         className="md:hidden fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-gray-900 text-white px-5 py-3.5 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:bg-black transition-all"
@@ -448,7 +448,7 @@ export default function StoreSettingsPage() {
         <Eye size={16} /> Preview
       </button>
 
-      {/* ── MOBILE PREVIEW SHEET ─────────────────────────────────────────── */}
+      {/* MOBILE PREVIEW SHEET */}
       <AnimatePresence>
         {showMobilePreview && (
           <motion.div

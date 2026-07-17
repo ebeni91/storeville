@@ -11,7 +11,7 @@ import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
-  // ── States for Phone OTP ───────────────────────────────────────────────────
+  // States for Phone OTP
   const [identifier, setIdentifier] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
@@ -24,7 +24,7 @@ export default function LoginPage() {
     else router.push('/')
   }
 
-  // ── Phone OTP Actions ─────────────────────────────────────────────────────
+  // Phone OTP Actions
   const handleSendOtp = async () => {
     setError('')
     setIsSendingOtp(true)
@@ -59,7 +59,7 @@ export default function LoginPage() {
     }
   }
 
-  // ── Google OAuth ─────────────────────────────────────────────────────────────
+  // Google OAuth
   const handleGoogle = async () => {
     setError('')
     await authClient.signIn.social({
@@ -81,7 +81,7 @@ export default function LoginPage() {
             <div className="flex items-start">
               <span className="text-3xl font-light tracking-[-1px] text-gray-400">Store</span>
               <span className="text-3xl font-black tracking-[-1px] text-gray-900">Ville</span>
-              <span className="text-sm font-black text-[#34d399] mt-1 ml-[2px]">™</span>
+              <span className="text-sm font-black text-[#34d399] mt-1 ml-[2px]"></span>
             </div>
           </Link>
           <h1 className="text-[3.5rem] font-black text-gray-900 leading-[1.1] mb-6 tracking-tighter text-balance">
@@ -90,7 +90,7 @@ export default function LoginPage() {
           </h1>
           
         </div>
-        <div className="relative z-10 text-gray-500 font-bold text-sm uppercase tracking-widest">© 2026 StoreVille Technologies</div>
+        <div className="relative z-10 text-gray-500 font-bold text-sm uppercase tracking-widest"> 2026 StoreVille Technologies</div>
       </div>
 
       {/* RIGHT PANEL: REDESIGNED FORM (Matching reference image) */}
@@ -103,7 +103,7 @@ export default function LoginPage() {
               <div className="flex items-start">
                 <span className="text-3xl font-light tracking-[-1px] text-gray-400">Store</span>
                 <span className="text-3xl font-black tracking-[-1px] text-gray-900">Ville</span>
-                <span className="text-sm font-black text-[#34d399] mt-1 ml-[2px]">™</span>
+                <span className="text-sm font-black text-[#34d399] mt-1 ml-[2px]"></span>
               </div>
             </Link>
           </div>
@@ -119,7 +119,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* 📱 PHONE OTP FORM (REDESIGNED TO MATCH REFERENCE) */}
+          {/*  PHONE OTP FORM (REDESIGNED TO MATCH REFERENCE) */}
           {!otpSent ? (
             <div className="space-y-6">
               <div className="flex gap-4 items-center">
@@ -187,7 +187,7 @@ export default function LoginPage() {
               </div>
             </div>
           ) : (
-            /* 📝 VERIFY OTP STATE (ADAPTED TO NEW STYLE) */
+            /*  VERIFY OTP STATE (ADAPTED TO NEW STYLE) */
             <form onSubmit={handleVerifyOtp} className="space-y-8 animate-in slide-in-from-bottom-6 duration-700">
                <div className="text-center font-bold text-gray-600 mb-6">
                  Enter the 6-digit code sent to <br/>

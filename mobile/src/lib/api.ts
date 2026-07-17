@@ -33,7 +33,7 @@ export const api = axios.create({
   },
 });
 
-// ── Auth interceptor ─────────────────────────────────────────────────────────
+// Auth Interceptor
 // better-auth stores session cookies in expo-secure-store.
 // authClient.getCookie() retrieves them and we attach them to every Django request.
 // Django's BetterAuthMiddleware reads the cookie and resolves the session.
@@ -50,7 +50,7 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// ── Trailing slash interceptor ───────────────────────────────────────────────────────────────────────────
+// Trailing Slash Interceptor
 api.interceptors.request.use((config) => {
   // Django's APPEND_SLASH requires all API endpoints to end with a trailing slash.
   // This interceptor ensures every request has one, so we don't need to add

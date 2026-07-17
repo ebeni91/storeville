@@ -134,7 +134,7 @@ export default function FoodStorefront({ store }: { store: any }) {
       className="min-h-screen pb-32 font-sans transition-colors duration-700 relative"
       style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}
     >
-      {/* ── TOP ANNOUNCEMENT BAR (Floating Pill) ── */}
+      {/* TOP ANNOUNCEMENT BAR (Floating Pill) */}
       {(store.announcement_is_active && store.announcement_text) && (
         <div className="absolute top-4 md:top-6 lg:top-8 inset-x-0 z-[150] px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto pointer-events-none">
           <div className="w-full py-2.5 px-4 text-xs font-black tracking-widest uppercase shadow-2xl rounded-2xl overflow-hidden whitespace-nowrap pointer-events-auto border" style={{ backgroundColor: store.announcement_color || store.primary_color, color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
@@ -160,7 +160,7 @@ export default function FoodStorefront({ store }: { store: any }) {
       {/* AUTH MODAL */}
       <AuthModal store={store} bgRgb={bgRgb} textRgb={textRgb} onMergeCart={handleMergeCart} />
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <div className={`px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8 max-w-[1600px] mx-auto ${(store.announcement_is_active && store.announcement_text) ? 'pt-[4.5rem] md:pt-[5.5rem] lg:pt-[6.5rem]' : 'pt-4 md:pt-6 lg:pt-8'}`}>
         <header
           className="relative w-full h-[60vh] md:h-[65vh] rounded-[2rem] md:rounded-[3rem] flex flex-col justify-between overflow-hidden shadow-2xl border"
@@ -238,7 +238,7 @@ export default function FoodStorefront({ store }: { store: any }) {
         </header>
       </div>
 
-      {/* ── CATEGORY CHIPS (Live Menu Chips) ── */}
+      {/* CATEGORY CHIPS (Live Menu Chips) */}
       {categories.length > 0 && (
         <div className="max-w-[1600px] mx-auto px-4 md:px-8 mb-6">
           <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar pb-2">
@@ -271,7 +271,7 @@ export default function FoodStorefront({ store }: { store: any }) {
         </div>
       )}
 
-      {/* ── MENU: Category-as-Menu Horizontal Scroll per Section ── */}
+      {/* MENU: Category-as-Menu Horizontal Scroll per Section */}
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 space-y-12">
         {filteredItems.length === 0 ? (
           <div className="text-center py-20 rounded-[3rem] border-2 border-dashed" style={{ borderColor: `rgba(${textRgb}, 0.1)` }}>
@@ -329,7 +329,7 @@ export default function FoodStorefront({ store }: { store: any }) {
   )
 }
 
-// ── FOOD PRODUCT CARD (Simplified: price + heart, click → detail page) ──
+// FOOD PRODUCT CARD (Simplified: price + heart, click → detail page)
 function FoodCard({ item, store, bgRgb, textRgb, session, favorites, toggleFavorite, openAuthModal, router }: any) {
   const isFav = favorites.some((f: any) => f.productId === item.id && f.type === 'FOOD')
 

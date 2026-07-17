@@ -52,10 +52,10 @@ export function AboutUsScreen({ navigation }: Props) {
         }]}>
           <Text style={[styles.cardTitle, { color: colors.text }]}>What We Offer</Text>
           {[
-            { emoji: '🛍', text: 'Discover retail stores, fashion, electronics, and more across your city.' },
-            { emoji: '🍕', text: 'Browse cafes, restaurants, and food vendors on an interactive map.' },
-            { emoji: '📦', text: 'Place orders and track deliveries in real-time.' },
-            { emoji: '💳', text: 'Secure in-app payments via cards and mobile wallets.' },
+            { emoji: '', text: 'Discover retail stores, fashion, electronics, and more across your city.' },
+            { emoji: '', text: 'Browse cafes, restaurants, and food vendors on an interactive map.' },
+            { emoji: '', text: 'Place orders and track deliveries in real-time.' },
+            { emoji: '', text: 'Secure in-app payments via cards and mobile wallets.' },
           ].map((item, i) => (
             <View key={i} style={styles.featureRow}>
               <Text style={styles.featureEmoji}>{item.emoji}</Text>
@@ -77,7 +77,7 @@ export function AboutUsScreen({ navigation }: Props) {
           ))}
         </View>
 
-        <Text style={[styles.footer, { color: colors.textMuted }]}>Made in Ethiopia 🇪🇹 · © 2026 StoreVille Technology</Text>
+        <Text style={[styles.footer, { color: colors.textMuted }]}>Made in Ethiopia  ·  2026 StoreVille Technology</Text>
       </ScrollView>
     </View>
   );

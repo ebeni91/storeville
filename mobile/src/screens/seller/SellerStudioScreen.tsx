@@ -13,7 +13,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { CustomAlert } from '../../components/ui/CustomAlert';
 import { useAlert } from '../../lib/useAlert';
 
-// ─── Extended premium THEMES ──────────────────────────────────────────────────
+// Extended premium THEMES
 const THEMES = [
   // Original 8
   { id: 'apple-dark',      name: 'Cupertino Dark',   desc: "Apple's signature obsidian",      bg: '#000000', text: '#F5F5F7', primary: '#2997FF',  accent2: '#30D158' },
@@ -63,14 +63,14 @@ export function SellerStudioScreen({ navigation }: any) {
   });
 
 
-  // ── Derived current theme ──────────────────────────────────────────────────
+  // Derived current theme
   const currentTheme = THEMES.find(
     t => t.bg === formData.background_color && t.primary === formData.primary_color
   ) || null;
 
   useEffect(() => { fetchStore(); }, []);
 
-  // ── Animate theme picker ───────────────────────────────────────────────────
+  // Animate theme picker
   const openThemePicker = () => {
     setThemePickerOpen(true);
     Animated.spring(slideAnim, { toValue: 0, tension: 80, friction: 12, useNativeDriver: true }).start();
@@ -165,7 +165,7 @@ export function SellerStudioScreen({ navigation }: any) {
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'}  backgroundColor="transparent" translucent={true} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
 
-        {/* ── Header ────────────────────────────────────────────────────────── */}
+        {/* Header */}
         <View style={[styles.header, { backgroundColor: isDark ? 'rgba(28, 30, 43, 0.98)' : colors.surface, borderBottomColor: cardBorder }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View>
@@ -208,7 +208,7 @@ export function SellerStudioScreen({ navigation }: any) {
 
         <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
 
-          {/* ── THEME TAB ─────────────────────────────────────────────────── */}
+          {/* THEME TAB */}
           {activeTab === 'theme' && (
             <>
               {/* Current Theme Row */}
@@ -267,7 +267,7 @@ export function SellerStudioScreen({ navigation }: any) {
             </>
           )}
 
-          {/* ── IDENTITY TAB ──────────────────────────────────────────────── */}
+          {/* IDENTITY TAB */}
           {activeTab === 'identity' && (
             <>
               {/* Banner image */}
@@ -379,7 +379,7 @@ export function SellerStudioScreen({ navigation }: any) {
             </>
           )}
 
-          {/* ── Save Button ────────────────────────────────────────────────── */}
+          {/* Save Button */}
           <TouchableOpacity
             onPress={handleSave} disabled={isSaving} activeOpacity={0.85}
             style={[styles.saveBtn, { backgroundColor: isSaving ? colors.surfaceAlt : colors.text }]}
@@ -391,7 +391,7 @@ export function SellerStudioScreen({ navigation }: any) {
         </View>
       </ScrollView>
 
-      {/* ── THEME PICKER MODAL ──────────────────────────────────────────────── */}
+      {/* THEME PICKER MODAL */}
       <Modal visible={themePickerOpen} transparent animationType="none" onRequestClose={closeThemePicker}>
         <View style={styles.modalBackdrop}>
           <TouchableOpacity style={StyleSheet.absoluteFill} onPress={closeThemePicker} />

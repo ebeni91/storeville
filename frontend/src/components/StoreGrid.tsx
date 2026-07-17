@@ -17,7 +17,7 @@ export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food'
   const modeHover = mode === 'food' ? 'group-hover:text-orange-500' : 'group-hover:text-gray-900'
   const modeRing = mode === 'food' ? 'group-hover:ring-orange-500/50' : 'group-hover:ring-gray-900/50'
 
-  // 🦴 PREMIUM SKELETON LOADER
+  //  PREMIUM SKELETON LOADER
   if (isLoading) {
     return (
       <div className="w-full h-full p-4 md:p-8 overflow-y-auto bg-gray-50/30 hide-scrollbar">
@@ -38,7 +38,7 @@ export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food'
     )
   }
 
-  // 📭 EMPTY STATE
+  //  EMPTY STATE
   if (!stores || stores.length === 0) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50/30">
@@ -51,14 +51,14 @@ export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food'
     )
   }
 
-  // 🏬 LIVE GRID 
+  //  LIVE GRID 
   return (
     <div className="w-full h-full p-4 md:p-8 overflow-y-auto bg-gray-50/30 hide-scrollbar">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
         {stores.map((store: Store) => (
          <Link 
             key={store.id} 
-            // 🌟 NEW: Standard relative path! Next.js will SPA navigate instantly.
+            //  NEW: Standard relative path! Next.js will SPA navigate instantly.
             href={`/store/${store.slug}`} 
             className={`group bg-white/90 backdrop-blur-xl border border-white shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 transform hover:-translate-y-2 p-4 md:p-5 rounded-[2rem] flex flex-col relative ring-1 ring-transparent ${modeRing}`}
           >
@@ -84,7 +84,7 @@ export default function StoreGrid({ mode = 'retail' }: { mode: 'retail' | 'food'
                 <Star size={12} className="fill-yellow-400 text-yellow-400" /> 4.9
               </div>
 
-              {/* 🚀 LIVE AVAILABILITY INDICATORS */}
+              {/*  LIVE AVAILABILITY INDICATORS */}
               <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-[0_4px_10px_rgba(0,0,0,0.1)] text-gray-900 flex items-center gap-2 border border-white/50">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></div> Open
               </div>

@@ -15,14 +15,14 @@ import {
 import { CustomAlert } from '../../components/ui/CustomAlert';
 import { useAlert } from '../../lib/useAlert';
 
-// ─── Payment methods ───────────────────────────────────────────────────────────
+// Payment methods
 const PAYMENT_METHODS = [
   { id: 'cod',      label: 'Cash on Delivery', icon: Banknote,   color: '#16a34a', bg: '#dcfce7' },
   { id: 'telebirr', label: 'Telebirr',          icon: Smartphone, color: '#111827', bg: '#f3f4f6' },
   { id: 'cbe',      label: 'CBE Birr',           icon: Building2,  color: '#0ea5e9', bg: '#f0f9ff' },
 ];
 
-// ─── Colour helpers ────────────────────────────────────────────────────────────
+// Colour helpers
 const hexRgb = (hex: string) => {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#ffffff');
   return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : { r: 255, g: 255, b: 255 };
@@ -111,7 +111,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
     } finally { setLoading(false); }
   };
 
-  // ── Success screen ─────────────────────────────────────────────────────────
+  // Success screen
   if (orderSuccess) {
     return (
       <View style={{ flex: 1, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
@@ -119,7 +119,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
         <View style={[styles.successCircle, { backgroundColor: isFood ? '#fff7ed' : '#f3f4f6' }]}>
           <CheckCircle color={accent} size={56} />
         </View>
-        <Text style={[styles.successTitle, { color: textPrimary }]}>Order Placed! 🎉</Text>
+        <Text style={[styles.successTitle, { color: textPrimary }]}>Order Placed! </Text>
         <Text style={[styles.successSub, { color: textSecondary }]}>
           Your order has been sent to {store.name}.{'\n'}
           {isFood ? "Sit tight, it's being prepared!" : 'Your items will be shipped shortly!'}
@@ -156,7 +156,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
 
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160 }}>
 
-          {/* ── Read-only order summary ──────────────────────────────────────── */}
+          {/* Read-only order summary */}
           <Text style={[styles.sectionLabel, { color: textSecondary }]}>Your {isFood ? 'Order' : 'Cart'} · {items.length} items</Text>
           <View style={[styles.summaryCard, { backgroundColor: surface, borderColor: border }]}>
             {items.map(item => (
@@ -184,7 +184,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
             </View>
           </View>
 
-          {/* ── Delivery / Shipping address ─────────────────────────────────── */}
+          {/* Delivery / Shipping address */}
           <Text style={[styles.sectionLabel, { marginTop: 16, color: textSecondary }]}>{isFood ? 'Delivery Address' : 'Shipping Address'}</Text>
           <View style={[styles.inputCard, { backgroundColor: surface, borderColor: border }]}>
             <MapPin color={accent} size={20} style={{ marginTop: 2 }} />
@@ -198,7 +198,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
             />
           </View>
 
-          {/* ── Special instructions (food only) ────────────────────────────── */}
+          {/* Special instructions (food only) */}
           {isFood && (
             <>
               <Text style={[styles.sectionLabel, { marginTop: 12, color: textSecondary }]}>Special Instructions</Text>
@@ -213,7 +213,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
             </>
           )}
 
-          {/* ── Payment method ───────────────────────────────────────────────── */}
+          {/* Payment method */}
           <Text style={[styles.sectionLabel, { marginTop: 12, color: textSecondary }]}>Payment Method</Text>
           <View style={styles.paymentGrid}>
             {PAYMENT_METHODS.map(m => {
@@ -244,7 +244,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
             })}
           </View>
 
-          {/* ── Guest warning ────────────────────────────────────────────────── */}
+          {/* Guest warning */}
           {!isLoggedIn && (
             <View style={styles.guestWarn}>
               <ShoppingBag color="#f97316" size={18} />
@@ -253,7 +253,7 @@ export function CheckoutScreen({ route, navigation }: Props) {
           )}
         </ScrollView>
 
-        {/* ── Sticky place order button ─────────────────────────────────────── */}
+        {/* Sticky place order button */}
         <View style={[styles.bottomBar, { backgroundColor: bg, borderTopColor: border }]}>
           <TouchableOpacity
             onPress={handlePlace}

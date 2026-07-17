@@ -54,7 +54,6 @@ class Store(models.Model):
     )
     latitude = models.DecimalField(
         max_digits=9, decimal_places=6, null=True, blank=True,
-        # ✅ FIX (Issue #28): Enforce valid coordinate range
         validators=[MinValueValidator(-90), MaxValueValidator(90)]
     )
     longitude = models.DecimalField(
@@ -106,10 +105,6 @@ class Store(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            # ✅ FIX (Issue #11): Replaced the race-condition while-loop with a
-            # transaction.atomic() + IntegrityError retry pattern.
-            # The old loop could allow two concurrent processes to both read
-            # slug='my-store' as available before either writes it.
             base_slug = slugify(self.name)
             for counter in range(1, 100):
                 slug = base_slug if counter == 1 else f"{base_slug}-{counter}"

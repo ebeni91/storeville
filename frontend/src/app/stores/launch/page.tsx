@@ -24,13 +24,13 @@ export default function RegisterPage() {
   const router = useRouter()
   const { data: session, isPending } = authClient.useSession()
   
-  // ── Auth States ────────────────────────────────────────────────────────────
+  // Auth States
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [isSendingOtp, setIsSendingOtp] = useState(false)
   
-  // ── Store Profile States ───────────────────────────────────────────────────
+  // Store Profile States
   const [businessName, setBusinessName] = useState('')
   const [description, setDescription] = useState('')
   const [gateway, setGateway] = useState<'food' | 'retail'>('retail')
@@ -50,7 +50,7 @@ export default function RegisterPage() {
     }
   }, [session, router])
 
-  // ── Auth Actions ──────────────────────────────────────────────────────────
+  // Auth Actions
   const handleGoogle = async () => {
     setError('')
     await authClient.signIn.social({
@@ -92,7 +92,7 @@ export default function RegisterPage() {
     }
   }
 
-  // ── Store Creation ────────────────────────────────────────────────────────
+  // Store Creation
   const handleCreateStore = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!businessType) { setError('Please select a business category.'); return }
@@ -110,11 +110,10 @@ export default function RegisterPage() {
         longitude: parseFloat(Number(location.lng).toFixed(6)),
       })
 
-      // ✅ THE FIX: The BA client session is cached in-memory and won't reflect
-      // the new SELLER role even after a getSession() call. We must poll the
-      // server-side session endpoint directly (bypassing the client cache)
-      // until the role has propagated, then do a hard navigation so Next.js
-      // middleware re-evaluates from a clean state.
+      // The Better Auth client session is cached in-memory and will not immediately
+      // reflect the newly assigned SELLER role. To resolve this, we poll the server-side
+      // session endpoint directly (bypassing the cache) until the role propagates,
+      // and then perform a hard navigation to force the Next.js middleware to re-evaluate.
       let attempts = 0
       const maxAttempts = 10
 
@@ -125,7 +124,7 @@ export default function RegisterPage() {
           const freshSession = await res.json()
           if (freshSession?.user?.role === 'SELLER') {
             // Hard navigate — forces middleware + session to reload from scratch
-            // ✅ ALSO clear/update the x-user-role cookie so middleware doesn't use stale cache
+            //  ALSO clear/update the x-user-role cookie so middleware doesn't use stale cache
             document.cookie = "x-user-role=SELLER; path=/; max-age=300"
             window.location.href = '/dashboard/seller'
             return
@@ -158,7 +157,7 @@ export default function RegisterPage() {
   return (
     <main className="flex min-h-screen w-full bg-white font-sans selection:bg-gray-900 selection:text-white lg:h-screen lg:overflow-hidden">
       
-      {/* 🏙️ LEFT PANEL: BRAND & VALUE PROP (Synced with Login) */}
+      {/*  LEFT PANEL: BRAND & VALUE PROP (Synced with Login) */}
       <div className="hidden lg:flex flex-col justify-between w-[40%] bg-gray-900 p-16 relative overflow-hidden flex-shrink-0">
         <div className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]"></div>
         <StoreIcon className="absolute -bottom-24 -left-20 w-[600px] h-[600px] text-white/5 -rotate-12" strokeWidth={1} />
@@ -168,7 +167,7 @@ export default function RegisterPage() {
             <div className="flex items-start">
               <span className="text-4xl font-light tracking-[-1.5px] text-gray-400">Store</span>
               <span className="text-4xl font-black tracking-[-1.5px] text-white">Ville</span>
-              <span className="text-sm font-black text-[#34d399] mt-[2px] ml-[2px]">™</span>
+              <span className="text-sm font-black text-[#34d399] mt-[2px] ml-[2px]"></span>
             </div>
           </Link>
 
@@ -179,10 +178,10 @@ export default function RegisterPage() {
 
           
         </div>
-        <div className="relative z-10 text-gray-300/30 font-black text-[10px] uppercase tracking-[0.4em]">© 2026 StoreVille Merchant Platform</div>
+        <div className="relative z-10 text-gray-300/30 font-black text-[10px] uppercase tracking-[0.4em]"> 2026 StoreVille Merchant Platform</div>
       </div>
 
-      {/* 📋 RIGHT PANEL: DYNAMIC MERCHANT FORM */}
+      {/*  RIGHT PANEL: DYNAMIC MERCHANT FORM */}
       <div className="w-full lg:w-[60%] h-full overflow-y-auto p-4 sm:p-12 lg:p-16 bg-white flex justify-center">
         <div className="w-full max-w-[700px] mx-auto py-8">
           
@@ -203,7 +202,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* ─────── STEP 1: AUTHENTICATION (Synced with New Login Style) ─────── */}
+          {/* STEP 1: AUTHENTICATION (Synced with New Login Style) */}
           {!session ? (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
               
@@ -264,7 +263,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
               ) : (
-                /* 📝 VERIFY OTP STATE */
+                /*  VERIFY OTP STATE */
                 <form onSubmit={handleVerifyOtp} className="space-y-10 animate-in slide-in-from-bottom-8 duration-700">
                   <div className="text-center font-bold text-gray-400 mb-8 uppercase tracking-widest text-xs">
                     Verification code sent to <br/>
@@ -298,10 +297,9 @@ export default function RegisterPage() {
               )}
             </div>
           ) : (
-            /* ─────── STEP 2: BUSINESS PROFILE (HI-END FORM) ─────── */
+            {/* STEP 2: BUSINESS PROFILE (HI-END FORM) */}
             <form onSubmit={handleCreateStore} className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
               
-              {/* Category Selector Pill */}
               <div className="space-y-4">
                 <label className={labelClass}>Marketplace Vertical</label>
                 <div className="p-2 bg-[#f8fafc] rounded-[2rem] border border-gray-100 flex gap-2">

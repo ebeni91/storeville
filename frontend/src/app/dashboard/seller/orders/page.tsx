@@ -171,7 +171,7 @@ export default function OrdersPage() {
         </div>
       </motion.div>
 
-      {/* 🚀 PREMIUM ORDER DETAILS DRAWER 🚀 */}
+      {/*  PREMIUM ORDER DETAILS DRAWER  */}
       {selectedOrder && (
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setSelectedOrder(null)}></div>

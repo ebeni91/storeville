@@ -15,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# ── Store Discovery (Public, Read-Only) ───────────────────────────────────────
+# Store Discovery (Public, Read-Only)
 
 class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StoreDiscoverySerializer
@@ -23,8 +23,6 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        # ✅ FIX: Explicit ordering and select_related for the new theme config
-        # to prevent N+1 queries while maintaining the flattened API response.
         queryset = Store.objects.filter(is_active=True).select_related('theme_config').order_by('created_at')
         store_type = self.request.query_params.get('type')
         if store_type:
@@ -66,7 +64,7 @@ class StoreDiscoveryViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": "Invalid coordinate format."}, status=400)
 
 
-# ── Store Management (Seller-Only) ────────────────────────────────────────────
+# Store Management (Seller-Only)
 
 class StoreManagementViewSet(viewsets.ModelViewSet):
     serializer_class = StoreManagementSerializer

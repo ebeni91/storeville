@@ -4,7 +4,7 @@ import { phoneNumber } from 'better-auth/plugins';
 import { Pool } from 'pg';
 
 
-// ✅ BUILD-TIME GUARD: DATABASE_URL is only available at runtime (not in `next build`).
+// Build-time guard: DATABASE_URL is only available at runtime (not in `next build`).
 // We create the pool only when the env var exists. During the Docker image build,
 // Next.js evaluates this module but DATABASE_URL is absent — the guard returns null
 // so betterAuth() is never called. At runtime (container up) DATABASE_URL is always set.
@@ -27,12 +27,12 @@ export const auth = pool ? betterAuth({
 
   baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
 
-  // ── Email + Password (DISABLED) ───────────────────────────────────────────
+  // Email + Password (DISABLED)
   emailAndPassword: {
     enabled: false,
   },
 
-  // ── Social Providers ───────────────────────────────────────────────────────
+  // Social Providers
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -42,11 +42,10 @@ export const auth = pool ? betterAuth({
     },
   },
 
-  // ── User Field Mapping ────────────────────────────────────────────────────
+  // User Field Mapping
   user: {
-    // 🌟 THE FIX: Map internal property names to actual DB column names.
-    // This ensures that both the core and plugins (like phoneNumber) use 
-    // the snake_case columns in our shared Postgres database.
+    // Map internal property names to actual DB column names.
+    // This ensures that both the core and plugins use the snake_case columns in our shared Postgres database.
     fields: {},
     additionalFields: {
       role: {
@@ -57,7 +56,7 @@ export const auth = pool ? betterAuth({
     },
   },
 
-  // ── Plugins ────────────────────────────────────────────────────────────────
+  // Plugins
   plugins: [
     // Expo deep-link support for mobile OAuth
     expo(),
@@ -81,9 +80,8 @@ export const auth = pool ? betterAuth({
     }),
   ],
 
-  // ── Database Hooks ─────────────────────────────────────────────────────────
-  // 🌟 USER SYNC: When a new user registers via Better Auth, immediately
-  // create a corresponding Django user so they appear in the Admin dashboard.
+  // Database Hooks
+  // Synchronize new users created via Better Auth into the Django Admin dashboard.
   databaseHooks: {
     user: {
       create: {
@@ -113,16 +111,15 @@ export const auth = pool ? betterAuth({
     }
   },
 
-  // ── Trusted Origins for CORS + deep links ─────────────────────────────────
-  // ✅ SECURITY FIX: No hardcoded IPs, ngrok URLs, or broad wildcards.
-  // All origins are driven by environment variables.
+  // Trusted Origins for CORS + deep links
+  // Ensure all allowed origins are strictly driven by environment variables.
   trustedOrigins: [
     process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
     ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
     // Native mobile deep link scheme
     'storeville://',
-    // ✅ FIX: Always allow localhost:3000 because Docker internal traffic uses it
+    // Always allow localhost:3000 for Docker internal traffic routing.
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     // Allow dev origins only in development
@@ -133,9 +130,9 @@ export const auth = pool ? betterAuth({
     ] : []),
   ],
 
-  // ── Session ───────────────────────────────────────────────────────────────
+  // Session
   session: {
-    // 🌟 THE FIX: Disable cookie cache to prevent stale session data
+    // Disable cookie cache to prevent stale session data
     cookieCache: {
       enabled: false, 
     },
@@ -143,13 +140,11 @@ export const auth = pool ? betterAuth({
     freshAge: 0,
   },
 
-  // ── Advanced ──────────────────────────────────────────────────────────────
+  // Advanced
   advanced: {
-    // ✅ FIX: Use Secure cookies whenever the auth URL is served over HTTPS.
-    // This covers both production (https://storeville.app) AND local dev via
-    // ngrok (https://willette-conclusive-robby.ngrok-free.dev).
-    // On plain http://localhost, Secure cookies are NOT set — browsers would
-    // silently discard them causing an instant logout loop after OAuth.
+    // Enforce Secure cookies when the auth URL uses HTTPS.
+    // This is required for production and ngrok environments, but disabled for localhost
+    // to prevent browsers from silently discarding cookies and causing a logout loop.
     useSecureCookies: (process.env.BETTER_AUTH_URL ?? '').startsWith('https://'),
   }
 }) : null as any;

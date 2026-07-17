@@ -70,7 +70,7 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
       const formattedAddress = `Name: ${contactName} | Phone: ${contactPhone} | Location: ${address}`
 
       if (store.store_type === 'FOOD') {
-        // 🍔 SUBMIT TO FOOD ENGINE
+        //  SUBMIT TO FOOD ENGINE
         const payload = {
           store: store.id,
           delivery_address: formattedAddress,
@@ -88,7 +88,7 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
         await api.delete(`/orders/food/cart/?store_id=${store.id}`)
         
       } else {
-        // 🛍️ SUBMIT TO RETAIL ENGINE
+        //  SUBMIT TO RETAIL ENGINE
         const payload = {
           store: store.id,
           shipping_address: formattedAddress,
@@ -153,7 +153,7 @@ export default function CheckoutPage({ params }: { params: { subdomain: string }
   return (
     <main className="min-h-screen pb-24 font-sans" style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}>
       
-      {/* ── UNIFIED STICKY HEADER ── */}
+      {/* UNIFIED STICKY HEADER */}
       <div className="sticky top-0 z-[150] flex flex-col w-full">
         {/* ANNOUNCEMENT BAR */}
         {(store.announcement_is_active && store.announcement_text) && (

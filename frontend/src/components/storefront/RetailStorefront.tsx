@@ -18,7 +18,7 @@ interface RetailProduct { id: string; category: string; category_name: string; n
 export default function RetailStorefront({ store }: { store: any }) {
   const router = useRouter()
   
-  // 🌟 UNIVERSAL AUTH & CART STATES
+  //  UNIVERSAL AUTH & CART STATES
   const { data: session, isPending } = authClient.useSession()
   const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuthStore()
   const { carts, addItem, removeItem, mergeCartWithBackend } = useCartStore()
@@ -78,7 +78,7 @@ export default function RetailStorefront({ store }: { store: any }) {
     return activeCategory === 'ALL' || product.category === activeCategory
   })
 
-  // 🛒 Add to cart → navigate to cart page
+  //  Add to cart → navigate to cart page
   const handleAddToCart = (product: any) => {
     addItem(store.id, { ...product, quantity: 1 })
     setToastMessage(`Added ${product.name} to your cart.`)
@@ -133,7 +133,7 @@ export default function RetailStorefront({ store }: { store: any }) {
   return (
     <main className="min-h-screen pb-32 font-sans transition-colors duration-700 relative" style={{ backgroundColor: store.background_color || '#fafafa', color: store.secondary_color || '#111827' }}>
       
-      {/* ── TOP ANNOUNCEMENT BAR (Floating Pill) ── */}
+      {/* TOP ANNOUNCEMENT BAR (Floating Pill) */}
       {(store.announcement_is_active && store.announcement_text) && (
         <div className="absolute top-4 md:top-6 lg:top-8 inset-x-0 z-[150] px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto pointer-events-none">
           <div className="w-full py-2.5 px-4 text-xs font-black tracking-widest uppercase shadow-2xl rounded-2xl overflow-hidden whitespace-nowrap pointer-events-auto border" style={{ backgroundColor: store.announcement_color || store.primary_color, color: '#fff', borderColor: 'rgba(255,255,255,0.1)' }}>
@@ -160,7 +160,7 @@ export default function RetailStorefront({ store }: { store: any }) {
       <AuthModal store={store} bgRgb={bgRgb} textRgb={textRgb} onMergeCart={handleMergeCart} />
 
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <div className={`px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8 max-w-[1600px] mx-auto ${(store.announcement_is_active && store.announcement_text) ? 'pt-[4.5rem] md:pt-[5.5rem] lg:pt-[6.5rem]' : 'pt-4 md:pt-6 lg:pt-8'}`}>
         <header
           className="relative w-full h-[45vh] md:h-[60vh] lg:h-[75vh] rounded-[2rem] md:rounded-[3rem] flex flex-col justify-between overflow-hidden shadow-2xl border"
@@ -243,7 +243,7 @@ export default function RetailStorefront({ store }: { store: any }) {
         
         {/* SIDEBAR (Desktop) */}
         <aside className="w-full lg:w-60 shrink-0">
-          {/* 📱 MOBILE CATEGORIES (Horizontal Scroll) */}
+          {/*  MOBILE CATEGORIES (Horizontal Scroll) */}
           <div className="lg:hidden -mx-4 px-4 overflow-x-auto no-scrollbar flex items-center gap-3 mb-8">
             <button 
               onClick={() => setActiveCategory('ALL')} 

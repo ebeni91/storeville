@@ -15,10 +15,8 @@ import MapExplorer from '@/components/MapExplorer'
 
 type Gateway = 'RETAIL' | 'FOOD'
 
-// ─────────────────────────────────────────────────────────
-// 🚀 SPLASH SCREEN
-// ─────────────────────────────────────────────────────────
-function SplashScreen({ onDone }: { onDone: () => void }) {
+// //  SPLASH SCREEN
+// function SplashScreen({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     const t = setTimeout(onDone, 2800)
     return () => clearTimeout(t)
@@ -43,7 +41,7 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
           <div className="flex items-start">
             <span className="text-[64px] font-extralight tracking-[-2.5px] leading-[68px] text-[#0f0f23]/35">Store</span>
             <span className="text-[64px] font-black tracking-[-2.5px] leading-[68px] text-[#0f0f23]">Ville</span>
-            <span className="text-[18px] font-bold text-[#34d399] mt-[10px] ml-[3px]">™</span>
+            <span className="text-[18px] font-bold text-[#34d399] mt-[10px] ml-[3px]"></span>
           </div>
           <motion.div
             initial={{ x: '-120%' }}
@@ -68,16 +66,14 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
         transition={{ duration: 0.68 }}
         className="absolute bottom-[46px] text-[9px] font-semibold tracking-[2.5px] uppercase text-[#0f0f23]/20"
       >
-        © 2026 StoreVille Technology
+         2026 StoreVille Technology
       </motion.div>
     </motion.div>
   )
 }
 
-// ─────────────────────────────────────────────────────────
-// 🏠 HOME PAGE — ExploreScreen-style immersive map
-// ─────────────────────────────────────────────────────────
-export default function Home() {
+// //  HOME PAGE — ExploreScreen-style immersive map
+// export default function Home() {
   const router = useRouter()
   const { data: session } = authClient.useSession()
   const [isMounted, setIsMounted] = useState(false)
@@ -118,19 +114,19 @@ export default function Home() {
 
   return (
     <>
-      {/* ── SPLASH SCREEN ─────────────────────────────── */}
+      {/* SPLASH SCREEN */}
       <AnimatePresence>
         {showSplash && <SplashScreen onDone={handleSplashDone} />}
       </AnimatePresence>
 
-      {/* ── MAIN VIEW ─────────────────────────────────── */}
+      {/* MAIN VIEW */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: splashDone ? 1 : 0 }}
         transition={{ duration: 0.6 }}
         className="fixed inset-0 w-full h-full overflow-hidden"
       >
-        {/* ── Full-screen Map ───────────────────────────── */}
+        {/* Full-screen Map */}
         <div className="absolute inset-0 z-0">
           <MapExplorer
             mode={isFood ? 'food' : 'retail'}
@@ -141,7 +137,7 @@ export default function Home() {
           />
         </div>
 
-        {/* ── FLOATING NAVBAR ───────────────────────────── */}
+        {/* FLOATING NAVBAR */}
         <div className="absolute top-0 inset-x-0 z-50 px-4 pt-4 pointer-events-none">
           <div className="pointer-events-auto flex items-center justify-between max-w-[1400px] mx-auto bg-white/80 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-white/60 px-5 py-3">
 
@@ -150,7 +146,7 @@ export default function Home() {
               <div className="flex items-start">
                 <span className="text-2xl font-light tracking-[-1px] text-gray-400">Store</span>
                 <span className="text-2xl font-black tracking-[-1px] text-gray-900">Ville</span>
-                <span className="text-xs font-black text-[#34d399] mt-1 ml-[1px]">™</span>
+                <span className="text-xs font-black text-[#34d399] mt-1 ml-[1px]"></span>
               </div>
             </Link>
 
@@ -210,7 +206,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── CHIPS UNDER NAVBAR ───────────────────── */}
+        {/* CHIPS UNDER NAVBAR */}
         <div className="absolute z-40 inset-x-4 top-[88px] pointer-events-none">
           <div className="max-w-[1400px] mx-auto pointer-events-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none justify-center md:px-5">
             {chips.map((chip) => {
@@ -231,7 +227,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── BOTTOM CONTROLS CLUSTER ─────────────────────── */}
+        {/* BOTTOM CONTROLS CLUSTER */}
 
         <div className="absolute z-40 bottom-6 inset-x-0 flex flex-col items-center gap-4 px-4 pointer-events-none">
           {/* 1. GATEWAY SWITCHER PILLS */}
@@ -264,7 +260,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── STORE DISCOVERY DRAWER ────────────────────── */}
+        {/* STORE DISCOVERY DRAWER */}
         <AnimatePresence>
           {isDrawerOpen && selectedStore && (
             <>

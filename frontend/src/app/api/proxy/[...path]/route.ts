@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * 🌟 CRITICAL FIX: Proper Cookie-Forwarding Proxy
- * 🌟 CRITICAL FIX: Proper Cookie-Forwarding Proxy
+ * Custom Cookie-Forwarding Proxy
  *
- * Next.js rewrites() strip the Cookie header when proxying to an external destination.
- * This means Django's BetterAuthMiddleware never receives "better-auth.session-token",
- * causing it to fall back to the admin Django session → stores get assigned to Super Admin.
- *
- * This API route EXPLICITLY forwards all cookies and headers, solving the hijacking bug.
+ * Resolves an issue where Next.js rewrites() strip the Cookie header when proxying 
+ * to an external destination. Without the "better-auth.session-token", the backend
+ * may misidentify the user session. This explicit proxy ensures all headers and 
+ * cookies are correctly forwarded to the Django backend.
  */
 async function handler(request: NextRequest, { params }: { params: { path: string[] } }) {
   const DJANGO_BACKEND = process.env.DJANGO_INTERNAL_URL ?? process.env.DJANGO_BACKEND_URL ?? 'http://backend:8000'
@@ -47,7 +45,7 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
   // Ensure host is set to the actual backend hostname (e.g. render.com domain or backend:8000 locally)
   forwardedHeaders.set('host', BASE_URL.host)
 
-  // 🔒 CSRF GUARD: Inject a custom header that Django's BetterAuthAuthentication
+  //  CSRF GUARD: Inject a custom header that Django's BetterAuthAuthentication
   // validates. Browsers cannot set custom headers in cross-origin requests without
   // a CORS preflight — which Django will reject. This acts as a CSRF token.
   forwardedHeaders.set('X-Requested-From', 'storeville-proxy')
@@ -63,7 +61,7 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
       headers: forwardedHeaders,
       body,
       redirect: 'manual',
-      cache: 'no-store', // 🌟 FIX: Never cache proxy responses (bypasses poisoned 301 redirect caches)
+      cache: 'no-store', // Never cache proxy responses to prevent poisoned 301 redirect caches
     })
 
     // Django's APPEND_SLASH sends a 301/308 redirect when the trailing slash is missing.

@@ -76,7 +76,7 @@ export function SellerProductsScreen() {
 
   const isFood = store?.store_type === 'FOOD';
 
-  // ── Build sections from items grouped by category ────────────────────────────
+  // Build sections from items grouped by category
   const sections = (() => {
     const map: Record<string, any[]> = {};
     items.forEach(item => {
@@ -95,7 +95,7 @@ export function SellerProductsScreen() {
     });
   };
 
-  // ── Visibility & delete ───────────────────────────────────────────────────────
+  // Visibility & delete
   const toggleVisibility = async (item: any) => {
     try {
       const endpoint = isFood ? `/food/items/${item.id}` : `/retail/products/${item.id}`;
@@ -125,7 +125,7 @@ export function SellerProductsScreen() {
     });
   };
 
-  // ── Category management ───────────────────────────────────────────────────────
+  // Category management
   const openCategoryModal = () => { setCatName(''); setCatOrder('0'); setIsCategoryModalOpen(true); };
 
   const handleCategorySubmit = async () => {
@@ -146,7 +146,7 @@ export function SellerProductsScreen() {
     } finally { setIsSubmittingCat(false); }
   };
 
-  // ── Product management ────────────────────────────────────────────────────────
+  // Product management
   const openCreateModal = () => {
     setEditingItem(null);
     setFormData({
@@ -255,7 +255,7 @@ export function SellerProductsScreen() {
     } finally { setIsSubmitting(false); }
   };
 
-  // ── Render product row ────────────────────────────────────────────────────────
+  // Render product row
   const renderItem = ({ item }: { item: any }) => {
     const isActive = isFood ? item.is_available : item.is_active;
     return (
@@ -302,7 +302,7 @@ export function SellerProductsScreen() {
     );
   };
 
-  // ── Render section header ─────────────────────────────────────────────────────
+  // Render section header
   const renderSectionHeader = ({ section }: { section: any }) => {
     const isCollapsed = collapsed.has(section.title);
     return (
@@ -356,7 +356,7 @@ export function SellerProductsScreen() {
           />
         )}
 
-        {/* ── PRODUCT MODAL ─────────────────────────────────────────────────── */}
+        {/* PRODUCT MODAL */}
         <Modal visible={isModalOpen} animationType="slide" presentationStyle="pageSheet">
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.bg }}>
             <View style={[styles.modalHeader, { backgroundColor: headerBg, borderBottomColor: cardBorder }]}>
@@ -428,7 +428,7 @@ export function SellerProductsScreen() {
                 )}
               </View>
 
-              {/* ── Food-specific: Kitchen details ─────────────────────────────── */}
+              {/* Food-specific: Kitchen details */}
               {isFood ? (
                 <>
                   <View style={[styles.kitchenCard, { backgroundColor: 'rgba(249,115,22,0.06)', borderColor: 'rgba(249,115,22,0.15)' }]}>
@@ -455,7 +455,7 @@ export function SellerProductsScreen() {
                     </View>
                   </View>
 
-                  {/* ── Options section ──────────────────────────────────────── */}
+                  {/* Options section */}
                   <View style={[styles.optionsCard, { backgroundColor: 'rgba(99,102,241,0.05)', borderColor: 'rgba(0,0,0,0.08)' }]}>
                     <Text style={[styles.optionsLabel, { color: '#111827' }]}>Size / Variant Options <Text style={{ fontSize: 10, fontWeight: '600' }}>(Optional)</Text></Text>
 
@@ -493,7 +493,7 @@ export function SellerProductsScreen() {
                     </View>
                   </View>
 
-                  {/* ── Extras section ───────────────────────────────────────── */}
+                  {/* Extras section */}
                   <View style={[styles.optionsCard, { backgroundColor: 'rgba(168,85,247,0.05)', borderColor: 'rgba(168,85,247,0.15)', marginBottom: 32 }]}>
                     <Text style={[styles.optionsLabel, { color: '#a855f7' }]}>Extras & Add-ons <Text style={{ fontSize: 10, fontWeight: '600' }}>(Optional)</Text></Text>
 
@@ -528,7 +528,7 @@ export function SellerProductsScreen() {
                   </View>
                 </>
               ) : (
-                // ── Retail: Inventory details ─────────────────────────────────
+                // Retail: Inventory details
                 <View style={[styles.kitchenCard, { backgroundColor: 'rgba(79,70,229,0.06)', borderColor: 'rgba(79,70,229,0.15)', marginBottom: 32 }]}>
                   <Text style={[styles.kitchenLabel, { color: '#4f46e5' }]}>Inventory Details</Text>
                   <View style={{ flexDirection: 'row', gap: 16 }}>
@@ -555,7 +555,7 @@ export function SellerProductsScreen() {
           </KeyboardAvoidingView>
         </Modal>
 
-        {/* ── CATEGORY MODAL ─────────────────────────────────────────────────── */}
+        {/* CATEGORY MODAL */}
         <Modal visible={isCategoryModalOpen} animationType="slide" transparent>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.catModalWrap}>
             <View style={[styles.catModalSheet, { backgroundColor: cardBg }]}>

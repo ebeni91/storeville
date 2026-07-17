@@ -194,7 +194,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* ── Header ─────────────────────────────────────── */}
+        {/* Header */}
         <View style={{ paddingTop: 64, paddingHorizontal: 28, paddingBottom: 12, marginBottom: 8 }}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 32 }}>
             <Text style={{ color: accentColor, fontSize: 15, fontWeight: '700' }}>← Back</Text>
@@ -210,7 +210,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
 
         <View style={{ paddingHorizontal: 20 }}>
 
-          {/* ── Category Toggle ────────────────────────────── */}
+          {/* Category Toggle */}
           <View style={{
             flexDirection: 'row', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : colors.surfaceAlt,
             borderRadius: 20, padding: 5, marginBottom: 24,
@@ -245,7 +245,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
             })}
           </View>
 
-          {/* ── Store Name ─────────────────────────────────── */}
+          {/* Store Name */}
           <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
             Store Name
           </Text>
@@ -262,7 +262,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
             />
           </View>
 
-          {/* ── Business Type ──────────────────────────────── */}
+          {/* Business Type */}
           <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 10, marginLeft: 4 }}>
             Business Type
           </Text>
@@ -290,7 +290,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
             })}
           </View>
 
-          {/* ── Description ───────────────────────────────── */}
+          {/* Description */}
           <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
             Description (Optional)
           </Text>
@@ -313,7 +313,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
             />
           </View>
 
-          {/* ── Map Location Picker ────────────────────────── */}
+          {/* Map Location Picker */}
           <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 10, marginLeft: 4 }}>
             Store Location
           </Text>
@@ -374,7 +374,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
             Drag the pin to mark your exact store entrance
         </Text>
 
-        {/* ── Subscription Plan Selection ────────────────── */}
+        {/* Subscription Plan Selection */}
         <Text style={{ fontSize: 10, fontWeight: '800', letterSpacing: 2, color: colors.textMuted, textTransform: 'uppercase', marginBottom: 10, marginLeft: 4 }}>
           Subscription Plan
         </Text>
@@ -406,7 +406,7 @@ export function StoreLaunchScreen({ navigation }: Props) {
           })}
         </View>
 
-        {/* ── Launch Button ──────────────────────────────── */}
+        {/* Launch Button */}
           <TouchableOpacity
             onPress={handleLaunch}
             disabled={loading || success || !storeName.trim() || !businessType}

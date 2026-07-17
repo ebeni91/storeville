@@ -22,8 +22,7 @@ class MenuCategoryViewSet(viewsets.ModelViewSet):
         return MenuCategory.objects.none()
 
     def perform_create(self, serializer):
-        # ✅ SECURITY FIX (Issue #5): Require explicit store_id — never fall back to
-        # the first owned store, which could silently write to the wrong store.
+        # Require explicit store_id to prevent silently writing to the wrong store.
         store_id = self.request.data.get('store_id')
         if not store_id:
             raise ValidationError({'store_id': 'This field is required when creating a category.'})
@@ -44,7 +43,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         return MenuItem.objects.none()
 
     def perform_create(self, serializer):
-        # ✅ SECURITY FIX (Issue #5): Same as MenuCategoryViewSet — require explicit store_id.
+        # Require explicit store_id to prevent silently writing to the wrong store.
         store_id = self.request.data.get('store_id')
         if not store_id:
             raise ValidationError({'store_id': 'This field is required when creating a menu item.'})
@@ -63,9 +62,8 @@ class MenuItemOptionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         item_id = self.kwargs.get('item_pk')
-        # ✅ SECURITY FIX (Issue #2): Validate store ownership via the menu item chain.
-        # Without store__owner check, Seller A could add options to Seller B's menu items (IDOR).
-        # get_object_or_404 also returns 404 (not 500) for invalid/missing item IDs.
+        # Validate store ownership via the menu item chain to prevent IDOR vulnerabilities.
+        # This ensures sellers can only modify items belonging to their own stores.
         menu_item = get_object_or_404(MenuItem, id=item_id, store__owner=self.request.user)
         serializer.save(menu_item=menu_item)
 
@@ -81,7 +79,7 @@ class MenuItemExtraViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         item_id = self.kwargs.get('item_pk')
-        # ✅ SECURITY FIX (Issue #2): Same ownership guard as MenuItemOptionViewSet.
+        # Validate store ownership via the menu item chain to prevent IDOR vulnerabilities.
         menu_item = get_object_or_404(MenuItem, id=item_id, store__owner=self.request.user)
         serializer.save(menu_item=menu_item)
 

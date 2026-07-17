@@ -9,16 +9,14 @@ class LocationService:
         """
         Find stores within radius_km of the given coordinates.
 
-        ✅ PERFORMANCE FIX: Apply a lat/lon bounding box BEFORE the expensive
-        Haversine annotation. The trig functions (ACos, Cos, Sin) previously ran
-        against the ENTIRE Store table on every map request — O(N) CPU cost.
-        The bounding box is a simple range filter that uses column indexes and
-        reduces the candidate set to a small geographic area, typically cutting
-        CPU cost by 90-99% at scale.
+        Applies a lat/lon bounding box before the computationally expensive 
+        Haversine annotation to optimize performance. This index-backed range 
+        filter reduces the candidate set to a small geographic area, cutting 
+        down the O(N) CPU cost of trig functions at scale.
 
-        The bounding box is a square approximation (slightly larger than the
-        exact circle) so no valid stores near the edge are excluded before the
-        precise Haversine filter is applied.
+        The bounding box acts as a square approximation (slightly larger than 
+        the exact circle radius) to ensure no valid stores near the edge are 
+        excluded before the precise Haversine distance filter is applied.
         """
         earth_radius = 6371.0
         lat = float(user_lat)

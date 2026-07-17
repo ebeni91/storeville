@@ -78,7 +78,7 @@ export default function ProfileDropdown({ isOpen, onClose, onSignOut, userEmail,
 
           {/* Menu Items */}
           <div className="p-2 space-y-1">
-            {/* 🌟 MERCHANT ONBOARDING CTA (Only for Customers) */}
+            {/*  MERCHANT ONBOARDING CTA (Only for Customers) */}
             {(session?.user as any)?.role === 'CUSTOMER' && (
               <button 
                 onClick={() => { router.push('/stores/launch'); onClose(); }} 

@@ -21,7 +21,7 @@ api.interceptors.response.use(
 export interface Store {
   id: string
   name: string
-  slug: string         // 🌟 We use SLUG, not subdomain
+  slug: string         //  We use SLUG, not subdomain
   store_type?: string  
   category: string
   city?: string        

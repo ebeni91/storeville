@@ -23,7 +23,7 @@ export function RootNavigator() {
 
   const [splashDone, setSplashDone] = useState(false);
 
-  // ── Splash overlay ──────────────────────────────────────────────────────────
+  // Splash overlay
   const splashAnimDone = React.useRef(false);
   const sessionReadyRef = React.useRef(false);
 
@@ -39,7 +39,7 @@ export function RootNavigator() {
     if (sessionReadyRef.current) setSplashDone(true);
   };
 
-  // ── Derive auth state from session ──────────────────────────────────────────
+  // Derive auth state from session
   const user = session?.user as any;
   const isAuthenticated = !!user;
   const isSeller = isAuthenticated && user?.role === 'SELLER';
@@ -52,15 +52,15 @@ export function RootNavigator() {
         <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
 
           {isSeller ? (
-            // 🏪 Seller: route to their dashboard
+            //  Seller: route to their dashboard
             <Stack.Screen name="SellerRoot" component={SellerTabNavigator} />
 
           ) : canBrowse ? (
-            // 🛍️ Authenticated customer or guest: marketplace access
+            //  Authenticated customer or guest: marketplace access
             <Stack.Screen name="MarketplaceTabs" component={BuyerTabNavigator} />
 
           ) : (
-            // 🔐 Unauthenticated: single unified auth screen
+            //  Unauthenticated: single unified auth screen
             <Stack.Screen name="Auth" component={AuthScreen} />
           )}
 

@@ -27,7 +27,7 @@ const fetchFoodOrders = async () => { const res = await api.get('/orders/food/')
 
 interface Props { navigation: any; }
 
-// ── Beautiful animated theme toggle ──────────────────────────────────────────
+// Beautiful animated theme toggle
 function ThemeToggle() {
   const { mode, toggleTheme } = useThemeStore();
   const anim = useRef(new Animated.Value(mode === 'dark' ? 1 : 0)).current;
@@ -73,9 +73,7 @@ function ThemeToggle() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function ProfileScreen({ navigation }: Props) {
+// export function ProfileScreen({ navigation }: Props) {
   const { isGuest, logout, exitGuestMode } = useAuthStore();
   const { data: session } = authClient.useSession();
   const user = session?.user as any;
@@ -176,7 +174,7 @@ export function ProfileScreen({ navigation }: Props) {
       <StatusBar barStyle="light-content" backgroundColor="#111827"  backgroundColor="transparent" translucent={true} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
 
-        {/* ── Indigo Header ────────────────────────────── */}
+        {/* Indigo Header */}
         <View style={styles.header}>
           <View style={styles.avatarRow}>
             <View style={styles.avatarCircle}>
@@ -189,7 +187,7 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* ── Stat Cards ────────────────────────────────── */}
+        {/* Stat Cards */}
         <View style={styles.statsRow}>
           {[
             { icon: ShoppingBag, color: '#111827', bg: colors.accentFaint, value: ordersCount, label: 'ORDERS' },
@@ -214,7 +212,7 @@ export function ProfileScreen({ navigation }: Props) {
 
         <View style={styles.body}>
 
-          {/* ── Appearance Toggle ─────────────────────────── */}
+          {/* Appearance Toggle */}
           <View style={{ marginBottom: 24 }}>
             {/* <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Appearance</Text> */}
             <View style={[
@@ -236,7 +234,7 @@ export function ProfileScreen({ navigation }: Props) {
             </View>
           </View>
 
-          {/* ── Menu Sections ─────────────────────────────── */}
+          {/* Menu Sections */}
           {menuSections.map((section) => (
             <View key={section.title} style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
@@ -268,7 +266,7 @@ export function ProfileScreen({ navigation }: Props) {
             </View>
           ))}
 
-          {/* ── Launch Your Store CTA ──────────────────────── */}
+          {/* Launch Your Store CTA */}
           {!isSeller && (
             <TouchableOpacity
               onPress={() => navigation.navigate('StoreLaunch')}
@@ -358,7 +356,7 @@ const styles = StyleSheet.create({
   signOutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 16, paddingVertical: 16, marginTop: 4, borderWidth: 1 },
   signOutText: { fontSize: 15, fontWeight: '700' },
 
-  // ── Theme Toggle ──────────────────────────────────
+  // Theme Toggle
   toggleTrack: {
     width: TOGGLE_W,
     height: 36,

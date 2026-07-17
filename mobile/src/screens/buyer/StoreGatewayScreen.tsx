@@ -20,7 +20,7 @@ const FOOD_CARD_W = width * 0.52;
 const RETAIL_CARD_W = (width - 48) / 2;
 const COLLAPSE = HERO_H - (Platform.OS === 'ios' ? 90 : 70);
 
-// ─── Colour utilities ──────────────────────────────────────────────────────────
+// Colour utilities
 const hexRgb = (hex: string) => {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#ffffff');
   return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : { r: 255, g: 255, b: 255 };
@@ -47,7 +47,7 @@ const parseOpenStatus = (deliveryHours: string): boolean | null => {
   return cur >= open && cur < close;
 };
 
-// ─── Shimmer skeleton ──────────────────────────────────────────────────────────
+// Shimmer skeleton
 function Shimmer({ w, h: ht, r = 12, style, color = '#e0e0e8' }: { w: number | string; h: number; r?: number; style?: any; color?: string }) {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -62,7 +62,7 @@ function Shimmer({ w, h: ht, r = 12, style, color = '#e0e0e8' }: { w: number | s
   return <Animated.View style={[{ width: w as any, height: ht, borderRadius: r, backgroundColor: color, opacity }, style]} />;
 }
 
-// ─── Announcement bar ──────────────────────────────────────────────────────────
+// Announcement bar
 function AnnouncementBar({ store, accent }: { store: any; accent: string }) {
   if (!store.announcement_is_active || !store.announcement_text) return null;
   const bg  = store.announcement_color || accent;
@@ -90,7 +90,7 @@ function AnnouncementBar({ store, accent }: { store: any; accent: string }) {
   );
 }
 
-// ─── Shared minimal product card (heart + tap to detail) ─────────────────────
+// Shared minimal product card (heart + tap to detail)
 function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlisted, index, surface = '#ffffff', textPrimary = '#0a0a0a' }: any) {
   const slideY  = useRef(new Animated.Value(28)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -124,7 +124,7 @@ function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlist
         <View style={[styles.cardImg, { height: IMG_H, backgroundColor: `rgba(${acRgb},0.07)` }]}>
           {item.image
             ? <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-            : <Text style={{ fontSize: 36 }}>{isFood ? '🍽️' : '📦'}</Text>}
+            : <Text style={{ fontSize: 36 }}>{isFood ? '' : ''}</Text>}
           <LinearGradient colors={['transparent', 'rgba(0,0,0,0.25)']} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50 }} />
           {ooc && <View style={styles.oocOverlay}><Text style={styles.oocTxt}>Sold Out</Text></View>}
           {/* Wishlist heart */}
@@ -148,7 +148,7 @@ function SharedProductCard({ item, accent, isFood, onPress, onWishlist, wishlist
   );
 }
 
-// ─── Main screen ───────────────────────────────────────────────────────────────
+// Main screen
 export function StoreGatewayScreen({ route, navigation, previewMode = false }: { route: any; navigation: any; previewMode?: boolean }) {
   const { store } = route.params;
   const isFood    = store.store_type === 'FOOD';
@@ -229,7 +229,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
         <AnnouncementBar store={store} accent={accent} />
       </View>
 
-      {/* ── Main scrollable ─────────────────────────────────────────────────── */}
+      {/* Main scrollable */}
       <Animated.ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
@@ -237,7 +237,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
-        {/* ── Hero card ───────────────────────────────────────────────────── */}
+        {/* Hero card */}
         <View style={[styles.heroCard, { marginTop: STATUS_H + announcementH + 16, height: Math.max(340, HERO_H - 40) }]}>
           {/* Back + Cart + Wishlist */}
           <View style={[styles.heroNav, { paddingTop: 16 }]}>
@@ -322,7 +322,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
           </Animated.View>
         </View>
 
-        {/* ── Category chips / menu tabs ───────────────────────────────────── */}
+        {/* Category chips / menu tabs */}
         {/* For FOOD: these are scroll-to-section tabs. For RETAIL: these are live filters */}
         {allSections.length > 0 && (
           <View style={[styles.tabBar, { backgroundColor: bg, borderBottomColor: `rgba(${rgbStr(secondary)},0.07)` }]}>
@@ -369,7 +369,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
           </View>
         )}
 
-        {/* ── Product area ────────────────────────────────────────────────── */}
+        {/* Product area */}
         <View style={{ paddingTop: 20 }}>
           {isLoading ? (
             // Skeleton
@@ -395,7 +395,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
               <Text style={styles.emptySub}>This store hasn't added any {isFood ? 'menu items' : 'products'} yet.</Text>
             </View>
           ) : isFood ? (
-            // ── FOOD: horizontal scroll per menu section ─────────────────────
+            // FOOD: horizontal scroll per menu section
             visibleSections.map((sec, sIdx) => (
               <View
                 key={sec.title}
@@ -432,7 +432,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
               </View>
             ))
           ) : (
-            // ── RETAIL: 2-col vertical grid with live category filter ────────
+            // RETAIL: 2-col vertical grid with live category filter
             visibleSections.map((sec, sIdx) => {
               let globalItemIndex = 0;
               visibleSections.slice(0, sIdx).forEach(s => { globalItemIndex += s.data.length; });
@@ -474,7 +474,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
         </View>
       </Animated.ScrollView>
 
-      {/* ── Floating cart bar (only when cart has items) ─────────────────────── */}
+      {/* Floating cart bar (only when cart has items) */}
       {cartCount > 0 && (
         <View style={styles.cartBarWrap}>
           <TouchableOpacity
@@ -499,7 +499,7 @@ export function StoreGatewayScreen({ route, navigation, previewMode = false }: {
   );
 }
 
-// ─── StyleSheet ───────────────────────────────────────────────────────────────
+// StyleSheet
 const styles = StyleSheet.create({
   // Nav
   navWrap:  { position: 'absolute', left: 0, right: 0, zIndex: 50 },

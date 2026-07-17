@@ -5,7 +5,7 @@ class StoresConfig(AppConfig):
     name = 'apps.stores'
 
     def ready(self):
-        # ✅ ARCHITECTURE FIX: Register signals here rather than at module import time.
-        # Importing in ready() guarantees the handler is registered exactly once,
-        # even if models.py is imported multiple times (e.g., during test discovery).
+        # Register signals in ready() rather than at module import time.
+        # This guarantees the handler is registered exactly once, avoiding duplicate
+        # registrations if models.py is imported multiple times (e.g., during test discovery).
         import apps.stores.signals  # noqa: F401

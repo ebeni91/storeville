@@ -21,7 +21,7 @@ def dashboard_callback(request, context):
     today = now.date()
     seven_days_ago = today - timedelta(days=6)
 
-    # ─── KPI CARDS ────────────────────────────────────────────────────────────
+    # KPI CARDS
     total_buyers  = User.objects.filter(role='BUYER').count()
     total_sellers = User.objects.filter(role='SELLER').count()
     total_users   = User.objects.count()
@@ -53,7 +53,7 @@ def dashboard_callback(request, context):
         .aggregate(total=Sum('amount'))['total'] or 0
     )
 
-    # ─── 7-DAY ORDER CHART DATA ────────────────────────────────────────────────
+    # 7-DAY ORDER CHART DATA
     # Build a full 7-day date range so gaps are filled with 0
     date_range = [(seven_days_ago + timedelta(days=i)) for i in range(7)]
     day_labels = [d.strftime('%a') for d in date_range]
@@ -90,7 +90,7 @@ def dashboard_callback(request, context):
     food_data    = [food_daily.get(d, 0)    for d in date_range]
     revenue_data = [revenue_daily.get(d, 0) for d in date_range]
 
-    # ─── TRENDING RETAIL PRODUCTS ──────────────────────────────────────────────
+    # TRENDING RETAIL PRODUCTS
     two_weeks = today - timedelta(days=14)
     top_products = (
         RetailOrderItem.objects
@@ -112,7 +112,7 @@ def dashboard_callback(request, context):
     ]
 
     context.update({
-        # ── KPI Cards ──────────────────────────────────────────────────────────
+        # KPI Cards
         "kpi": [
             {
                 "title": "Platform Users",
@@ -135,15 +135,15 @@ def dashboard_callback(request, context):
                 "footer": "All-time successful payments",
             },
         ],
-        # ── Charts ─────────────────────────────────────────────────────────────
+        # Charts
         "chart_labels":       day_labels,
         "chart_retail":       retail_data,
         "chart_food":         food_data,
         "chart_revenue":      revenue_data,
-        # ── Revenue cards ──────────────────────────────────────────────────────
+        # Revenue cards
         "this_week_rev":      f"ETB {this_week_rev:,.2f}",
         "last_week_rev":      f"ETB {last_week_rev:,.2f}",
-        # ── Trending ───────────────────────────────────────────────────────────
+        # Trending
         "trending_products":  trending,
     })
 

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+// Types
 
 export interface SelectedExtra {
   id: string;
@@ -37,7 +37,7 @@ export interface WishlistItem {
   description?: string;
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers
 
 /** Compute total price for a single CartItem including all selected extras × qty */
 export const getItemTotal = (item: CartItem): number => {
@@ -51,7 +51,7 @@ export const getItemUnitPrice = (item: CartItem): number => {
   return item.base_price + extrasTotal;
 };
 
-// ─── State interface ───────────────────────────────────────────────────────────
+// State interface
 
 interface CartState {
   // Cart
@@ -80,12 +80,12 @@ interface CartState {
   clearWishlist: () => void;
 }
 
-// ─── Store ─────────────────────────────────────────────────────────────────────
+// Store
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
-      // ── Cart ────────────────────────────────────────────────────────────────
+      // Cart
       items: [],
       storeId: null,
       storeName: null,
@@ -143,7 +143,7 @@ export const useCartStore = create<CartState>()(
 
       getItemCount: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
 
-      // ── Wishlist ─────────────────────────────────────────────────────────────
+      // Wishlist
       wishlist: [],
 
       addToWishlist: (item) => {

@@ -14,7 +14,7 @@ body,html,#map{margin:0;padding:0;height:100vh;width:100vw;}
 .pin-ripple{animation:ripple 1.8s ease-out infinite;}
 </style></head><body><div id="map"></div>
 <script>
-// ✅ SECURITY: Map initialised with no data. Store data injected via initMap event.
+// Initialize map without inline data to prevent XSS. Data is injected dynamically via the initMap event.
 window.map = L.map('map', {zoomControl:false, attributionControl:false}).setView([9.0,38.75], 5);
 L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {maxZoom:20}).addTo(window.map);
 
@@ -135,7 +135,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     setActiveChip(type === 'FOOD' ? 'Cafes' : 'Fashion');
   };
 
-  // ── Location setup ─────────────────────────────────
+  // Location setup
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -158,7 +158,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     })();
   }, []);
 
-  // ── Store data (public — works for guests AND authenticated users) ─
+  // Store data (public — works for guests AND authenticated users)
   const { data: stores } = useQuery({
     queryKey: ['stores', activeGateway],
     queryFn: async () => {
@@ -176,7 +176,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     retry: 2,
   });
 
-  // ── Drawer ──────────────────────────────────────
+  // Drawer
   const openDrawer = (store: any) => {
     setSelectedStore(store);
     Animated.spring(drawerAnim, { toValue: 1, tension: 65, friction: 11, useNativeDriver: true }).start();
@@ -193,10 +193,9 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
     outputRange: [height, 0],
   });
 
-  // ✅ SECURITY FIX: Store data is NEVER concatenated into the HTML string.
-  // The HTML below is fully static — no user-controlled data inside it.
-  // Stores are injected AFTER load via injectJavaScript() which safely
-  // passes a JSON payload without any XSS risk.
+  // Inject store data into the WebView safely using postMessage/injectJavaScript.
+  // This prevents XSS vulnerabilities that could occur if user-controlled store 
+  // data were concatenated directly into the static HTML template.
   const lat = location?.coords.latitude ?? 9.0192;
   const lng = location?.coords.longitude ?? 38.7525;
 
@@ -239,14 +238,14 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
         </View>
       ) : (
         <View style={{ flex: 1 }}>
-          {/* ── Full-screen Map ───────────────────── */}
+          {/* Full-screen Map */}
           <WebView
             ref={webviewRef}
             source={MAP_SOURCE}
             style={{ flex: 1 }}
             scrollEnabled={false}
             bounces={false}
-            // ✅ SECURITY FIX: Store data injected AFTER load, not in HTML string
+            // Safely inject store data only after the static map HTML has fully loaded
             onLoadEnd={injectStoreData}
             onMessage={(event) => {
               try {
@@ -259,7 +258,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
             }}
           />
 
-          {/* ── Floating Search Bar ───────────────── */}
+          {/* Floating Search Bar */}
           <View style={styles.searchContainer}>
             <View style={[styles.searchBar, { 
               backgroundColor: mode === 'dark' ? 'rgba(28, 30, 43, 0.95)' : '#ffffff',
@@ -277,7 +276,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
               </TouchableOpacity>
             </View>
 
-            {/* ── Category Chips ──────────────────── */}
+            {/* Category Chips */}
             <ScrollView
               horizontal showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chipsRow}
@@ -301,7 +300,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
             </ScrollView>
           </View>
 
-          {/* ── Locate Me Button ──────────────────── */}
+          {/* Locate Me Button */}
           <TouchableOpacity
             style={styles.locateButton}
             activeOpacity={0.8}
@@ -319,7 +318,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
             <Navigation color="#111827" size={24} strokeWidth={2.5} />
           </TouchableOpacity>
 
-          {/* ── Gateway Switcher Pills ────────────── */}
+          {/* Gateway Switcher Pills */}
           <View style={styles.gatewaySwitcher}>
             <TouchableOpacity
               onPress={() => switchGateway('RETAIL')}
@@ -349,7 +348,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
             </TouchableOpacity>
           </View>
 
-          {/* ── Store Discovery Drawer ────────────── */}
+          {/* Store Discovery Drawer */}
           {selectedStore && (
             <Animated.View style={[styles.drawer, { transform: [{ translateY: drawerTranslateY }] }]}>
               <View style={[styles.drawerInner, { backgroundColor: colors.surface }]}>
@@ -419,7 +418,7 @@ export function ExploreScreen({ navigation }: { navigation: any }) {
 }
 
 const styles = StyleSheet.create({
-  // ── Search
+  // Search
   searchContainer: {
     position: 'absolute', top: 52, left: 16, right: 16, zIndex: 10,
   },
@@ -439,7 +438,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(99,102,241,0.09)', padding: 8, borderRadius: 11,
   },
 
-  // ── Chips
+  // Chips
   chipsRow: {
     flexDirection: 'row', gap: 8, paddingRight: 8,
   },
@@ -460,7 +459,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
 
-  // ── Locate Me Button
+  // Locate Me Button
   locateButton: {
     position: 'absolute',
     right: 20,
@@ -473,7 +472,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
 
-  // ── Gateway Switcher
+  // Gateway Switcher
   gatewaySwitcher: {
     position: 'absolute',
     bottom: TAB_BAR_HEIGHT + 16, // sits just above the tab bar
@@ -502,7 +501,7 @@ const styles = StyleSheet.create({
     fontSize: 14, fontWeight: '700',
   },
 
-  // ── Drawer
+  // Drawer
   drawer: {
     position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 50,
   },

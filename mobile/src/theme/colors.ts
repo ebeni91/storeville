@@ -1,4 +1,4 @@
-// ─── Light Theme ──────────────────────────────────────────────────────────────
+// Light Theme
 export const lightColors = {
   bg:           '#f8fafc',
   surface:      '#ffffff',
@@ -20,7 +20,7 @@ export const lightColors = {
   tabIconFocus: '#1a1a2e',
 };
 
-// ─── Dark Theme ───────────────────────────────────────────────────────────────
+// Dark Theme
 export const darkColors = {
   bg:           '#050508',
   surface:      '#0f0f14',

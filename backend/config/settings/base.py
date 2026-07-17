@@ -52,7 +52,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    # ✅ WhiteNoise: serves static files (CSS/JS for admin) directly from Gunicorn
+    # WhiteNoise: serves static files (CSS/JS for admin) directly from Gunicorn
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -67,14 +67,14 @@ MIDDLEWARE = [
 from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-auth-zone',
-    # 🔒 CSRF GUARD: Allow the custom header our Next.js proxy injects.
+    # CSRF GUARD: Allow the custom header our Next.js proxy injects.
     # This must be listed here or the browser's CORS preflight will reject it.
     'x-requested-from',
 ]
 
 ROOT_URLCONF = 'config.urls'
 
-# 🌟 THE FIX: Disable automatic slash appending. 
+# Disable automatic slash appending. 
 # This prevents Django from trying to redirect POST requests (which breaks the payload).
 APPEND_SLASH = False
 
@@ -125,7 +125,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-# ✅ WhiteNoise: serve compressed static files efficiently
+# WhiteNoise: serve compressed static files efficiently
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (Store Logos, Banners, Product Images)
@@ -135,7 +135,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ── Redis Cache Backend ────────────────────────────────────────────────────────
+# Redis Cache Backend
 # Uses Redis DB 1 (separate from Celery which typically uses DB 0)
 # Cache timeout: 5 minutes for most data; overridden per-view where needed.
 CACHES = {
@@ -147,7 +147,7 @@ CACHES = {
     }
 }
 
-# ── Structured Logging ─────────────────────────────────────────────────────────
+# Structured Logging
 # JSON-formatted logs so Docker / Render log aggregation can index them properly.
 LOGGING = {
     'version': 1,
@@ -180,13 +180,11 @@ LOGGING = {
     },
 }
 
-# -----------------------------------------------------------------
-# REST FRAMEWORK & SECURITY CONFIGURATIONS
-# -----------------------------------------------------------------
+# REST Framework & Security Configurations
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 🌟 THE BRIDGE: Trust the user resolved by BetterAuthMiddleware
+        # Trust the user resolved by BetterAuthMiddleware.
         'core.authentication.BetterAuthAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -195,7 +193,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'EXCEPTION_HANDLER': 'core.exceptions.enterprise_exception_handler',
-    # 🔒 RATE LIMITING: Protect every endpoint from brute force, scraping, and DoS.
+    # Rate Limiting: Protect endpoints from brute force, scraping, and DoS.
     # Anon rate covers unauthenticated users (map loads, store discovery).
     # User rate covers authenticated users (order creation, cart operations).
     # Override per-view with @throttle_classes([...]) for stricter limits on auth endpoints.
@@ -213,9 +211,7 @@ REST_FRAMEWORK = {
 BETTER_AUTH_URL = os.environ.get('BETTER_AUTH_URL', 'http://frontend:3000')
 
 
-# ==============================================================================
-# UNFOLD ADMIN DASHBOARD SETTINGS
-# ==============================================================================
+# Unfold Admin Dashboard Settings
 
 from django.templatetags.static import static
 

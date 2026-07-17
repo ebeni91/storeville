@@ -91,7 +91,7 @@ export default function WishlistPage() {
         </div>
       </div>
 
-      {/* ── UNIFIED STICKY HEADER ── */}
+      {/* UNIFIED STICKY HEADER */}
       <div className="sticky top-0 z-[150] flex flex-col w-full">
         {/* ANNOUNCEMENT BAR */}
         {(store.announcement_is_active && store.announcement_text) && (

@@ -43,7 +43,11 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='driver_profile', to=settings.AUTH_USER_MODEL)),
             ],
         ),
-        migrations.AlterField(
+        migrations.RemoveField(
+            model_name='delivery',
+            name='driver',
+        ),
+        migrations.AddField(
             model_name='delivery',
             name='driver',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='delivery.driverprofile'),

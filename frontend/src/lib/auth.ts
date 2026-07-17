@@ -4,37 +4,24 @@ import { phoneNumber } from 'better-auth/plugins';
 import { Pool } from 'pg';
 
 
-// ✅ FIX: Lazy pool — only instantiated on first request, not at module import.
-// During `next build`, Next.js evaluates all route modules. An eager Pool() call
-// here would throw "DATABASE_URL required" inside the Docker builder where runtime
-// env vars are not yet injected. Wrapping in a factory defers the error to actual
-// request time, where DATABASE_URL is always present.
-let _pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!_pool) {
-    const url = process.env.DATABASE_URL
-    if (!url) {
-      throw new Error(
-        '[StoreVille] DATABASE_URL environment variable is required. ' +
-        'Set it in .env (e.g. postgresql://user:pass@postgres:5432/db)'
-      )
-    }
-    _pool = new Pool({
-      connectionString: url,
-      ssl: url.includes('@postgres:5432') || url.includes('@localhost:')
+// ✅ BUILD-TIME GUARD: DATABASE_URL is only available at runtime (not in `next build`).
+// We create the pool only when the env var exists. During the Docker image build,
+// Next.js evaluates this module but DATABASE_URL is absent — the guard returns null
+// so betterAuth() is never called. At runtime (container up) DATABASE_URL is always set.
+const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL.includes('@postgres:5432') || process.env.DATABASE_URL.includes('@localhost:')
         ? undefined
         : { rejectUnauthorized: false },
       max: 10,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
     })
-  }
-  return _pool
-}
+  : null
 
-export const auth = betterAuth({
-  database: getPool(),
+export const auth = pool ? betterAuth({
+  database: pool,
 
   secret: process.env.BETTER_AUTH_SECRET!,
 
@@ -164,6 +151,6 @@ export const auth = betterAuth({
     // silently discard them causing an instant logout loop after OAuth.
     useSecureCookies: (process.env.BETTER_AUTH_URL ?? '').startsWith('https://'),
   }
-});
+}) : null as any;
 
 export type Auth = typeof auth;

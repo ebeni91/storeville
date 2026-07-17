@@ -9,6 +9,7 @@ from core.permissions import IsSeller, IsStoreOwner
 from .serializers import StoreManagementSerializer, StoreDiscoverySerializer
 from .services import LocationService
 from .models import Store
+from apps.accounts.services import RoleSyncService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -81,24 +82,5 @@ class StoreManagementViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         # JIT Role Upgrade: Promote CUSTOMER → SELLER when they open their first store.
-        if user.role == 'CUSTOMER':
-            user.role = 'SELLER'
-            user.save(update_fields=['role'])
-            logger.info(f"[StoreManagement] Promoted user {user.id} to SELLER on first store creation.")
-
-            # ✅ CRITICAL: Also update the Better Auth 'user' table.
-            # The frontend session reads role directly from Better Auth's Postgres table.
-            # If we only update the Django user, the BA session cookie still says CUSTOMER
-            # and the frontend will route them as a buyer even after promotion.
-            try:
-                from django.db import connection
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        'UPDATE "user" SET role = %s WHERE email = %s',
-                        ['SELLER', user.email]
-                    )
-                    logger.info(f"[StoreManagement] Synced SELLER role to Better Auth table for {user.email}.")
-            except Exception as e:
-                logger.error(f"[StoreManagement] Failed to sync role to Better Auth table: {e}")
-
+        RoleSyncService.promote_to_seller(user)
         serializer.save(owner=user)

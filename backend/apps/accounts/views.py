@@ -8,6 +8,7 @@ from django.conf import settings
 import logging
 import json
 import os
+import hmac
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -36,8 +37,7 @@ class SyncUserView(APIView):
             )
 
         secret = request.headers.get('X-Internal-Secret', '')
-        import hmac as _hmac
-        if not _hmac.compare_digest(secret, expected):
+        if not hmac.compare_digest(secret, expected):
             logger.warning("[SyncUser] Rejected request with invalid X-Internal-Secret")
             return Response({'error': 'Forbidden'}, status=403)
 

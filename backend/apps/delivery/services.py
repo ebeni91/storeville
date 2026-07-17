@@ -1,8 +1,9 @@
 from django.db import transaction
 from django.db.models import F, ExpressionWrapper, FloatField
 from django.db.models.functions import ACos, Cos, Radians, Sin
-from apps.orders.models import Order
-from .models import Delivery, Driver
+from apps.retail_orders.models import RetailOrder
+from apps.food_orders.models import FoodOrder
+from .models import Delivery, DriverProfile
 
 class DeliveryService:
     @staticmethod
@@ -11,11 +12,15 @@ class DeliveryService:
         """
         Creates a delivery record and attempts to find the nearest available driver.
         """
-        if order.delivery_method in [Order.DeliveryMethod.PICKUP]:
+        # Determine if it's retail or food
+        is_retail = isinstance(order, RetailOrder)
+        
+        if order.delivery_method in ['PICKUP']:
             raise ValueError("This order is marked for customer pickup.")
 
         delivery = Delivery.objects.create(
-            order=order,
+            retail_order=order if is_retail else None,
+            food_order=None if is_retail else order,
             pickup_latitude=order.store.latitude,
             pickup_longitude=order.store.longitude,
             status=Delivery.Status.SEARCHING
@@ -37,8 +42,7 @@ class DeliveryService:
             nearest_driver.is_available = False
             nearest_driver.save()
 
-           
-            order.status = Order.Status.OUT_FOR_DELIVERY
+            order.status = 'OUT_FOR_DELIVERY'
             order.save()
 
         return delivery
@@ -62,7 +66,7 @@ class DeliveryService:
         )
 
         # Find available drivers, calculate distance, sort by closest
-        nearest = Driver.objects.filter(is_available=True).annotate(
+        nearest = DriverProfile.objects.filter(is_available=True).annotate(
             distance=distance_expr
         ).filter(distance__lte=radius_km).order_by('distance').first()
 

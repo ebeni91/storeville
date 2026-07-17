@@ -9,16 +9,7 @@ from .serializers import RetailCategorySerializer, RetailProductSerializer, Reta
 from apps.stores.models import Store
 
 
-class IsStoreOwnerOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user and request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.store.owner == request.user
+from core.permissions import IsStoreOwnerOrReadOnly
 
 
 class RetailCategoryViewSet(viewsets.ModelViewSet):

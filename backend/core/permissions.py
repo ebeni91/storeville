@@ -28,3 +28,18 @@ class IsStoreOwner(permissions.BasePermission):
         elif hasattr(obj, 'store'):
             return obj.store.owner == request.user
         return False
+
+class IsStoreOwnerOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if hasattr(obj, 'store'):
+            return obj.store.owner == request.user
+        if hasattr(obj, 'menu_item'):
+            return obj.menu_item.store.owner == request.user
+        return False

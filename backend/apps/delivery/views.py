@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from core.permissions import IsDriver
-from .models import Delivery, Driver
+from .models import Delivery, DriverProfile
 from .serializers import DeliverySerializer, DriverLocationSerializer
 
 class DriverActionViewSet(viewsets.ModelViewSet):
@@ -46,7 +46,7 @@ class DriverLocationUpdateView(views.APIView):
     permission_classes = [permissions.IsAuthenticated, IsDriver]
 
     def patch(self, request):
-        driver = get_object_or_404(Driver, user=request.user)
+        driver, _ = DriverProfile.objects.get_or_create(user=request.user)
         serializer = DriverLocationSerializer(driver, data=request.data, partial=True)
         
         if serializer.is_valid():

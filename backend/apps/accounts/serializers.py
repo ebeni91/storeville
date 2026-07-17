@@ -17,7 +17,7 @@ from .models import CustomerAddress, SavedPaymentMethod
 class CustomerAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerAddress
-        fields = ['id', 'title', 'address_text', 'is_primary', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'address_text', 'contact_name', 'phone_number', 'address_line1', 'address_line2', 'city', 'state', 'zip_code', 'is_primary', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def create(self, validated_data):

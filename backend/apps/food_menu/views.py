@@ -6,21 +6,7 @@ from .serializers import MenuCategorySerializer, MenuItemSerializer, MenuItemOpt
 from apps.stores.models import Store
 
 
-class IsStoreOwnerOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user and request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        # Support both direct store ownership and menu_item → store ownership
-        if hasattr(obj, 'store'):
-            return obj.store.owner == request.user
-        if hasattr(obj, 'menu_item'):
-            return obj.menu_item.store.owner == request.user
-        return False
+from core.permissions import IsStoreOwnerOrReadOnly
 
 
 class MenuCategoryViewSet(viewsets.ModelViewSet):

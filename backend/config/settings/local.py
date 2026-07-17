@@ -7,11 +7,11 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'storeville_db',
-        'USER': 'storeville_user',
-        'PASSWORD': 'super_secure_password',
-        'HOST': 'postgres', # Docker service name
-        'PORT': '5432',
+        'NAME': os.environ.get('POSTGRES_DB', 'storeville_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'storeville_user'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'super_secure_password'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'postgres'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 

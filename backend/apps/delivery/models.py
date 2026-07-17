@@ -6,6 +6,14 @@ import uuid
 
 User = get_user_model()
 
+class DriverProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='driver_profile')
+    current_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    current_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    is_available = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Driver: {self.user.username}"
 class Delivery(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending Assignment'
@@ -20,11 +28,15 @@ class Delivery(models.Model):
     retail_order = models.ForeignKey(RetailOrder, on_delete=models.CASCADE, related_name='deliveries', null=True, blank=True)
     food_order = models.ForeignKey(FoodOrder, on_delete=models.CASCADE, related_name='deliveries', null=True, blank=True)
     
-    driver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'DRIVER'})
+    driver = models.ForeignKey(DriverProfile, on_delete=models.SET_NULL, null=True, blank=True)
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    tracking_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
     tracking_notes = models.TextField(blank=True)
+    pickup_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    pickup_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     
+    delivered_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

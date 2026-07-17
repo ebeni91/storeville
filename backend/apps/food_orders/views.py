@@ -36,8 +36,10 @@ class FoodOrderViewSet(viewsets.ModelViewSet):
         if not order_id:
             return Response({"error": "No ID provided"}, status=400)
         
-        qs = self.get_queryset().filter(id__istartswith=order_id)
-        order = qs.first()
+        try:
+            order = self.get_queryset().get(id=order_id)
+        except (FoodOrder.DoesNotExist, ValueError):
+            order = None
         if not order:
             return Response({"error": "Order not found"}, status=404)
             

@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from apps.orders.models import Order
+from apps.retail_orders.models import RetailOrder
+from apps.food_orders.models import FoodOrder
 from .models import PaymentTransaction
 from .serializers import PaymentInitializationSerializer
 from .providers import ChapaProvider
@@ -22,14 +23,23 @@ class InitializePaymentView(views.APIView):
         provider_choice = serializer.validated_data['provider']
 
         # Ensure the user actually owns this order and it hasn't been paid yet
-        order = get_object_or_404(Order, id=order_id, customer=request.user)
+        order = RetailOrder.objects.filter(id=order_id, customer=request.user).first()
+        is_retail = True
         
-        if order.payment_status == Order.PaymentStatus.PAID:
+        if not order:
+            order = FoodOrder.objects.filter(id=order_id, customer=request.user).first()
+            is_retail = False
+            
+        if not order:
+            return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        if order.payment_status == 'PAID':
             return Response({"error": "This order is already paid."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create a pending transaction record
         payment_tx = PaymentTransaction.objects.create(
-            order=order,
+            retail_order=order if is_retail else None,
+            food_order=None if is_retail else order,
             provider=provider_choice,
             amount=order.total_price,
             status=PaymentTransaction.Status.PENDING
@@ -89,13 +99,13 @@ class ChapaWebhookView(views.APIView):
                 payment_tx.save()
 
                 order = payment_tx.order
-                order.payment_status = Order.PaymentStatus.PAID
+                order.payment_status = 'PAID'
                 
                 # Auto-advance the order status based on delivery type
-                if order.delivery_method in [Order.DeliveryMethod.DELIVERY_ASAP, Order.DeliveryMethod.PICKUP]:
-                    order.status = Order.Status.PREPARING
+                if order.delivery_method in ['DELIVERY_ASAP', 'PICKUP']:
+                    order.status = 'PREPARING'
                 else:
-                    order.status = Order.Status.CONFIRMED
+                    order.status = 'CONFIRMED'
                 order.save()
             else:
                 payment_tx.status = PaymentTransaction.Status.FAILED

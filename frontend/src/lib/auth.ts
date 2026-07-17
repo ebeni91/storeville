@@ -4,29 +4,37 @@ import { phoneNumber } from 'better-auth/plugins';
 import { Pool } from 'pg';
 
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    '[StoreVille] DATABASE_URL environment variable is required. ' +
-    'Set it in .env (e.g. postgresql://user:pass@postgres:5432/db)'
-  );
+// ✅ FIX: Lazy pool — only instantiated on first request, not at module import.
+// During `next build`, Next.js evaluates all route modules. An eager Pool() call
+// here would throw "DATABASE_URL required" inside the Docker builder where runtime
+// env vars are not yet injected. Wrapping in a factory defers the error to actual
+// request time, where DATABASE_URL is always present.
+let _pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!_pool) {
+    const url = process.env.DATABASE_URL
+    if (!url) {
+      throw new Error(
+        '[StoreVille] DATABASE_URL environment variable is required. ' +
+        'Set it in .env (e.g. postgresql://user:pass@postgres:5432/db)'
+      )
+    }
+    _pool = new Pool({
+      connectionString: url,
+      ssl: url.includes('@postgres:5432') || url.includes('@localhost:')
+        ? undefined
+        : { rejectUnauthorized: false },
+      max: 10,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 5_000,
+    })
+  }
+  return _pool
 }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  // ✅ FIX: External databases (like Render) require SSL when connected from Vercel.
-  // Locally, the standard postgres Docker container does not support SSL.
-  // We use npm start (production mode) inside Docker, so we must check the DB host instead of NODE_ENV.
-  ssl: process.env.DATABASE_URL?.includes('@postgres:5432') || process.env.DATABASE_URL?.includes('@localhost:')
-    ? undefined 
-    : { rejectUnauthorized: false },
-  // Limit connections so Vercel edge functions don't exhaust Postgres
-  max: 10,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
-});
-
 export const auth = betterAuth({
-  database: pool,
+  database: getPool(),
 
   secret: process.env.BETTER_AUTH_SECRET!,
 

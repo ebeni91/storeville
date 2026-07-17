@@ -59,7 +59,16 @@ services:
       retries: 3
       start_period: 60s
     depends_on:
+      db-migrate:
+        condition: service_completed_successfully
       backend:
+        condition: service_healthy
+
+  # ── Better Auth schema init (runs once, then exits) ─────────────────────────
+  db-migrate:
+    restart: "no"
+    depends_on:
+      postgres:
         condition: service_healthy
 
   # ── Nginx — reverse proxy, SSL termination, static/media serving ──────────

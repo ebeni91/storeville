@@ -43,5 +43,10 @@ docker compose exec backend python manage.py makemigrations
 docker compose exec backend python manage.py migrate
 ```
 
+The **Better Auth schema** (tables for `user`, `session`, `account`, `verification`) is created **automatically** on every `docker compose up` via the `db-migrate` init service — no manual SQL script required. If you ever need to re-run it manually:
+```bash
+make ba-migrate
+```
+
 ## Architecture Documentation
 For detailed architecture and workflow information, please refer to the [ARCHITECTURE.md](docs/ARCHITECTURE.md) document.

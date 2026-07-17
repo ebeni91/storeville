@@ -58,6 +58,22 @@ services:
       - 172.26.144.180
       - 8.8.8.8
 
+  # ── Better Auth schema init (runs once, then exits) ─────────────────────────
+  # Reads src/lib/auth.ts and applies the correct CREATE TABLE / ALTER TABLE
+  # statements to Postgres — including all custom fields (role, phone_number, etc.).
+  # The frontend service depends on this completing successfully before it boots.
+  db-migrate:
+    build:
+      context: ./frontend
+      target: builder          # reuse the builder stage — no extra image needed
+    command: npm run ba:migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"              # one-shot: run once and exit
+
   frontend:
     build:
       context: ./frontend
@@ -83,7 +99,10 @@ services:
       - 172.26.144.180
       - 8.8.8.8
     depends_on:
-      - backend
+      db-migrate:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
 
   # ── ngrok tunnel (DEV ONLY — not present in docker-compose.prod.yml) ────────
   # Provides a stable public HTTPS domain so Google OAuth redirect URIs work

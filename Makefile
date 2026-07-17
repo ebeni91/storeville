@@ -39,6 +39,9 @@ makemigrations:
 migrate:
 	docker compose exec backend python manage.py migrate
 
+ba-migrate:
+	docker compose run --rm db-migrate
+
 shell:
 	docker compose exec backend python manage.py shell
 

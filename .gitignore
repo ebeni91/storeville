@@ -1,15 +1,39 @@
+# ── Environment ───────────────────────────────────────────────────────────────
 .env
-.env.*
-.env.example
-node_modules/
+.env.local
+.env.production
+# Keep .env.example and .env.local.example so new developers can set up quickly
+!.env.example
+!.env.local.example
 
-# Python / Django
+# ── Python / Django ───────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
+*.pyo
 venv/
 db.sqlite3
+*.egg-info/
 
-# Next.js / Frontend
+# ── Node.js ───────────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Next.js / Frontend ───────────────────────────────────────────────────────
 frontend/.next/
 frontend/out/
 .next/
+
+# ── Expo / Mobile ─────────────────────────────────────────────────────────────
+mobile/.expo/
+mobile/android/app/build/
+mobile/ios/build/
+
+# ── Build artifacts & logs ────────────────────────────────────────────────────
+*.log
+*.tsbuildinfo
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo

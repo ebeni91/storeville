@@ -1,0 +1,27 @@
+# Exclude files that should never be copied into the Docker image.
+# Reduces build context size and prevents leaking secrets/dev artifacts.
+
+# Version control
+.git
+.gitignore
+
+# Python virtual environment (dependencies installed via pip in Dockerfile)
+venv/
+*.pyc
+__pycache__/
+
+# User-uploaded media (mounted as a Docker volume in production)
+media/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# Environment files (secrets injected via env_file or Docker secrets)
+.env
+.env.*
+
+# Documentation
+*.md
+docs/

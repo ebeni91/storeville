@@ -8,8 +8,6 @@
 #  - Health checks on all services
 #  - Nginx reverse proxy (handles SSL termination, static/media files)
 
-version: '3.8'
-
 services:
 
   postgres:

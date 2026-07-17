@@ -1,0 +1,26 @@
+# Exclude files that should never be copied into the Docker image.
+# Note: node_modules IS intentionally included (COPY node_modules in Dockerfile).
+
+# Version control
+.git
+.gitignore
+
+# Next.js build output (rebuilt inside Docker via npm run build)
+.next/
+out/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# Environment files (secrets injected via env_file or Docker secrets)
+.env
+.env.local
+.env.production
+
+# Documentation
+*.md
+
+# Prisma generated client is rebuilt during build
+prisma/*.db

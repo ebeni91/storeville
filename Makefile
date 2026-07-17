@@ -6,12 +6,12 @@ build:
 	docker compose build
 build-frontend:
 	docker compose build frontend
-	docker-compose up -d --build frontend
+	docker compose up -d --build frontend
 build-backend:
 	docker compose build backend
 
 up:
-	docker-compose up --build
+	docker compose up --build
 
 up-frontend:
 	docker compose up -d frontend

@@ -125,6 +125,8 @@ export default function RegisterPage() {
           const freshSession = await res.json()
           if (freshSession?.user?.role === 'SELLER') {
             // Hard navigate — forces middleware + session to reload from scratch
+            // ✅ ALSO clear/update the x-user-role cookie so middleware doesn't use stale cache
+            document.cookie = "x-user-role=SELLER; path=/; max-age=300"
             window.location.href = '/dashboard/seller'
             return
           }
@@ -136,6 +138,7 @@ export default function RegisterPage() {
         }
 
         // Fallback: go anyway — backend promotion succeeded even if poll timed out
+        document.cookie = "x-user-role=SELLER; path=/; max-age=300"
         window.location.href = '/dashboard/seller'
       }
 

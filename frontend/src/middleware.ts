@@ -9,9 +9,13 @@ export async function middleware(request: NextRequest) {
   
   if (!hasSessionCookie) {
     if (pathname.startsWith('/dashboard/seller')) {
-      return NextResponse.redirect(new URL('/', request.url))
+      const res = NextResponse.redirect(new URL('/', request.url))
+      res.cookies.delete('x-user-role')
+      return res
     }
-    return NextResponse.next()
+    const res = NextResponse.next()
+    res.cookies.delete('x-user-role')
+    return res
   }
 
   // 1. Resolve the user's role from the Django backend.
@@ -21,21 +25,26 @@ export async function middleware(request: NextRequest) {
   //   queries the BA user table directly — PROVEN to return the correct role
   //   (the same mechanism that logs "role=SELLER" in the backend logs)
   // - Better Auth's own get-session may not include additionalFields reliably.
-  let role: string | null = null
-  try {
-    const djangoURL = process.env.DJANGO_INTERNAL_URL || 'http://backend:8000'
-    const profileRes = await fetch(`${djangoURL}/api/accounts/profile/`, {
-      headers: {
-        cookie: request.headers.get('cookie') || '',
-        'Accept': 'application/json',
-      },
-    })
-    if (profileRes.ok) {
-      const profile = await profileRes.json()
-      role = profile?.role ?? null
+  let role: string | null = request.cookies.get('x-user-role')?.value || null
+  let fetchedRole = false
+
+  if (!role) {
+    try {
+      const djangoURL = process.env.DJANGO_INTERNAL_URL || 'http://backend:8000'
+      const profileRes = await fetch(`${djangoURL}/api/accounts/profile/`, {
+        headers: {
+          cookie: request.headers.get('cookie') || '',
+          'Accept': 'application/json',
+        },
+      })
+      if (profileRes.ok) {
+        const profile = await profileRes.json()
+        role = profile?.role ?? 'CUSTOMER'
+        fetchedRole = true
+      }
+    } catch (err) {
+      console.error('[Middleware] Django profile check failed:', err)
     }
-  } catch (err) {
-    console.error('[Middleware] Django profile check failed:', err)
   }
 
   const isSeller = role === 'SELLER'
@@ -49,16 +58,21 @@ export async function middleware(request: NextRequest) {
                               !pathname.startsWith('/store') &&
                               pathname !== '/logout'
 
+  let response = NextResponse.next()
+
   if (isSeller && isAccessingPlatform) {
-    return NextResponse.redirect(new URL('/dashboard/seller', request.url))
+    response = NextResponse.redirect(new URL('/dashboard/seller', request.url))
+  } else if (pathname.startsWith('/dashboard/seller') && !isSeller) {
+    response = NextResponse.redirect(new URL('/', request.url))
   }
 
-  // 3. DASHBOARD PROTECTION: Ensure only sellers access /dashboard/seller
-  if (pathname.startsWith('/dashboard/seller') && !isSeller) {
-    return NextResponse.redirect(new URL('/', request.url))
+  // 4. SET CACHE COOKIE: If we just fetched the role, cache it for 5 minutes.
+  // This drastically reduces network calls to the backend on every page load.
+  if (fetchedRole && role) {
+    response.cookies.set('x-user-role', role, { maxAge: 300, path: '/' })
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {

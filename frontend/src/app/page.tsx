@@ -15,8 +15,8 @@ import MapExplorer from '@/components/MapExplorer'
 
 type Gateway = 'RETAIL' | 'FOOD'
 
-// //  SPLASH SCREEN
-// function SplashScreen({ onDone }: { onDone: () => void }) {
+// Splash Screen
+function SplashScreen({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     const t = setTimeout(onDone, 2800)
     return () => clearTimeout(t)
@@ -72,8 +72,8 @@ type Gateway = 'RETAIL' | 'FOOD'
   )
 }
 
-// //  HOME PAGE — ExploreScreen-style immersive map
-// export default function Home() {
+// HOME PAGE
+export default function Home() {
   const router = useRouter()
   const { data: session } = authClient.useSession()
   const [isMounted, setIsMounted] = useState(false)

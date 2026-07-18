@@ -6,9 +6,9 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { authClient } from '@/lib/auth-client'
 import Link from 'next/link'
 
-// // PREMIUM DARK THEME  ·  Obsidian Soft UI
+// PREMIUM DARK THEME — Obsidian Soft UI
 // A true premium dark aesthetic inspired by Apple, Linear, and modern luxury.
-// const DARK_CSS = `
+const DARK_CSS = `
   /* ── Root tokens ───────────────────────────────────────────────────────── */
   [data-seller-theme="dark"] {
     color-scheme: dark;

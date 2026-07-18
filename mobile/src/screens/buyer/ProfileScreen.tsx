@@ -73,7 +73,7 @@ function ThemeToggle() {
   );
 }
 
-// export function ProfileScreen({ navigation }: Props) {
+export function ProfileScreen({ navigation }: Props) {
   const { isGuest, logout, exitGuestMode } = useAuthStore();
   const { data: session } = authClient.useSession();
   const user = session?.user as any;

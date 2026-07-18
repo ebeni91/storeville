@@ -1,14 +1,12 @@
-# ──────────────────────────────────────────────────────────────────────────────
 # StoreVille CI Pipeline
 # Runs on every push and pull request. Validates all three platform components
 # in parallel: Django API, Next.js Frontend, and Expo Mobile.
-# ──────────────────────────────────────────────────────────────────────────────
 
 name: CI
 
 on:
   push:
-    branches: ['**']        # Run on pushes to ANY branch (feature branches too)
+    branches: ['**']        # Run on pushes to any branch
   pull_request:
     branches: [main]        # Run on PRs targeting main
 
@@ -19,7 +17,7 @@ concurrency:
 
 jobs:
 
-  # ── Backend (Django) ──────────────────────────────────────────────────────
+  # Backend (Django)
   backend:
     name: Backend (Django)
     runs-on: ubuntu-latest
@@ -50,6 +48,8 @@ jobs:
       POSTGRES_DB: storeville_test
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_password
+      # Dummy value — BetterAuthMiddleware is inactive in CI settings
+      BETTER_AUTH_URL: http://localhost:3000
 
     steps:
       - name: Checkout code
@@ -67,13 +67,10 @@ jobs:
 
       - name: Run Django system checks
         run: python manage.py check --deploy --fail-level WARNING
-        env:
-          # Override settings for CI — use localhost Postgres, not Docker service name
-          DJANGO_SETTINGS_MODULE: config.settings.ci
 
       - name: Check for missing migrations
         run: python manage.py migrate --check --no-input
-        continue-on-error: true  # Won't fail CI, but will flag issues
+        continue-on-error: true  # Advisory — flags drift without blocking CI
 
       - name: Run migrations
         run: python manage.py migrate --no-input
@@ -81,7 +78,7 @@ jobs:
       - name: Run tests
         run: python manage.py test --verbosity=2
 
-  # ── Frontend (Next.js) ────────────────────────────────────────────────────
+  # Frontend (Next.js)
   frontend:
     name: Frontend (Next.js)
     runs-on: ubuntu-latest
@@ -91,14 +88,14 @@ jobs:
         working-directory: frontend
 
     env:
-      # Dummy values so Next.js can compile without real credentials
+      # Dummy runtime values — Next.js build does not connect to DB or auth at build time.
+      # The build-time guard in src/lib/auth.ts skips betterAuth() when DATABASE_URL is absent.
       DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
       BETTER_AUTH_SECRET: ci-dummy-secret
       BETTER_AUTH_URL: http://localhost:3000
       GOOGLE_CLIENT_ID: dummy-client-id
       GOOGLE_CLIENT_SECRET: dummy-client-secret
       INTERNAL_SYNC_SECRET: ci-dummy-sync-secret
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api
 
     steps:
       - name: Checkout code
@@ -114,13 +111,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: TypeScript type-check
+        run: npx tsc --noEmit
+
       - name: Lint
         run: npm run lint
 
       - name: Build
+        # Uses `next build` (not `vercel-build`) to skip the Better Auth CLI migration step,
+        # which requires a live database. Schema migrations run via the db-migrate container
+        # in Docker Compose and via the Vercel build hook in production.
         run: npm run build
 
-  # ── Mobile (Expo / React Native) ──────────────────────────────────────────
+  # Mobile (Expo / React Native)
   mobile:
     name: Mobile (Expo)
     runs-on: ubuntu-latest
@@ -143,9 +146,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Expo Doctor (SDK compatibility check)
-        run: npx expo-doctor@latest
-        continue-on-error: true  # Advisory — don't block CI on SDK warnings
-
       - name: TypeScript type-check
         run: npx tsc --noEmit
+
+      - name: Expo Doctor (SDK compatibility check)
+        run: npx expo-doctor@latest
+        continue-on-error: true  # Advisory — does not block CI on SDK warnings

@@ -171,7 +171,7 @@ export function ProfileScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle="light-content" backgroundColor="#111827"  backgroundColor="transparent" translucent={true} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
 
         {/* Indigo Header */}

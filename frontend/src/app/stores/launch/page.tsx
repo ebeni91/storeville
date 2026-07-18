@@ -297,7 +297,7 @@ export default function RegisterPage() {
               )}
             </div>
           ) : (
-            {/* STEP 2: BUSINESS PROFILE (HI-END FORM) */}
+            /* STEP 2: BUSINESS PROFILE */
             <form onSubmit={handleCreateStore} className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
               
               <div className="space-y-4">
